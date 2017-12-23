@@ -919,7 +919,7 @@ namespace pastel
           Time time_step_;
 
          public:
-          update_nth_order_derivatives(Time time_step) : time_step_{time_step} { }
+          correct(Time time_step) : time_step_{time_step} { }
 
           template <typename Particles, typename ExternalForce>
           void operator()(Particles& particles, ExternalForce&&) const
@@ -928,7 +928,7 @@ namespace pastel
               = ::pastel::container::meta::is_data_accessible<Particles>::value;
             static constexpr bool has_mass
               = ::pastel::container::meta::has_mass<Particles>::value;
-            using corrrect_func
+            using correct_func
               = ::pastel::integrate::gear::update_particles_detail::correct_impl<
                   order, is_data_accessible, has_mass, acceleration_index, AdditionalVectorIndexTuple>;
             using mobility_tag
@@ -1154,7 +1154,10 @@ namespace pastel
       inline void update_particles(System& system, Time time_step)
       {
         static_assert(order >= 4u && order <= 6u, "order must satisfy 4u <= order <= 6u");
-        ::pastel::integrate::gear::update_particles_detail::update_particles<order, acceleration_index, AdditionalVectorIndexTuple>::call(system, Time);
+        using update_particles_func
+          = ::pastel::integrate::gear::update_particles_detail::update_particles<
+              order, acceleration_index, AdditionalVectorIndexTuple>;
+        update_particles_func::call(system, time_step);
       }
     } // namespace gear
   } // namespace integrate

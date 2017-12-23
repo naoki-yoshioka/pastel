@@ -1,13 +1,13 @@
 .PHONY: all
-all: tuple_test
-all: geometry
-all: particles
-all: fixed_neighbor_list
-all: simple_system
-all: system
-all: euler
-all: vverlet
-all: gear
+all: bin/tuple_test
+all: bin/geometry
+all: bin/particles
+all: bin/fixed_neighbor_list
+all: bin/simple_system
+all: bin/system
+all: bin/euler
+all: bin/vverlet
+all: bin/gear
 
 .PHONY: test
 test: all
@@ -21,31 +21,31 @@ test: all
 	./bin/vverlet
 	./bin/gear
 
-tuple_test: tuple_test.cpp
+bin/tuple_test: tuple_test.cpp
 	g++ tuple_test.cpp -Wall -I../include -o bin/tuple_test
 
-geometry: geometry.cpp
+bin/geometry: geometry.cpp
 	g++ geometry.cpp -Wall -I../include -o bin/geometry
 
-particles: particles.cpp
+bin/particles: particles.cpp
 	g++ particles.cpp -Wall -I../include -o bin/particles
 
-fixed_neighbor_list: fixed_neighbor_list.cpp
+bin/fixed_neighbor_list: fixed_neighbor_list.cpp
 	g++ fixed_neighbor_list.cpp -Wall -I../include -o bin/fixed_neighbor_list
 
-simple_system: simple_system.cpp
+bin/simple_system: simple_system.cpp
 	g++ simple_system.cpp -Wall -I../include -o bin/simple_system
 
-system: system.cpp
+bin/system: system.cpp
 	g++ system.cpp -Wall -I../include -o bin/system
 
-euler: euler.cpp
+bin/euler: euler.cpp
 	g++ euler.cpp -Wall -I../include -o bin/euler
 
-vverlet: vverlet.cpp
+bin/vverlet: vverlet.cpp
 	g++ vverlet.cpp -Wall -I../include -o bin/vverlet
 
-gear: gear.cpp
+bin/gear: gear.cpp
 	g++ gear.cpp -Wall -I../include -o bin/gear
 
 .PHONY: clean

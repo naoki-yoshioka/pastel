@@ -135,8 +135,8 @@ namespace pastel
               dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
               Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
-        static pointer call(particles_type& particles) noexcept { return particles.template nth_additional_vectors_[n].data(); }
-        static const_pointer call(particles_type const& particles) noexcept { return particles.template nth_additional_vectors_[n].data(); }
+        static pointer call(particles_type& particles) noexcept { return particles.additional_vectors_[n].data(); }
+        static const_pointer call(particles_type const& particles) noexcept { return particles.additional_vectors_[n].data(); }
       }; // struct data< ::pastel::container::tags::nth_additional_vector<n>, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
 
       template <
@@ -155,8 +155,8 @@ namespace pastel
               dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
               Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
-        static pointer call(particles_type& particles) noexcept { return particles.template nth_additional_scalars_[n].data(); }
-        static const_pointer call(particles_type const& particles) noexcept { return particles.template nth_additional_scalars_[n].data(); }
+        static pointer call(particles_type& particles) noexcept { return particles.additional_scalars_[n].data(); }
+        static const_pointer call(particles_type const& particles) noexcept { return particles.additional_scalars_[n].data(); }
       }; // struct data< ::pastel::container::tags::nth_additional_scalar<n>, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
 
 

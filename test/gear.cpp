@@ -20,6 +20,7 @@
 //#include <pastel/container/aligned_particles.hpp>
 #include <pastel/container/aligned_simple_particles.hpp>
 #include <pastel/container/get.hpp>
+#include <pastel/container/mobility_tags.hpp>
 #include <pastel/geometry/get.hpp>
 #include <pastel/geometry/vector_io.hpp>
 #include <pastel/geometry/point_io.hpp>
@@ -33,8 +34,8 @@
 
 BOOST_AUTO_TEST_CASE(gear_test, * boost::unit_test::tolerance(0.001))
 {
-  //using particles_type = pastel::container::aligned_particles<3u>;
-  using particles_type = pastel::container::aligned_simple_particles<3u>;
+  //using particles_type = pastel::container::aligned_particles<3u, pastel::container::mobility_tags::mobile, 4u>;
+  using particles_type = pastel::container::aligned_simple_particles<3u, pastel::container::mobility_tags::mobile, 4u>;
   using force_type = pastel::force::linear_spring<false>;
   using neighbor_list_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type>;
   using system_type = pastel::system::simple_system<particles_type, neighbor_list_type>;

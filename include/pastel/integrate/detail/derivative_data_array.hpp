@@ -58,8 +58,8 @@ namespace pastel
           : data_{}
         { ::pastel::integrate::detail::derivative_data_array_detail::initialize<0u, num_additional_vectors, AdditionalVectorIndexTuple>::call(particles, data_); }
 
-        vector_type* operator[](std::size_t index) { return data_[index]; }
-        vector_type* operator[](std::size_t index) const { return data_[index]; }
+        vector_type*& operator[](std::size_t index) { return data_[index]; }
+        vector_type* const& operator[](std::size_t index) const { return data_[index]; }
       }; // struct derivative_data_array<num_additional_vectors, AdditionalVectorIndexTuple, Particles>
     } // namespace detail
   } // namespace integrate

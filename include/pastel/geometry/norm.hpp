@@ -52,6 +52,8 @@ namespace pastel
       return std::hypot(data[0u], data[1u]);
     }
 
+    /*
+    // since C++17
     inline float norm(::pastel::geometry::vector<3u, float> const& vector)
     {
       auto const data = vector.data();
@@ -69,9 +71,10 @@ namespace pastel
       auto const data = vector.data();
       return std::hypot(data[0u], data[1u], data[2u]);
     }
+    */
 
     inline constexpr float norm(float value) { return std::fabs(value); }
-    inline constexpr double norm(double value) { return std::fabs(value) }
+    inline constexpr double norm(double value) { return std::fabs(value); }
     inline constexpr long double norm(long double value) { return std::fabs(value); }
   } // namespace geometry
 } // namespace pastel

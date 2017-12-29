@@ -55,7 +55,8 @@ namespace pastel
       ::pastel::geometry::vector<dimension_, long double> const& lhs,
       ::pastel::geometry::vector<dimension_, long double> const& rhs)
     {
-      auto result = long double{};
+      using value_type = long double;
+      auto result = value_type{};
       auto const lhs_data = lhs.data();
       auto const rhs_data = rhs.data();
       for (auto index = std::size_t{0}; index < dimension_; ++index)

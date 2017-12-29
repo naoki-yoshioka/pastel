@@ -39,7 +39,8 @@ namespace pastel
     template <std::size_t dimension_>
     inline long double squared_norm(::pastel::geometry::vector<dimension_, long double> const& vector)
     {
-      auto result = long double{};
+      using value_type = long double;
+      auto result = value_type{};
       auto const data = vector.data();
       for (auto index = std::size_t{0}; index < dimension_; ++index)
         result = std::fma(data[index], data[index], result);

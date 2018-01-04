@@ -26,6 +26,7 @@ namespace pastel
       using value_type = Value;
       using required_arguments_category = ::pastel::force::tags::requires_position;
       static constexpr bool has_potential_energy = true;
+      static constexpr bool has_cutoff = false;
 
       constexpr linear_spring() noexcept
         : spring_coefficient_{Value{1}}, half_spring_coefficient_{Value{1} / Value{2}}
@@ -96,6 +97,7 @@ namespace pastel
       using value_type = Value;
       using required_arguments_category = ::pastel::force::tags::requires_position;
       static constexpr bool has_potential_energy = true;
+      static constexpr bool has_cutoff = false;
 
       constexpr linear_spring() noexcept
         : spring_coefficient_{Value{1}},

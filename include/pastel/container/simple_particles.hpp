@@ -322,20 +322,53 @@ namespace pastel
           && std::is_nothrow_destructible<vectors_type>::value
           && std::is_nothrow_destructible<scalars_type>::value)
         = default;
-      simple_particles(simple_particles const&) = default;
-      simple_particles(simple_particles&&)
+
+      simple_particles(simple_particles const& other)
+        : positions_(other.positions_),
+          velocities_(other.velocities_),
+          forces_(other.forces_),
+          additional_vectors_{},
+          additional_scalars_{}
+      {
+        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
+          additional_vectors_[index] = other.additional_vectors_[index];
+        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
+          additional_scalars_[index] = other.additional_scalars_[index];
+      }
+
+      simple_particles(simple_particles&& other)
         noexcept(
           std::is_nothrow_move_constructible<points_type>::value
           && std::is_nothrow_move_constructible<vectors_type>::value
           && std::is_nothrow_move_constructible<scalars_type>::value)
-        = default;
-      simple_particles& operator=(simple_particles const&) & = default;
-      simple_particles& operator=(simple_particles&&) &
+        : positions_(std::move(other.positions_)),
+          velocities_(std::move(other.velocities_)),
+          forces_(std::move(other.forces_)),
+          additional_vectors_{},
+          additional_scalars_{}
+      {
+        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
+          additional_vectors_[index] = std::move(other.additional_vectors_[index]);
+        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
+          additional_scalars_[index] = std::move(other.additional_scalars_[index]);
+      }
+
+      simple_particles& operator=(simple_particles const& other) &
+      {
+        simple_particles temp{other};
+        temp.swap(*this);
+        return *this;
+      }
+
+      simple_particles& operator=(simple_particles&& other) &
         noexcept(
-          std::is_nothrow_move_assignable<points_type>::value
-          && std::is_nothrow_move_assignable<vectors_type>::value
-          && std::is_nothrow_move_assignable<scalars_type>::value)
-        = default;
+          std::is_nothrow_move_constructible<simple_particles>::value
+          && noexcept(simple_particles{}.swap(other)))
+      {
+        simple_particles temp{std::move(other)};
+        temp.swap(*this);
+        return *this;
+      }
 
       simple_particles(PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
         noexcept(noexcept(points_type{point_allocator}) && noexcept(vectors_type{vector_allocator}) && noexcept(scalars_type{scalar_allocator}))

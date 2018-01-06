@@ -2,6 +2,7 @@
 # define PASTEL_UTILITY_IS_CONST_POINTER_HPP
 
 # include <type_traits>
+# include <memory>
 
 
 namespace pastel
@@ -9,16 +10,12 @@ namespace pastel
   namespace utility
   {
     template <typename Pointer>
-    struct is_const_pointer;
-
-    template <typename T>
-    struct is_const_pointer<T*>
-      : std::false_type
-    { };
-
-    template <typename T>
-    struct is_const_pointer<T const*>
-      : std::true_type
+    struct is_const_pointer
+      : std::is_same<
+          Pointer,
+          typename std::pointer_traits<Pointer>::template rebind<
+            typename std::remove_const<
+              typename std::pointer_traits<Pointer>::element_type>::type const>>
     { };
   } // namespace utility
 } // namespace pastel

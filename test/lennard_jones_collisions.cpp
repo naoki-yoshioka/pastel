@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(lennard_jones_collisions_test, * boost::unit_test::toleranc
   using vector_type = typename pastel::container::meta::vector_of<particles_type>::type;
   auto particles = particles_type{};
   particles.reserve(2u);
-  particles.emplace_back(point_type{-1.0, 0.0}, vector_type{1.0, 0.0}, vector_type{});
+  particles.emplace_back(point_type{-5.0, 0.0}, vector_type{5.0, 0.0}, vector_type{});
   particles.emplace_back(point_type{speed, 0.0}, vector_type{-speed, 0.0}, vector_type{});
 
   // Fixed Neighbor List

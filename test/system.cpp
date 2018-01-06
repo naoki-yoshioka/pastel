@@ -22,7 +22,6 @@
 #include <pastel/neighbor/aligned_fixed_neighbor_list.hpp>
 #include <pastel/neighbor/neighbor_io.hpp>
 #include <pastel/neighbor/meta/interaction_pair_of.hpp>
-#include <pastel/neighbor/meta/is_intraparticle.hpp>
 #include <pastel/force/linear_spring.hpp>
 #include <pastel/extforce/no_force.hpp>
 #include <pastel/utility/pair.hpp>
@@ -34,7 +33,7 @@ BOOST_AUTO_TEST_CASE(system_test, * boost::unit_test::tolerance(0.000001))
   using force_type = pastel::force::linear_spring<>;
   using neighbor_list1_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type, pastel::utility::size_pair<0u, 0u>>;
   using neighbor_list2_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type, pastel::utility::size_pair<1u, 1u>>;
-  using neighbor_list12_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type, pastel::utility::size_pair<0u, 1u>, false>;
+  using neighbor_list12_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type, pastel::utility::size_pair<0u, 1u>>;
 
   using particles_tuple_type = std::tuple<particles_type, particles_type>;
   using neighbor_list_tuple_type = std::tuple<neighbor_list1_type, neighbor_list2_type, neighbor_list12_type>;
@@ -50,13 +49,10 @@ BOOST_AUTO_TEST_CASE(system_test, * boost::unit_test::tolerance(0.000001))
   BOOST_TEST((std::is_same<typename pastel::system::meta::external_force_of<1u, system_type>::type, pastel::extforce::no_force>::value));
   BOOST_TEST((pastel::neighbor::meta::interaction_pair_of<typename pastel::system::meta::neighbor_list_of<0u, system_type>::type>::type::first == 0u));
   BOOST_TEST((pastel::neighbor::meta::interaction_pair_of<typename pastel::system::meta::neighbor_list_of<0u, system_type>::type>::type::second == 0u));
-  BOOST_TEST((pastel::neighbor::meta::is_intraparticle<typename pastel::system::meta::neighbor_list_of<0u, system_type>::type>::value));
   BOOST_TEST((pastel::neighbor::meta::interaction_pair_of<typename pastel::system::meta::neighbor_list_of<1u, system_type>::type>::type::first == 1u));
   BOOST_TEST((pastel::neighbor::meta::interaction_pair_of<typename pastel::system::meta::neighbor_list_of<1u, system_type>::type>::type::second == 1u));
-  BOOST_TEST((pastel::neighbor::meta::is_intraparticle<typename pastel::system::meta::neighbor_list_of<1u, system_type>::type>::value));
   BOOST_TEST((pastel::neighbor::meta::interaction_pair_of<typename pastel::system::meta::neighbor_list_of<2u, system_type>::type>::type::first == 0u));
   BOOST_TEST((pastel::neighbor::meta::interaction_pair_of<typename pastel::system::meta::neighbor_list_of<2u, system_type>::type>::type::second == 1u));
-  BOOST_TEST((!pastel::neighbor::meta::is_intraparticle<typename pastel::system::meta::neighbor_list_of<2u, system_type>::type>::value));
 
   constexpr auto num_particles1 = 10u;
   constexpr auto num_neighbors1 = num_particles1-1u;

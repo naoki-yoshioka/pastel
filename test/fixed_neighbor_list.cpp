@@ -18,7 +18,6 @@
 #include <pastel/neighbor/partner_end.hpp>
 #include <pastel/neighbor/meta/value_of.hpp>
 #include <pastel/neighbor/meta/force_of.hpp>
-#include <pastel/neighbor/meta/is_intraparticle.hpp>
 #include <pastel/neighbor/meta/is_partner_data_accessible.hpp>
 #include <pastel/geometry/vector.hpp>
 #include <pastel/force/linear_spring.hpp>
@@ -140,7 +139,6 @@ BOOST_AUTO_TEST_CASE(fixed_neighbor_list_test, * boost::unit_test::tolerance(0.0
   using force_type = pastel::force::linear_spring<>;
   auto force = force_type{1.0};
   using neighbor_list_type = pastel::neighbor::fixed_neighbor_list<force_type>;
-  BOOST_TEST(pastel::neighbor::meta::is_intraparticle<neighbor_list_type>::value);
   test<neighbor_list_type>(std::move(force));
 }
 
@@ -149,7 +147,6 @@ BOOST_AUTO_TEST_CASE(aligned_fixed_neighbor_list_test, * boost::unit_test::toler
   using force_type = pastel::force::linear_spring<>;
   auto force = force_type{1.0};
   using neighbor_list_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type>;
-  BOOST_TEST(pastel::neighbor::meta::is_intraparticle<neighbor_list_type>::value);
   test<neighbor_list_type>(std::move(force));
 }
 

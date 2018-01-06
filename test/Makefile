@@ -8,6 +8,7 @@ all: bin/system
 all: bin/euler
 all: bin/vverlet
 all: bin/gear
+all: bin/lennard_jones_collisions
 
 .PHONY: test
 test: all
@@ -20,6 +21,7 @@ test: all
 	./bin/euler
 	./bin/vverlet
 	./bin/gear
+	./bin/lennard_jones_collisions
 
 bin/tuple_test: tuple_test.cpp
 	g++ tuple_test.cpp -Wall -I../include -o bin/tuple_test
@@ -48,7 +50,10 @@ bin/vverlet: vverlet.cpp
 bin/gear: gear.cpp
 	g++ gear.cpp -Wall -I../include -o bin/gear
 
+bin/lennard_jones_collisions: lennard_jones_collisions.cpp
+	g++ lennard_jones_collisions.cpp -Wall -I../include -o bin/lennard_jones_collisions
+
 .PHONY: clean
 clean: 
-	$(RM) bin/tuple_test bin/geometry bin/particles bin/fixed_neighbor_list bin/simple_system bin/system bin/euler bin/vverlet bin/gear
+	$(RM) bin/tuple_test bin/geometry bin/particles bin/fixed_neighbor_list bin/simple_system bin/system bin/euler bin/vverlet bin/gear bin/lennard_jones_collisions
 

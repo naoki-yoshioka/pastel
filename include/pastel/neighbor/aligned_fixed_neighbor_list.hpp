@@ -10,14 +10,10 @@ namespace pastel
 {
   namespace neighbor
   {
-    template <
-      typename Force,
-      typename InteractionPair = ::pastel::utility::size_pair<0u, 0u>,
-      bool is_intraparticle_ = true>
+    template <typename Force, typename InteractionPair = ::pastel::utility::size_pair<0u, 0u>>
     using aligned_fixed_neighbor_list
       = ::pastel::neighbor::fixed_neighbor_list<
-          Force, InteractionPair, is_intraparticle_,
-          boost::alignment::aligned_allocator<std::size_t>>;
+          Force, InteractionPair, boost::alignment::aligned_allocator<std::size_t>>;
   } // namespace neighbor
 } // namespace pastel
 

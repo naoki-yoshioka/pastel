@@ -21,7 +21,6 @@
 #include <pastel/neighbor/aligned_fixed_neighbor_list.hpp>
 #include <pastel/neighbor/neighbor_io.hpp>
 #include <pastel/neighbor/meta/interaction_pair_of.hpp>
-#include <pastel/neighbor/meta/is_intraparticle.hpp>
 #include <pastel/force/linear_spring.hpp>
 #include <pastel/extforce/no_force.hpp>
 
@@ -39,7 +38,6 @@ BOOST_AUTO_TEST_CASE(simple_system_test, * boost::unit_test::tolerance(0.000001)
   BOOST_TEST((std::is_same<typename pastel::system::meta::external_force_of<0u, system_type>::type, pastel::extforce::no_force>::value));
   BOOST_TEST((pastel::neighbor::meta::interaction_pair_of<typename pastel::system::meta::neighbor_list_of<0u, system_type>::type>::type::first == 0u));
   BOOST_TEST((pastel::neighbor::meta::interaction_pair_of<typename pastel::system::meta::neighbor_list_of<0u, system_type>::type>::type::second == 0u));
-  BOOST_TEST((pastel::neighbor::meta::is_intraparticle<typename pastel::system::meta::neighbor_list_of<0u, system_type>::type>::value));
 
   constexpr auto num_particles = 10u;
   constexpr auto num_neighbors = num_particles-1u;

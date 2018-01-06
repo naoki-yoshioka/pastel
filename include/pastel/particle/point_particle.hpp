@@ -82,7 +82,7 @@ namespace pastel
     {
      public:
       static constexpr std::size_t dimension = dimension_;
-      static constexpr bool has_mass = true
+      static constexpr bool has_mass = true;
       using point_type = Point;
       using vector_type = Vector;
       using scalar_type = Value;

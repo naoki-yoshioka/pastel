@@ -25,7 +25,7 @@
 # include <pastel/container/meta/is_data_accessible.hpp>
 # include <pastel/particle/tags.hpp>
 # include <pastel/particle/get.hpp>
-# include <pastel/particle/particle.hpp>
+# include <pastel/particle/point_particle.hpp>
 # include <pastel/geometry/vector.hpp>
 # include <pastel/geometry/point.hpp>
 # include <pastel/geometry/meta/dimension_of.hpp>
@@ -317,7 +317,7 @@ namespace pastel
 
      public:
       using value_type
-        = ::pastel::particle::particle<dimension_, Value, Point, Vector>;
+        = ::pastel::particle::point_particle<dimension_, Value, Point, Vector>;
       using size_type = typename points_type::size_type;
       using difference_type = typename points_type::difference_type;
       using iterator
@@ -801,7 +801,7 @@ namespace pastel
       iterator insert(const_iterator pos, std::initializer_list<value_type> initializer_list)
       { return insert(pos, std::begin(initializer_list), std::end(initializer_list)); }
 
-      template <typename Position, typename Velocity, typename Force, typename Mass, typename Diameter>
+      template <typename Position, typename Velocity, typename Force, typename Mass>
       iterator emplace(const_iterator pos, Position&& position, Velocity&& velocity, Force&& force, Mass&& mass)
       {
         auto const pos_index = pos.index();
@@ -884,7 +884,7 @@ namespace pastel
           additional_scalars_[index].emplace_back();
       }
 
-      template <typename Position, typename Velocity, typename Force, typename Mass, typename Diameter>
+      template <typename Position, typename Velocity, typename Force, typename Mass>
       void emplace_back(Position&& position, Velocity&& velocity, Force&& force, Mass&& mass)
       {
         positions_.push_back(std::forward<Position>(position));

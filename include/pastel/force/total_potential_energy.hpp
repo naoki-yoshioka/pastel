@@ -1,6 +1,7 @@
 #ifndef PASTEL_FORCE_TOTAL_POTENTIAL_ENERGY_HPP
 # define PASTEL_FORCE_TOTAL_POTENTIAL_ENERGY_HPP
 
+# include <pastel/force/tags.hpp>
 # include <pastel/force/meta/has_potential_energy.hpp>
 # include <pastel/force/meta/value_of.hpp>
 # include <pastel/force/meta/required_arguments_category_of.hpp>

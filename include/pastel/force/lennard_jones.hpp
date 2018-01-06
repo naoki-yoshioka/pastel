@@ -13,7 +13,7 @@ namespace pastel
 {
   namespace force
   {
-    template <bool has_cutoff = true, bool has_diameter = true, typename Value = double>
+    template <bool has_cutoff, bool has_diameter = true, typename Value = double>
     class lennard_jones;
 
     template <typename Value>
@@ -95,8 +95,8 @@ namespace pastel
       }
 
      private:
-      template <typename Value_>
-      friend class ::pastel::force::lennard_jones<true, true, Value_>;
+      template <bool, bool, typename>
+      friend class ::pastel::force::lennard_jones;
 
       template <typename Vector>
       auto calculate_force(Vector const& difference, Value squared_distance) const
@@ -165,7 +165,7 @@ namespace pastel
 
       constexpr lennard_jones() noexcept
         : bare_force_{},
-          cutoff_length_{Value{3} * bare_force_.diameter()}
+          cutoff_length_{Value{3} * bare_force_.diameter()},
           squared_cutoff_length_{cutoff_length_ * cutoff_length_},
           energy_shift_{-bare_force_.calculate_energy(squared_cutoff_length_)}
       { }
@@ -186,9 +186,9 @@ namespace pastel
       constexpr bool operator==(lennard_jones const& other) const
       {
 # ifdef NDEBUG
-        return bare_froce_ == other.bare_force_ && cutoff_length_ == other.cutoff_length_;
+        return bare_force_ == other.bare_force_ && cutoff_length_ == other.cutoff_length_;
 # else
-        return bare_froce_ == other.bare_force_ && cutoff_length_ == other.cutoff_length_
+        return bare_force_ == other.bare_force_ && cutoff_length_ == other.cutoff_length_
           && squared_cutoff_length_ == other.squared_cutoff_length_
           && energy_shift_ == other.energy_shift_;
 # endif
@@ -241,13 +241,13 @@ namespace pastel
       }
 
       template <typename Point>
-      auto operator()(Point const& position1, Point const& position2)
-        -> decltype(brute_force_.calculate_force(position1 - position2, ::pastel::geometry::squared_norm(position1 - position2)))
+      auto operator()(Point const& position1, Point const& position2) const
+        -> decltype(bare_force_.calculate_force(position1 - position2, ::pastel::geometry::squared_norm(position1 - position2)))
       {
         auto const difference = position1 - position2;
         auto const squared_distance = ::pastel::geometry::squared_norm(difference);
         if (squared_distance > squared_cutoff_length_)
-          return decltype(bare_force_.calculate_force(difference, squared_distance)){}
+          return decltype(bare_force_.calculate_force(difference, squared_distance)){};
         return bare_force_.calculate_force(difference, squared_distance);
       }
 
@@ -324,8 +324,8 @@ namespace pastel
       }
 
      private:
-      template <typename Value_>
-      friend class ::pastel::force::lennard_jones<true, false, Value_>;
+      template <bool, bool, typename>
+      friend class ::pastel::force::lennard_jones;
 
       template <typename Vector>
       auto calculate_force(Vector const& difference, Value squared_distance, Value squared_diameter) const
@@ -399,7 +399,7 @@ namespace pastel
 
       constexpr lennard_jones() noexcept
         : bare_force_{},
-          cutoff_length_{Value{3}}
+          cutoff_length_{Value{3}},
           squared_cutoff_length_{cutoff_length_ * cutoff_length_}
       { }
 
@@ -422,9 +422,9 @@ namespace pastel
       constexpr bool operator==(lennard_jones const& other) const
       {
 # ifdef NDEBUG
-        return bare_froce_ == other.bare_force_ && cutoff_length_ == other.cutoff_length_;
+        return bare_force_ == other.bare_force_ && cutoff_length_ == other.cutoff_length_;
 # else
-        return bare_froce_ == other.bare_force_ && cutoff_length_ == other.cutoff_length_
+        return bare_force_ == other.bare_force_ && cutoff_length_ == other.cutoff_length_
           && squared_cutoff_length_ == other.squared_cutoff_length_;
 # endif
       }
@@ -456,13 +456,13 @@ namespace pastel
       }
 
       template <typename Point>
-      auto operator()(Point const& position1, Value const& diameter1, Point const& position2, Value const& diameter2)
-        -> decltype(brute_force_.calculate_force(position1 - position2, (diameter1 + diameter2) / Value{2}))
+      auto operator()(Point const& position1, Value const& diameter1, Point const& position2, Value const& diameter2) const
+        -> decltype(bare_force_.calculate_force(position1 - position2, (diameter1 + diameter2) / Value{2}))
       {
         auto const difference = position1 - position2;
         auto const squared_distance = ::pastel::geometry::squared_norm(difference);
         if (squared_distance > squared_cutoff_length_)
-          return decltype(bare_force_.calculate_force(difference, squared_distance, diameter1 * diameter2)){}
+          return decltype(bare_force_.calculate_force(difference, squared_distance, diameter1 * diameter2)){};
 
         auto const diameter = (diameter1 + diameter2) / Value{2};
         return bare_force_.calculate_force(difference, squared_distance, diameter * diameter);

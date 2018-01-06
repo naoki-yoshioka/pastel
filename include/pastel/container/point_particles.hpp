@@ -302,6 +302,11 @@ namespace pastel
       using point_allocator_type = PointAllocator;
       using vector_allocator_type = VectorAllocator;
       using scalar_allocator_type = ScalarAllocator;
+      using boundary_container_type
+        = ::pastel::container::point_particles<
+            dimension_, ::pastel::container::mobility_tags::immobile,
+            num_additional_vectors_, num_additional_scalars_,
+            Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
      private:
       using points_type = std::vector<Point, point_allocator_type>;

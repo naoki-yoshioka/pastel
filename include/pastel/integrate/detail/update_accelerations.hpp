@@ -30,13 +30,13 @@ namespace pastel
       {
         template <
           std::size_t order, bool is_data_accessible, bool has_mass,
-          std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
+          std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
         struct update_accelerations;
 
 
         // a_i(t+dt) = f_i(t) / m_i
-        template <std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
-        struct update_accelerations<0u, true, true, acceleration_index, AdditionalVectorIndexTuple>
+        template <std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
+        struct update_accelerations<0u, true, true, acceleration_index, IntegrationVectorIndexTuple>
         {
           template <typename Particles, typename Time>
           static void call(Particles const&, Time, ::pastel::container::mobility_tags::immobile)
@@ -49,7 +49,7 @@ namespace pastel
             auto const masses_data = particles.template data< ::pastel::particle::tags::mass >();
             auto const accelerations_data
               = particles.template data<
-                  ::pastel::container::tags::nth_additional_vector<acceleration_index> >();
+                  ::pastel::container::tags::nth_integration_vector<acceleration_index> >();
 
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
@@ -63,17 +63,17 @@ namespace pastel
             auto const masses_data = particles.template data< ::pastel::particle::tags::mass >();
             auto const accelerations_data
               = particles.template data<
-                  ::pastel::container::tags::nth_additional_vector<acceleration_index> >();
+                  ::pastel::container::tags::nth_integration_vector<acceleration_index> >();
 
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
               if (::pastel::container::is_mobile(particles, index))
                 accelerations_data[index] = forces_data[index] / masses_data[index];
           }
-        }; // struct update_accelerations<0u, true, true, acceleration_index, AdditionalVectorIndexTuple>
+        }; // struct update_accelerations<0u, true, true, acceleration_index, IntegrationVectorIndexTuple>
 
-        template <std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
-        struct update_accelerations<0u, false, true, acceleration_index, AdditionalVectorIndexTuple>
+        template <std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
+        struct update_accelerations<0u, false, true, acceleration_index, IntegrationVectorIndexTuple>
         {
           template <typename Particles, typename Time>
           static void call(Particles const&, Time, ::pastel::container::mobility_tags::immobile)
@@ -84,7 +84,7 @@ namespace pastel
           {
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
-              ::pastel::container::get< ::pastel::container::tags::nth_additional_vector<acceleration_index> >(particles, index)
+              ::pastel::container::get< ::pastel::container::tags::nth_integration_vector<acceleration_index> >(particles, index)
                 = ::pastel::container::get< ::pastel::particle::tags::force >(particles, index)
                     / ::pastel::container::get< ::pastel::particle::tags::mass >(particles, index);
           }
@@ -95,14 +95,14 @@ namespace pastel
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
               if (::pastel::container::is_mobile(particles, index))
-                ::pastel::container::get< ::pastel::container::tags::nth_additional_vector<acceleration_index> >(particles, index)
+                ::pastel::container::get< ::pastel::container::tags::nth_integration_vector<acceleration_index> >(particles, index)
                   = ::pastel::container::get< ::pastel::particle::tags::force >(particles, index)
                       / ::pastel::container::get< ::pastel::particle::tags::mass >(particles, index);
           }
-        }; // struct update_accelerations<0u, false, true, acceleration_index, AdditionalVectorIndexTuple>
+        }; // struct update_accelerations<0u, false, true, acceleration_index, IntegrationVectorIndexTuple>
 
-        template <std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
-        struct update_accelerations<0u, true, false, acceleration_index, AdditionalVectorIndexTuple>
+        template <std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
+        struct update_accelerations<0u, true, false, acceleration_index, IntegrationVectorIndexTuple>
         {
           template <typename Particles, typename Time>
           static void call(Particles const&, Time, ::pastel::container::mobility_tags::immobile)
@@ -114,7 +114,7 @@ namespace pastel
             auto const forces_data = particles.template data< ::pastel::particle::tags::force >();
             auto const accelerations_data
               = particles.template data<
-                  ::pastel::container::tags::nth_additional_vector<acceleration_index> >();
+                  ::pastel::container::tags::nth_integration_vector<acceleration_index> >();
 
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
@@ -127,17 +127,17 @@ namespace pastel
             auto const forces_data = particles.template data< ::pastel::particle::tags::force >();
             auto const accelerations_data
               = particles.template data<
-                  ::pastel::container::tags::nth_additional_vector<acceleration_index> >();
+                  ::pastel::container::tags::nth_integration_vector<acceleration_index> >();
 
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
               if (::pastel::container::is_mobile(particles, index))
                 accelerations_data[index] = forces_data[index];
           }
-        }; // struct update_accelerations<0u, true, false, acceleration_index, AdditionalVectorIndexTuple>
+        }; // struct update_accelerations<0u, true, false, acceleration_index, IntegrationVectorIndexTuple>
 
-        template <std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
-        struct update_accelerations<0u, false, false, acceleration_index, AdditionalVectorIndexTuple>
+        template <std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
+        struct update_accelerations<0u, false, false, acceleration_index, IntegrationVectorIndexTuple>
         {
           template <typename Particles, typename Time>
           static void call(Particles const&, Time, ::pastel::container::mobility_tags::immobile)
@@ -148,7 +148,7 @@ namespace pastel
           {
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
-              ::pastel::container::get< ::pastel::container::tags::nth_additional_vector<acceleration_index> >(particles, index)
+              ::pastel::container::get< ::pastel::container::tags::nth_integration_vector<acceleration_index> >(particles, index)
                 = ::pastel::container::get< ::pastel::particle::tags::force >(particles, index);
           }
 
@@ -158,10 +158,10 @@ namespace pastel
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
               if (::pastel::container::is_mobile(particles, index))
-                ::pastel::container::get< ::pastel::container::tags::nth_additional_vector<acceleration_index> >(particles, index)
+                ::pastel::container::get< ::pastel::container::tags::nth_integration_vector<acceleration_index> >(particles, index)
                   = ::pastel::container::get< ::pastel::particle::tags::force >(particles, index);
           }
-        }; // struct update_accelerations<0u, false, false, acceleration_index, AdditionalVectorIndexTuple>
+        }; // struct update_accelerations<0u, false, false, acceleration_index, IntegrationVectorIndexTuple>
 
 
         template <std::size_t index, std::size_t last>
@@ -193,13 +193,13 @@ namespace pastel
           { }
         }; // struct update_accelerations_impl1<last, last>
 
-        template <std::size_t index, std::size_t last, std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
+        template <std::size_t index, std::size_t last, std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
         struct update_accelerations_impl2
         {
           static_assert(index >= 1u, "index >= 1u");
 
           static constexpr auto derivative_index
-            = std::tuple_element<index-1u, AdditionalVectorIndexTuple>::type::value;
+            = std::tuple_element<index-1u, IntegrationVectorIndexTuple>::type::value;
 
           template <typename Particles, typename DerivativeCoefficients>
           static constexpr void call(
@@ -207,30 +207,30 @@ namespace pastel
             DerivativeCoefficients const& derivative_coefficients,
             std::size_t particle_index)
           {
-            ::pastel::container::get< ::pastel::container::tags::nth_additional_vector<acceleration_index> >(particles, particle_index)
-              += ::pastel::container::get< ::pastel::container::tags::nth_additional_vector<derivative_index> >(particles, particle_index)
+            ::pastel::container::get< ::pastel::container::tags::nth_integration_vector<acceleration_index> >(particles, particle_index)
+              += ::pastel::container::get< ::pastel::container::tags::nth_integration_vector<derivative_index> >(particles, particle_index)
                  * derivative_coefficients[index];
 
-            ::pastel::integrate::detail::update_accelerations_detail::update_accelerations_impl2<index+1u, last, acceleration_index, AdditionalVectorIndexTuple>::call(
+            ::pastel::integrate::detail::update_accelerations_detail::update_accelerations_impl2<index+1u, last, acceleration_index, IntegrationVectorIndexTuple>::call(
               particles, derivative_coefficients, particle_index);
           }
-        }; // struct update_accelerations_impl2<index, last, acceleration_index, AdditionalVectorIndexTuple>
+        }; // struct update_accelerations_impl2<index, last, acceleration_index, IntegrationVectorIndexTuple>
 
-        template <std::size_t last, std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
-        struct update_accelerations_impl2<last, last, acceleration_index, AdditionalVectorIndexTuple>
+        template <std::size_t last, std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
+        struct update_accelerations_impl2<last, last, acceleration_index, IntegrationVectorIndexTuple>
         {
           template <typename Particles, typename DerivativeCoefficients>
           static constexpr void call(Particles&, DerivativeCoefficients const&, std::size_t)
           { }
-        }; // struct update_accelerations_impl2<last, last, acceleration_index, AdditionalVectorIndexTuple>
+        }; // struct update_accelerations_impl2<last, last, acceleration_index, IntegrationVectorIndexTuple>
 
         // a_i(t+dt) = f_i(t) / m_i + b_i(t) dt + c_i(t) dt^2/2 + ...
-        template <std::size_t order, std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
-        struct update_accelerations<order, true, true, acceleration_index, AdditionalVectorIndexTuple>
+        template <std::size_t order, std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
+        struct update_accelerations<order, true, true, acceleration_index, IntegrationVectorIndexTuple>
         {
           static_assert(
-            std::tuple_size<AdditionalVectorIndexTuple>::value == order,
-            "Size of AdditionalVectorIndexTuple must be equal to order");
+            std::tuple_size<IntegrationVectorIndexTuple>::value == order,
+            "Size of IntegrationVectorIndexTuple must be equal to order");
 
           template <typename Particles, typename Time>
           static void call(Particles const&, Time, ::pastel::container::mobility_tags::immobile)
@@ -246,9 +246,9 @@ namespace pastel
             auto const masses_data = particles.template data< ::pastel::particle::tags::mass >();
             auto const accelerations_data
               = particles.template data<
-                  ::pastel::container::tags::nth_additional_vector<acceleration_index> >();
+                  ::pastel::container::tags::nth_integration_vector<acceleration_index> >();
             auto const derivative_data_array
-              = ::pastel::integrate::detail::derivative_data_array<order, AdditionalVectorIndexTuple, Particles>{particles};
+              = ::pastel::integrate::detail::derivative_data_array<order, IntegrationVectorIndexTuple, Particles>{particles};
 
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
@@ -270,9 +270,9 @@ namespace pastel
             auto const masses_data = particles.template data< ::pastel::particle::tags::mass >();
             auto const accelerations_data
               = particles.template data<
-                  ::pastel::container::tags::nth_additional_vector<acceleration_index> >();
+                  ::pastel::container::tags::nth_integration_vector<acceleration_index> >();
             auto const derivative_data_array
-              = ::pastel::integrate::detail::derivative_data_array<order, AdditionalVectorIndexTuple, Particles>{particles};
+              = ::pastel::integrate::detail::derivative_data_array<order, IntegrationVectorIndexTuple, Particles>{particles};
 
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
@@ -284,10 +284,10 @@ namespace pastel
                   accelerations_data, derivative_data_array, derivative_coefficients, index);
               }
           }
-        }; // struct update_accelerations<order, true, true, acceleration_index, AdditionalVectorIndexTuple>
+        }; // struct update_accelerations<order, true, true, acceleration_index, IntegrationVectorIndexTuple>
 
-        template <std::size_t order, std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
-        struct update_accelerations<order, false, true, acceleration_index, AdditionalVectorIndexTuple>
+        template <std::size_t order, std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
+        struct update_accelerations<order, false, true, acceleration_index, IntegrationVectorIndexTuple>
         {
           template <typename Particles, typename Time>
           static void call(Particles const&, Time, ::pastel::container::mobility_tags::immobile)
@@ -302,11 +302,11 @@ namespace pastel
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
             {
-              ::pastel::container::get< ::pastel::container::tags::nth_additional_vector<acceleration_index> >(particles, index)
+              ::pastel::container::get< ::pastel::container::tags::nth_integration_vector<acceleration_index> >(particles, index)
                 = ::pastel::container::get< ::pastel::particle::tags::force >(particles, index)
                     / ::pastel::container::get< ::pastel::particle::tags::mass >(particles, index);
 
-              ::pastel::integrate::detail::update_accelerations_detail::update_accelerations_impl2<1u, order+1u, acceleration_index, AdditionalVectorIndexTuple>::call(
+              ::pastel::integrate::detail::update_accelerations_detail::update_accelerations_impl2<1u, order+1u, acceleration_index, IntegrationVectorIndexTuple>::call(
                 particles, derivative_coefficients, index);
             }
           }
@@ -321,22 +321,22 @@ namespace pastel
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
               if (::pastel::container::is_mobile(particles, index))
               {
-                ::pastel::container::get< ::pastel::container::tags::nth_additional_vector<acceleration_index> >(particles, index)
+                ::pastel::container::get< ::pastel::container::tags::nth_integration_vector<acceleration_index> >(particles, index)
                   = ::pastel::container::get< ::pastel::particle::tags::force >(particles, index)
                       / ::pastel::container::get< ::pastel::particle::tags::mass >(particles, index);
 
-                ::pastel::integrate::detail::update_accelerations_detail::update_accelerations_impl2<1u, order+1u, acceleration_index, AdditionalVectorIndexTuple>::call(
+                ::pastel::integrate::detail::update_accelerations_detail::update_accelerations_impl2<1u, order+1u, acceleration_index, IntegrationVectorIndexTuple>::call(
                   particles, derivative_coefficients, index);
               }
           }
-        }; // struct update_accelerations<order, false, true, acceleration_index, AdditionalVectorIndexTuple>
+        }; // struct update_accelerations<order, false, true, acceleration_index, IntegrationVectorIndexTuple>
 
-        template <std::size_t order, std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
-        struct update_accelerations<order, true, false, acceleration_index, AdditionalVectorIndexTuple>
+        template <std::size_t order, std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
+        struct update_accelerations<order, true, false, acceleration_index, IntegrationVectorIndexTuple>
         {
           static_assert(
-            std::tuple_size<AdditionalVectorIndexTuple>::value == order,
-            "Size of AdditionalVectorIndexTuple must be equal to order");
+            std::tuple_size<IntegrationVectorIndexTuple>::value == order,
+            "Size of IntegrationVectorIndexTuple must be equal to order");
 
           template <typename Particles, typename Time>
           static void call(Particles const&, Time, ::pastel::container::mobility_tags::immobile)
@@ -351,9 +351,9 @@ namespace pastel
             auto const forces_data = particles.template data< ::pastel::particle::tags::force >();
             auto const accelerations_data
               = particles.template data<
-                  ::pastel::container::tags::nth_additional_vector<acceleration_index> >();
+                  ::pastel::container::tags::nth_integration_vector<acceleration_index> >();
             auto const derivative_data_array
-              = ::pastel::integrate::detail::derivative_data_array<order, AdditionalVectorIndexTuple, Particles>{particles};
+              = ::pastel::integrate::detail::derivative_data_array<order, IntegrationVectorIndexTuple, Particles>{particles};
 
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
@@ -374,9 +374,9 @@ namespace pastel
             auto const forces_data = particles.template data< ::pastel::particle::tags::force >();
             auto const accelerations_data
               = particles.template data<
-                  ::pastel::container::tags::nth_additional_vector<acceleration_index> >();
+                  ::pastel::container::tags::nth_integration_vector<acceleration_index> >();
             auto const derivative_data_array
-              = ::pastel::integrate::detail::derivative_data_array<order, AdditionalVectorIndexTuple, Particles>{particles};
+              = ::pastel::integrate::detail::derivative_data_array<order, IntegrationVectorIndexTuple, Particles>{particles};
 
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
@@ -388,10 +388,10 @@ namespace pastel
                   accelerations_data, derivative_data_array, derivative_coefficients, index);
               }
           }
-        }; // struct update_accelerations<order, true, false, acceleration_index, AdditionalVectorIndexTuple>
+        }; // struct update_accelerations<order, true, false, acceleration_index, IntegrationVectorIndexTuple>
 
-        template <std::size_t order, std::size_t acceleration_index, typename AdditionalVectorIndexTuple>
-        struct update_accelerations<order, false, false, acceleration_index, AdditionalVectorIndexTuple>
+        template <std::size_t order, std::size_t acceleration_index, typename IntegrationVectorIndexTuple>
+        struct update_accelerations<order, false, false, acceleration_index, IntegrationVectorIndexTuple>
         {
           template <typename Particles, typename Time>
           static void call(Particles const&, Time, ::pastel::container::mobility_tags::immobile)
@@ -406,10 +406,10 @@ namespace pastel
             auto const num_particles = ::pastel::container::num_particles(particles);
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
             {
-              ::pastel::container::get< ::pastel::container::tags::nth_additional_vector<acceleration_index> >(particles, index)
+              ::pastel::container::get< ::pastel::container::tags::nth_integration_vector<acceleration_index> >(particles, index)
                 = ::pastel::container::get< ::pastel::particle::tags::force >(particles, index);
 
-              ::pastel::integrate::detail::update_accelerations_detail::update_accelerations_impl2<1u, order+1u, acceleration_index, AdditionalVectorIndexTuple>::call(
+              ::pastel::integrate::detail::update_accelerations_detail::update_accelerations_impl2<1u, order+1u, acceleration_index, IntegrationVectorIndexTuple>::call(
                 particles, derivative_coefficients, index);
             }
           }
@@ -424,26 +424,26 @@ namespace pastel
             for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
               if (::pastel::container::is_mobile(particles, index))
               {
-                ::pastel::container::get< ::pastel::container::tags::nth_additional_vector<acceleration_index> >(particles, index)
+                ::pastel::container::get< ::pastel::container::tags::nth_integration_vector<acceleration_index> >(particles, index)
                   = ::pastel::container::get< ::pastel::particle::tags::force >(particles, index);
 
-                ::pastel::integrate::detail::update_accelerations_detail::update_accelerations_impl2<1u, order+1u, acceleration_index, AdditionalVectorIndexTuple>::call(
+                ::pastel::integrate::detail::update_accelerations_detail::update_accelerations_impl2<1u, order+1u, acceleration_index, IntegrationVectorIndexTuple>::call(
                   particles, derivative_coefficients, index);
               }
           }
-        }; // struct update_accelerations<order, false, false, acceleration_index, AdditionalVectorIndexTuple>
+        }; // struct update_accelerations<order, false, false, acceleration_index, IntegrationVectorIndexTuple>
       } // namespace update_accelerations_detail
 
 
-      // AdditionalVectorIndexTuple: indices for b(t), c(t), ..., but not for a(t) (accelerations)
-      template <std::size_t order, std::size_t acceleration_index, typename AdditionalVectorIndexTuple, typename Particles, typename Time>
+      // IntegrationVectorIndexTuple: indices for b(t), c(t), ..., but not for a(t) (accelerations)
+      template <std::size_t order, std::size_t acceleration_index, typename IntegrationVectorIndexTuple, typename Particles, typename Time>
       inline void update_accelerations(Particles& particles, Time time_step)
       {
         static_assert(
-          ::pastel::utility::tuple::meta::is_tuple<AdditionalVectorIndexTuple>::value
+          ::pastel::utility::tuple::meta::is_tuple<IntegrationVectorIndexTuple>::value
           && ::pastel::utility::tuple::meta::all_of<
-               AdditionalVectorIndexTuple, ::pastel::utility::is_integral_constant>::value,
-          "AdditionalVectorIndexTuple must be a tuple whose type is std::integral_constant");
+               IntegrationVectorIndexTuple, ::pastel::utility::is_integral_constant>::value,
+          "IntegrationVectorIndexTuple must be a tuple whose type is std::integral_constant");
 
         static constexpr bool is_data_accessible
           = ::pastel::container::meta::is_data_accessible<Particles>::value;
@@ -451,7 +451,7 @@ namespace pastel
           = ::pastel::container::meta::has_mass<Particles>::value;
         using update_accelerations_func
           = ::pastel::integrate::detail::update_accelerations_detail::update_accelerations<
-              order, is_data_accessible, has_mass, acceleration_index, AdditionalVectorIndexTuple>;
+              order, is_data_accessible, has_mass, acceleration_index, IntegrationVectorIndexTuple>;
         using mobility_tag
           = typename ::pastel::container::meta::mobility_tag_of<Particles>::type;
         update_accelerations_func::call(particles, time_step, mobility_tag{});

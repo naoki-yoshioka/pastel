@@ -17,8 +17,8 @@
 #include <pastel/container/meta/scalar_of.hpp>
 #include <pastel/container/meta/dimension_of.hpp>
 #include <pastel/container/meta/is_data_accessible.hpp>
-#include <pastel/container/meta/num_additional_vectors_of.hpp>
-#include <pastel/container/meta/num_additional_scalars_of.hpp>
+#include <pastel/container/meta/num_property_vectors_of.hpp>
+#include <pastel/container/meta/num_property_scalars_of.hpp>
 //#include <pastel/particle/particle.hpp>
 //#include <pastel/particle/particle_io.hpp>
 #include <pastel/particle/tags.hpp>
@@ -28,7 +28,7 @@
 #include <pastel/extforce/constant_force.hpp>
 
 
-template <typename Particles, std::size_t num_additional_vectors, std::size_t num_additional_scalars>
+template <typename Particles, std::size_t num_property_vectors, std::size_t num_property_scalars>
 void test()
 {
   constexpr auto num_particles = 10u;
@@ -50,8 +50,8 @@ void test()
   BOOST_TEST(pastel::container::meta::dimension_of<Particles>::value == pastel::geometry::meta::dimension_of<point_type>::value);
   BOOST_TEST(pastel::container::meta::dimension_of<Particles>::value == pastel::geometry::meta::dimension_of<vector_type>::value);
   BOOST_TEST(pastel::container::meta::is_data_accessible<Particles>::value);
-  BOOST_TEST(pastel::container::meta::num_additional_vectors_of<Particles>::value == num_additional_vectors);
-  BOOST_TEST(pastel::container::meta::num_additional_scalars_of<Particles>::value == num_additional_scalars);
+  BOOST_TEST(pastel::container::meta::num_property_vectors_of<Particles>::value == num_property_vectors);
+  BOOST_TEST(pastel::container::meta::num_property_scalars_of<Particles>::value == num_property_scalars);
 
   BOOST_TEST(pastel::container::num_particles(particles1) == num_particles);
   BOOST_TEST((pastel::container::get<pastel::particle::tags::position>(particles1, 0u) == point_type{0.5, 1.0, 1.0}));
@@ -80,7 +80,7 @@ void test()
   BOOST_TEST((particles3.template back<pastel::particle::tags::position>() == point_type{0.5, 1.0, 1.0}));
 }
 
-template <typename Particles, std::size_t num_additional_vectors, std::size_t num_additional_scalars>
+template <typename Particles, std::size_t num_property_vectors, std::size_t num_property_scalars>
 void immobile_test()
 {
   auto const num_particles = 10u;
@@ -102,8 +102,8 @@ void immobile_test()
   BOOST_TEST(pastel::container::meta::dimension_of<Particles>::value == pastel::geometry::meta::dimension_of<point_type>::value);
   BOOST_TEST(pastel::container::meta::dimension_of<Particles>::value == pastel::geometry::meta::dimension_of<vector_type>::value);
   BOOST_TEST(pastel::container::meta::is_data_accessible<Particles>::value);
-  BOOST_TEST(pastel::container::meta::num_additional_vectors_of<Particles>::value == num_additional_vectors);
-  BOOST_TEST(pastel::container::meta::num_additional_scalars_of<Particles>::value == num_additional_scalars);
+  BOOST_TEST(pastel::container::meta::num_property_vectors_of<Particles>::value == num_property_vectors);
+  BOOST_TEST(pastel::container::meta::num_property_scalars_of<Particles>::value == num_property_scalars);
 
   BOOST_TEST(pastel::container::num_particles(particles1) == num_particles);
   BOOST_TEST((pastel::container::get<pastel::particle::tags::position>(particles1, 0u) == point_type{0.5, 1.0, 1.0}));
@@ -133,14 +133,14 @@ void immobile_test()
 }
 
 BOOST_AUTO_TEST_CASE(particles_test, * boost::unit_test::tolerance(0.000001))
-{ test<pastel::container::particles<3u, pastel::container::mobility_tags::mobile, 1u, 0u>, 1u, 0u>(); }
+{ test<pastel::container::particles<3u, pastel::container::mobility_tags::mobile, 0u, 1u, 0u>, 1u, 0u>(); }
 
 BOOST_AUTO_TEST_CASE(aligned_particles_test, * boost::unit_test::tolerance(0.000001))
-{ test<pastel::container::aligned_particles<3u, pastel::container::mobility_tags::mobile, 1u, 0u>, 1u, 0u>(); }
+{ test<pastel::container::aligned_particles<3u, pastel::container::mobility_tags::mobile, 0u, 1u, 0u>, 1u, 0u>(); }
 
 BOOST_AUTO_TEST_CASE(immobile_particles_test, * boost::unit_test::tolerance(0.000001))
-{ immobile_test<pastel::container::particles<3u, pastel::container::mobility_tags::immobile, 1u, 0u>, 1u, 0u>(); }
+{ immobile_test<pastel::container::particles<3u, pastel::container::mobility_tags::immobile, 0u, 1u, 0u>, 1u, 0u>(); }
 
 BOOST_AUTO_TEST_CASE(immobile_aligned_particles_test, * boost::unit_test::tolerance(0.000001))
-{ immobile_test<pastel::container::aligned_particles<3u, pastel::container::mobility_tags::immobile, 1u, 0u>, 1u, 0u>(); }
+{ immobile_test<pastel::container::aligned_particles<3u, pastel::container::mobility_tags::immobile, 0u, 1u, 0u>, 1u, 0u>(); }
 

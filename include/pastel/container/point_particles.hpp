@@ -22,14 +22,17 @@
 # include <pastel/container/clear_forces.hpp>
 # include <pastel/container/apply_external_forces.hpp>
 # include <pastel/container/meta/is_data_accessible.hpp>
+# include <pastel/container/meta/size_of.hpp>
 # include <pastel/particle/tags.hpp>
 # include <pastel/particle/get.hpp>
 # include <pastel/particle/point_particle.hpp>
 # include <pastel/geometry/vector.hpp>
 # include <pastel/geometry/point.hpp>
 # include <pastel/geometry/meta/dimension_of.hpp>
+# include <pastel/system/index_with_origin.hpp>
 # include <pastel/utility/is_nothrow_swappable.hpp>
 # include <pastel/utility/is_input_iterator.hpp>
+# include <pastel/utility/for_.hpp>
 
 
 namespace pastel
@@ -1211,6 +1214,177 @@ namespace pastel
         Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>& rhs)
       noexcept(noexcept(lhs.swap(rhs)))
     { lhs.swap(rhs); }
+
+
+    namespace point_particles_detail
+    {
+      template <std::size_t n>
+      struct copy_nth_property_vector
+      {
+        template <typename Particles, typename TargetParticles, typename Index>
+        static void call(Particles const& particles, TargetParticles& target_particles, Index index)
+        {
+          ::pastel::container::get< ::pastel::container::tags::nth_property_vector<n> >(target_particles, index)
+            = ::pastel::container::get< ::pastel::container::tags::nth_property_vector<n> >(particles, index);
+        }
+      }; // struct copy_nth_property_vector<n>
+
+      template <std::size_t n>
+      struct copy_nth_property_scalar
+      {
+        template <typename Particles, typename TargetParticles, typename Index>
+        static void call(Particles const& particles, Index particle_index, TargetParticles& target_particles, Index target_particle_index)
+        {
+          ::pastel::container::get< ::pastel::container::tags::nth_property_scalar<n> >(target_particles, target_particle_index)
+            = ::pastel::container::get< ::pastel::container::tags::nth_property_scalar<n> >(particles, particle_index);
+        }
+      }; // struct copy_nth_property_scalar<n>
+    } // namespace point_particles_detail
+
+    namespace dispatch
+    {
+      template <
+        std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
+        typename Value, typename Point, typename Vector,
+        typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
+      struct add_particles<
+        ::pastel::container::point_particles<
+          dimension_, MobilityTag,
+          num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+          Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>>
+      {
+        template <
+          typename TargetParticles, typename BoundaryParticles,
+          typename Allocator, typename Size>
+        static void call(
+          TargetParticles& target_particles,
+          ::pastel::container::point_particles<
+            dimension_, MobilityTag,
+            num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+            Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& particles,
+          BoundaryParticles const& boundary_particles,
+          std::vector< ::pastel::system::index_with_origin<typename ::pastel::container::meta::size_of<TargetParticles>::type>, Allocator > const& particle_indices_for_boundary,
+          Size first, Size last)
+        {
+          auto const positions_data
+            = particles.template data< ::pastel::particle::tags::position >();
+          auto const velocities_data
+            = particles.template data< ::pastel::particle::tags::velocity >();
+          auto const masses_data
+            = particles.template data< ::pastel::particle::tags::mass >();
+
+          for (auto particle_index = first; particle_index < last; ++particle_index)
+          {
+            auto const index = particle_indices_for_boundary[particle_index].index();
+            auto const origin = particle_indices_for_boundary[particle_index].origin();
+            if (origin == ::pastel::system::origin::particles)
+            {
+              target_particles.emplace_back(
+                positions_data[index], velocities_data[index], Vector{}, masses_data[index]);
+
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::point_particles_detail::copy_nth_property_vector>::call(
+                particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::point_particles_detail::copy_nth_property_scalar>::call(
+                particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+            }
+            else // if (origin == ::pastel::system::origin::boundary_particles)
+            {
+              target_particles.emplace_back(
+                ::pastel::container::get< ::pastel::particle::tags::position >(boundary_particles, index),
+                ::pastel::container::get< ::pastel::particle::tags::velocity >(boundary_particles, index),
+                Vector{},
+                ::pastel::container::get< ::pastel::particle::tags::mass >(boundary_particles, index));
+
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::point_particles_detail::copy_nth_property_vector>::call(
+                boundary_particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::point_particles_detail::copy_nth_property_scalar>::call(
+                boundary_particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+            }
+          }
+        }
+      }; // struct add_particles< ::pastel::container::point_particles<dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> >
+
+      template <
+        std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
+        typename Value, typename Point, typename Vector,
+        typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
+      struct copy_particles<
+        ::pastel::container::point_particles<
+          dimension_, MobilityTag,
+          num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+          Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>>
+      {
+        template <
+          typename TargetMobilityTag, std::size_t target_num_integration_vectors_,
+          typename BoundaryMobilityTag, std::size_t boundary_num_integration_vectors_,
+          typename Allocator, typename Size>
+        static void call(
+          ::pastel::container::point_particles<
+            dimension_, TargetMobilityTag,
+            target_num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+            Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>& target_particles,
+          ::pastel::container::point_particles<
+            dimension_, MobilityTag,
+            num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+            Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& particles,
+          ::pastel::container::point_particles<
+            dimension_, BoundaryMobilityTag,
+            boundary_num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+            Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& boundary_particles,
+          std::vector< ::pastel::system::index_with_origin<typename ::pastel::container::meta::size_of<TargetParticles>::type>, Allocator > const& particle_indices_for_boundary,
+          Size first, Size last)
+        {
+          auto const positions_data
+            = particles.template data< ::pastel::particle::tags::position >();
+          auto const velocities_data
+            = particles.template data< ::pastel::particle::tags::velocity >();
+          auto const masses_data
+            = particles.template data< ::pastel::particle::tags::mass >();
+          auto const boundary_positions_data
+            = boundary_particles.template data< ::pastel::particle::tags::position >();
+          auto const boundary_velocities_data
+            = boundary_particles.template data< ::pastel::particle::tags::velocity >();
+          auto const boundary_masses_data
+            = boundary_particles.template data< ::pastel::particle::tags::mass >();
+          auto const target_positions_data
+            = target_particles.template data< ::pastel::particle::tags::position >();
+          auto const target_velocities_data
+            = target_particles.template data< ::pastel::particle::tags::velocity >();
+          auto const target_masses_data
+            = target_particles.template data< ::pastel::particle::tags::mass >();
+
+          for (auto particle_index = first; particle_index < last; ++particle_index)
+          {
+            auto const index = particle_indices_for_boundary[particle_index].index();
+            auto const origin = particle_indices_for_boundary[particle_index].origin();
+            if (origin == ::pastel::system::origin::particles)
+            {
+              target_positions_data[index] = positions_data[index];
+              target_velocities_data[index] = velocities_data[index];
+              target_masses_data[index] = masses_data[index];
+
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::point_particles_detail::copy_nth_property_vector>::call(
+                particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::point_particles_detail::copy_nth_property_scalar>::call(
+                particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+            }
+            else // if (origin == ::pastel::system::origin::boundary_particles)
+            {
+              target_positions_data[index] = boundary_positions_data[index];
+              target_velocities_data[index] = boundary_velocities_data[index];
+              target_masses_data[index] = boundary_masses_data[index];
+
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::point_particles_detail::copy_nth_property_vector>::call(
+                boundary_particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::point_particles_detail::copy_nth_property_scalar>::call(
+                boundary_particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+            }
+          }
+        }
+      }; // struct copy_particles< ::pastel::container::point_particles<dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> >
+    } // namespace dispatch
   } // namespace container
 } // namespace pastel
 

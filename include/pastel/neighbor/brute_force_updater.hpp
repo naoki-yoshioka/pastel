@@ -206,6 +206,7 @@ namespace pastel
       Value const& buffer_length() const { return buffer_length_; }
 
       bool is_valid() const { return buffer_length_ > Value{0}; }
+      bool is_invalid() const { return !this->is_valid(); }
 
 
       template <typename NeighborList, typename Particles, typename Time>
@@ -269,7 +270,7 @@ namespace pastel
 
 
       template <typename NeighborList, typename Particles>
-      void update_neighbor_list(NeighborList& neighbor_list, Particles const& particles)
+      void update_neighbor_list(NeighborList& neighbor_list, Particles const& particles) const
       {
         using interaction_pair_type
           = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
@@ -286,7 +287,7 @@ namespace pastel
       }
 
       template <typename NeighborList, typename KeyParticles, typename PartnerParticles>
-      void update_neighbor_list(NeighborList& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles)
+      void update_neighbor_list(NeighborList& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles) const
       {
         using interaction_pair_type
           = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;

@@ -8,13 +8,12 @@
 # include <pastel/integrate/detail/update_velocities.hpp>
 //# include <pastel/integrate/detail/update_orientations_order1.hpp>
 //# include <pastel/integrate/detail/update_local_angular_velocities_order1.hpp>
-# include <pastel/system/for_each.hpp>
-# include <pastel/system/for_each_neighbor_list.hpp>
+# include <pastel/system/for_each_container.hpp>
+# include <pastel/system/update_forces.hpp>
 # include <pastel/container/clear_forces.hpp>
 # include <pastel/container/apply_external_forces.hpp>
 //# include <pastel/container/modify_global_angular_velocities.hpp>
 //# include <pastel/container/modify_local_torques.hpp>
-# include <pastel/force/update_forces.hpp>
 
 
 namespace pastel
@@ -63,14 +62,6 @@ namespace pastel
         }; // struct clear_forces
 
 
-        struct update_forces
-        {
-          template <typename NeighborList, typename System>
-          void operator()(NeighborList const& neighbor_list, System& system) const
-          { ::pastel::force::update_forces(neighbor_list.force(), neighbor_list, system); }
-        }; // struct update_force
-
-
         struct apply_external_forces
         {
           template <typename Particles, typename ExternalForce>
@@ -86,20 +77,18 @@ namespace pastel
       template <typename System, typename Time>
       inline void update_particles(System& system, Time time_step)
       {
-        ::pastel::system::for_each(
+        ::pastel::system::for_each_container(
           system,
           ::pastel::integrate::euler::update_particles_detail::update_positions<Time>{time_step});
-        ::pastel::system::for_each(
+        ::pastel::system::for_each_container(
           system,
           ::pastel::integrate::euler::update_particles_detail::update_velocities<Time>{time_step});
         // update_orientations, update_local_angular_velocities, modify_global_angular_velocities
-        ::pastel::system::for_each(
+        ::pastel::system::for_each_container(
           system,
           ::pastel::integrate::euler::update_particles_detail::clear_forces());
-        ::pastel::system::for_each_neighbor_list(
-          system,
-          ::pastel::integrate::euler::update_particles_detail::update_forces());
-        ::pastel::system::for_each(
+        ::pastel::system::update_forces(system);
+        ::pastel::system::for_each_container(
           system,
           ::pastel::integrate::euler::update_particles_detail::apply_external_forces());
         // modify_local_torques

@@ -9,12 +9,15 @@ namespace pastel
     namespace tags
     {
       template <int n>
-      struct nth_additional_vector { };
+      struct nth_integration_vector { };
       template <int n>
-      struct nth_additional_scalar { };
+      struct nth_property_vector { };
+      template <int n>
+      struct nth_property_scalar { };
     } // namespace tags
   } // namespace container
 } // namespace pastel
 
 
 #endif // PASTEL_CONTAINER_TAGS_HPP
+

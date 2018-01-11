@@ -11,6 +11,8 @@ namespace pastel
       constexpr bool is_valid() const { return true; }
       constexpr bool is_invalid() const { return false; }
 
+      constexpr bool make_invalid_if_possible() const { return false; }
+
 
       template <typename NeighborList, typename Particles, typename Time>
       constexpr void reset_status(NeighborList const&, Particles const&, Time) const { }

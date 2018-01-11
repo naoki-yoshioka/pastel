@@ -13,20 +13,20 @@ namespace pastel
     {
       namespace accumulate_detail
       {
-        template <std::size_t index, std::size_t last>
+        template <std::size_t index, std::size_t num>
         struct accumulate
         {
           template <typename... Args, typename Value>
           static constexpr Value call(std::tuple<Args...> const& tuple, Value value)
           {
-            return ::pastel::utility::tuple::accumulate_detail::accumulate<index+4u, last>::call(
+            return ::pastel::utility::tuple::accumulate_detail::accumulate<index+4u, num-4u>::call(
               tuple, (((value + std::get<index>(tuple)) + std::get<index+1u>(tuple)) + std::get<index+2u>(tuple)) + std::get<index+3u>(tuple))
           }
 
           template <typename... Args, typename Value, typename Function>
           static constexpr Value call(std::tuple<Args...> const& tuple, Value value, Function&& function)
           {
-            return ::pastel::utility::tuple::accumulate_detail::accumulate<index+4u, last>::call(
+            return ::pastel::utility::tuple::accumulate_detail::accumulate<index+4u, num-4u>::call(
               tuple,
               function(
                 function(
@@ -37,56 +37,56 @@ namespace pastel
                 std::get<index+3u>(tuple)),
               std::forward<Function>(function));
           }
-        }; // struct accumulate<index, last>
+        }; // struct accumulate<index, num>
 
-        template <std::size_t last>
-        struct accumulate<last-3u, last>
+        template <std::size_t index>
+        struct accumulate<index, 3u>
         {
           template <typename... Args, typename Value>
           static constexpr Value call(std::tuple<Args...> const& tuple, Value value)
-          { return ((value + std::get<last-3u>(tuple)) + std::get<last-2u>(tuple)) + std::get<last-1u>(tuple); }
+          { return ((value + std::get<index>(tuple)) + std::get<index+1u>(tuple)) + std::get<index+2u>(tuple); }
 
           template <typename... Args, typename Value, typename Function>
           static constexpr Value call(std::tuple<Args...> const& tuple, Value value, Function&& function)
           {
             return function(
               function(
-                function(value, std::get<last-3u>(tuple)),
-                std::get<last-2u>(tuple)),
-              std::get<last-1u>(tuple));
+                function(value, std::get<index>(tuple)),
+                std::get<index+1u>(tuple)),
+              std::get<index+2u>(tuple));
           }
-        }; // struct accumulate<last-3u, last>
+        }; // struct accumulate<index, 3u>
 
-        template <std::size_t last>
-        struct accumulate<last-2u, last>
+        template <std::size_t index>
+        struct accumulate<index, 2u>
         {
           template <typename... Args, typename Value>
           static constexpr Value call(std::tuple<Args...> const& tuple, Value value)
-          { return (value + std::get<last-2u>(tuple)) + std::get<last-1u>(tuple); }
+          { return (value + std::get<index>(tuple)) + std::get<index+1u>(tuple); }
 
           template <typename... Args, typename Value, typename Function>
           static constexpr Value call(std::tuple<Args...> const& tuple, Value value, Function&& function)
           {
             return function(
-              function(value, std::get<last-2u>(tuple)),
-              std::get<last-1u>(tuple));
+              function(value, std::get<index>(tuple)),
+              std::get<index+1u>(tuple));
           }
-        }; // struct accumulate<last-2u, last>
+        }; // struct accumulate<index, 2u>
 
-        template <std::size_t last>
-        struct accumulate<last-1u, last>
+        template <std::size_t index>
+        struct accumulate<index, 1u>
         {
           template <typename... Args, typename Value>
           static constexpr Value call(std::tuple<Args...> const& tuple, Value value)
-          { return value + std::get<last-1u>(tuple); }
+          { return value + std::get<index>(tuple); }
 
           template <typename... Args, typename Value, typename Function>
           static constexpr Value call(std::tuple<Args...> const& tuple, Value value, Function&& function)
-          { return function(value, std::get<last-1u>(tuple)); }
-        }; // struct accumulate<last-1u, last>
+          { return function(value, std::get<index>(tuple)); }
+        }; // struct accumulate<index, 1u>
 
-        template <std::size_t last>
-        struct accumulate<last, last>
+        template <std::size_t index>
+        struct accumulate<index, 0u>
         {
           template <typename... Args, typename Value>
           static constexpr Value call(std::tuple<Args...> const& tuple, Value value)
@@ -95,7 +95,7 @@ namespace pastel
           template <typename... Args, typename Value, typename Function>
           static constexpr Value call(std::tuple<Args...> const&, Value value, Function&&)
           { return value; }
-        }; // struct accumulate<last, last>
+        }; // struct accumulate<index, 0u>
       } // namespace accumulate_detail
 
 

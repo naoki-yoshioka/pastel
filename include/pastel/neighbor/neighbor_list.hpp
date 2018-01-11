@@ -227,6 +227,17 @@ namespace pastel
       using force_type = Force;
       using updater_type = Updater;
 
+     private:
+      using interaction_pair_key_type = typename interaction_pair::type;
+
+     public:
+      template <interaction_pair_key_type boundary_partner>
+      using boundary_neighbor_list_type
+        = ::pastel::neighbor::neighbor_list<
+            Force,
+            ::pastel::utility::pair<interaction_pair_key_type, interaction_pair::first, boundary_partner>,
+            Updater, IndexAllocator>;
+
       ~neighbor_list()
         noexcept(
           std::is_nothrow_destructible<indices_type>::value
@@ -717,7 +728,7 @@ namespace pastel
       void assign(std::initializer_list<value_type> initializer_list)
       { assign(std::begin(initializer_list), std::end(initializer_list)); }
 
-      index_allocator_type get_index_allocator() const { return partners_.allocator(); }
+      index_allocator_type get_index_allocator() const { return partners_.get_allocator(); }
 
       // Iterators
       iterator begin() noexcept { auto const first_key = size_type{0}; return {*this, first_key, this->partner_data(first_key)}; }

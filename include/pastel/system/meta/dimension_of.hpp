@@ -1,8 +1,8 @@
 #ifndef PASTEL_SYSTEM_META_DIMENSION_OF_HPP
 # define PASTEL_SYSTEM_META_DIMENSION_OF_HPP
 
-# include <pastel/system/meta/particles_of.hpp>
-# include <pastel/container/meta/dimension_of.hpp>
+# include <cstddef>
+# include <type_traits>
 
 
 namespace pastel
@@ -11,9 +11,9 @@ namespace pastel
   {
     namespace meta
     {
-      template <std::size_t index, typename System>
+      template <typename System>
       struct dimension_of
-        : ::pastel::container::meta::dimension_of<typename ::pastel::system::meta::particles_of<index, System>::type>
+        : std::integral_constant<std::size_t, System::dimension>
       { };
     } // namespace meta
   } // namespace system

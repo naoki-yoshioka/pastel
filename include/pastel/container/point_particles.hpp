@@ -21,6 +21,8 @@
 # include <pastel/container/increase_force.hpp>
 # include <pastel/container/clear_forces.hpp>
 # include <pastel/container/apply_external_forces.hpp>
+# include <pastel/container/add_particles.hpp>
+# include <pastel/container/copy_particles.hpp>
 # include <pastel/container/meta/is_data_accessible.hpp>
 # include <pastel/container/meta/size_of.hpp>
 # include <pastel/particle/tags.hpp>
@@ -1333,7 +1335,7 @@ namespace pastel
             dimension_, BoundaryMobilityTag,
             boundary_num_integration_vectors_, num_property_vectors_, num_property_scalars_,
             Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& boundary_particles,
-          std::vector< ::pastel::system::index_with_origin<typename ::pastel::container::meta::size_of<TargetParticles>::type>, Allocator > const& particle_indices_for_boundary,
+          std::vector< ::pastel::system::index_with_origin<Size>, Allocator > const& particle_indices_for_boundary,
           Size first, Size last)
         {
           auto const positions_data

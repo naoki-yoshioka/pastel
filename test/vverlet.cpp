@@ -26,7 +26,7 @@
 #include <pastel/particle/tags.hpp>
 #include <pastel/particle/particle_io.hpp>
 #include <pastel/neighbor/neighbor_io.hpp>
-#include <pastel/neighbor/aligned_fixed_neighbor_list.hpp>
+#include <pastel/neighbor/fixed_neighbor_list.hpp>
 #include <pastel/force/linear_spring.hpp>
 #include <pastel/force/update_forces.hpp>
 
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(vverlet_test, * boost::unit_test::tolerance(0.001))
   //using particles_type = pastel::container::aligned_particles<3u>;
   using particles_type = pastel::container::aligned_simple_particles<3u>;
   using force_type = pastel::force::linear_spring<false>;
-  using neighbor_list_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type>;
+  using neighbor_list_type = pastel::neighbor::fixed_neighbor_list<force_type>;
   using system_type = pastel::system::simple_system<particles_type, neighbor_list_type>;
   auto system = system_type{};
 

@@ -15,8 +15,6 @@
 # include <pastel/particle/tags.hpp>
 # include <pastel/container/tags.hpp>
 # include <pastel/container/get.hpp>
-# include <pastel/container/clear_forces.hpp>
-# include <pastel/container/apply_external_forces.hpp>
 //# include <pastel/container/modify_global_angular_velocities.hpp>
 //# include <pastel/container/modify_local_torques.hpp>
 
@@ -961,13 +959,7 @@ namespace pastel
               ::pastel::integrate::gear::update_particles_detail::update_accelerations<1u, acceleration_index, IntegrationVectorIndexTuple, Time>{time_step});
             // update_angular_accelerations
 
-            ::pastel::system::for_each_container(
-              system,
-              ::pastel::integrate::gear::update_particles_detail::clear_forces());
             ::pastel::system::update_forces(system);
-            ::pastel::system::for_each_container(
-              system,
-              ::pastel::integrate::gear::update_particles_detail::apply_external_forces());
             // modify_local_torques
 
             ::pastel::system::for_each_container(
@@ -1028,13 +1020,7 @@ namespace pastel
               ::pastel::integrate::gear::update_particles_detail::update_nth_order_derivatives<3u, 1u, IntegrationVectorIndexTuple, Time>{time_step});
             // update_angular_integration_vectors<??>
 
-            ::pastel::system::for_each_container(
-              system,
-              ::pastel::integrate::gear::update_particles_detail::clear_forces());
             ::pastel::system::update_forces(system);
-            ::pastel::system::for_each_container(
-              system,
-              ::pastel::integrate::gear::update_particles_detail::apply_external_forces());
             // modify_local_torques
 
             ::pastel::system::for_each_container(
@@ -1103,13 +1089,7 @@ namespace pastel
               ::pastel::integrate::gear::update_particles_detail::update_nth_order_derivatives<4u, 1u, IntegrationVectorIndexTuple, Time>{time_step});
             // update_angular_integration_vectors<??>
 
-            ::pastel::system::for_each_container(
-              system,
-              ::pastel::integrate::gear::update_particles_detail::clear_forces());
             ::pastel::system::update_forces(system);
-            ::pastel::system::for_each_container(
-              system,
-              ::pastel::integrate::gear::update_particles_detail::apply_external_forces());
             // modify_local_torques
 
             ::pastel::system::for_each_container(

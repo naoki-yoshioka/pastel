@@ -10,8 +10,6 @@
 //# include <pastel/integrate/detail/update_local_angular_velocities_order1.hpp>
 # include <pastel/system/for_each_container.hpp>
 # include <pastel/system/update_forces.hpp>
-# include <pastel/container/clear_forces.hpp>
-# include <pastel/container/apply_external_forces.hpp>
 //# include <pastel/container/modify_global_angular_velocities.hpp>
 //# include <pastel/container/modify_local_torques.hpp>
 
@@ -52,22 +50,6 @@ namespace pastel
           void operator()(Particles& particles, ExternalForce&&) const
           { ::pastel::integrate::detail::update_velocities<1u, std::tuple<>>(particles, time_step_); }
         }; // struct update_velocities<Time>
-
-
-        struct clear_forces
-        {
-          template <typename Particles, typename ExternalForce>
-          void operator()(Particles& particles, ExternalForce&&) const
-          { ::pastel::container::clear_forces(particles); }
-        }; // struct clear_forces
-
-
-        struct apply_external_forces
-        {
-          template <typename Particles, typename ExternalForce>
-          void operator()(Particles& particles, ExternalForce&& external_force) const
-          { ::pastel::container::apply_external_forces(particles, std::forward<ExternalForce>(external_force)); }
-        };
       } // namespace update_particles_detail
 
 
@@ -84,13 +66,8 @@ namespace pastel
           system,
           ::pastel::integrate::euler::update_particles_detail::update_velocities<Time>{time_step});
         // update_orientations, update_local_angular_velocities, modify_global_angular_velocities
-        ::pastel::system::for_each_container(
-          system,
-          ::pastel::integrate::euler::update_particles_detail::clear_forces());
+
         ::pastel::system::update_forces(system);
-        ::pastel::system::for_each_container(
-          system,
-          ::pastel::integrate::euler::update_particles_detail::apply_external_forces());
         // modify_local_torques
       }
     } // namespace euler

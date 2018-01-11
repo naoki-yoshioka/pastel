@@ -8,7 +8,6 @@
 #include <algorithm>
 
 #include <pastel/neighbor/fixed_neighbor_list.hpp>
-#include <pastel/neighbor/aligned_fixed_neighbor_list.hpp>
 #include <pastel/neighbor/neighbor.hpp>
 #include <pastel/neighbor/neighbor_io.hpp>
 #include <pastel/neighbor/force.hpp>
@@ -142,19 +141,8 @@ BOOST_AUTO_TEST_CASE(fixed_neighbor_list_test, * boost::unit_test::tolerance(0.0
   test<neighbor_list_type>(std::move(force));
 }
 
-BOOST_AUTO_TEST_CASE(aligned_fixed_neighbor_list_test, * boost::unit_test::tolerance(0.000001))
-{
-  using force_type = pastel::force::linear_spring<>;
-  auto force = force_type{1.0};
-  using neighbor_list_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type>;
-  test<neighbor_list_type>(std::move(force));
-}
-
 /*
 BOOST_AUTO_TEST_CASE(immobile_particles_test, * boost::unit_test::tolerance(0.000001))
 { immobile_test<pastel::container::particles<3u, pastel::container::mobility_tags::immobile, 1u, 0u>, 1u, 0u>(); }
-
-BOOST_AUTO_TEST_CASE(immobile_aligned_particles_test, * boost::unit_test::tolerance(0.000001))
-{ immobile_test<pastel::container::aligned_particles<3u, pastel::container::mobility_tags::immobile, 1u, 0u>, 1u, 0u>(); }
 */
 

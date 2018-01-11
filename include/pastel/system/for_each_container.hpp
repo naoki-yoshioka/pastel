@@ -15,7 +15,7 @@ namespace pastel
   {
     namespace for_each_container_detail
     {
-      template <std::size_t n, std::size_t last>
+      template <std::size_t n, std::size_t num>
       struct nth_step
       {
         template <typename System, typename Function>
@@ -34,7 +34,7 @@ namespace pastel
             ::pastel::system::particles<n+3u>(system),
             ::pastel::system::external_force<n+3u>(system));
 
-          ::pastel::system::for_each_container_detail::nth_step<n+4u, last, System>::call(
+          ::pastel::system::for_each_container_detail::nth_step<n+4u, num-4u>::call(
             system, std::forward<Function>(function));
         }
 
@@ -54,100 +54,98 @@ namespace pastel
             ::pastel::system::particles<n+3u>(system),
             ::pastel::system::external_force<n+3u>(system));
 
-          ::pastel::system::for_each_container_detail::nth_step<n+4u, last, System>::call(
+          ::pastel::system::for_each_container_detail::nth_step<n+4u, num-4u>::call(
             system, std::forward<Function>(function));
         }
-      }; // struct nth_step<n, last>
+      }; // struct nth_step<n, num>
 
-      template <std::size_t last>
-      struct nth_step<last-3u, last>
+      template <std::size_t n>
+      struct nth_step<n, 3u>
       {
         template <typename System, typename Function>
         static void call(System& system, Function&& function)
         {
           function(
-            ::pastel::system::particles<last-3u>(system),
-            ::pastel::system::external_force<last-3u>(system));
+            ::pastel::system::particles<n>(system),
+            ::pastel::system::external_force<n>(system));
           function(
-            ::pastel::system::particles<last-2u>(system),
-            ::pastel::system::external_force<last-2u>(system));
+            ::pastel::system::particles<n+1u>(system),
+            ::pastel::system::external_force<n+1u>(system));
           function(
-            ::pastel::system::particles<last-1u>(system),
-            ::pastel::system::external_force<last-1u>(system));
+            ::pastel::system::particles<n+2u>(system),
+            ::pastel::system::external_force<n+2u>(system));
         }
 
         template <typename System, typename Function>
         static void call(System const& system, Function&& function)
         {
           function(
-            ::pastel::system::particles<last-3u>(system),
-            ::pastel::system::external_force<last-3u>(system));
+            ::pastel::system::particles<n>(system),
+            ::pastel::system::external_force<n>(system));
           function(
-            ::pastel::system::particles<last-2u>(system),
-            ::pastel::system::external_force<last-2u>(system));
+            ::pastel::system::particles<n+1u>(system),
+            ::pastel::system::external_force<n+1u>(system));
           function(
-            ::pastel::system::particles<last-1u>(system),
-            ::pastel::system::external_force<last-1u>(system));
+            ::pastel::system::particles<n+2u>(system),
+            ::pastel::system::external_force<n+2u>(system));
         }
-      }; // struct nth_step<last-3u, last>
+      }; // struct nth_step<n, 3u>
 
-      template <std::size_t last>
-      struct nth_step<last-2u, last>
+      template <std::size_t n>
+      struct nth_step<n, 2u>
       {
         template <typename System, typename Function>
         static void call(System& system, Function&& function)
         {
           function(
-            ::pastel::system::particles<last-2u>(system),
-            ::pastel::system::external_force<last-2u>(system));
+            ::pastel::system::particles<n>(system),
+            ::pastel::system::external_force<n>(system));
           function(
-            ::pastel::system::particles<last-1u>(system),
-            ::pastel::system::external_force<last-1u>(system));
+            ::pastel::system::particles<n+1u>(system),
+            ::pastel::system::external_force<n+1u>(system));
         }
 
         template <typename System, typename Function>
         static void call(System const& system, Function&& function)
         {
           function(
-            ::pastel::system::particles<last-2u>(system),
-            ::pastel::system::external_force<last-2u>(system));
+            ::pastel::system::particles<n>(system),
+            ::pastel::system::external_force<n>(system));
           function(
-            ::pastel::system::particles<last-1u>(system),
-            ::pastel::system::external_force<last-1u>(system));
+            ::pastel::system::particles<n+1u>(system),
+            ::pastel::system::external_force<n+1u>(system));
         }
-      }; // struct nth_step<last-2u, last>
+      }; // struct nth_step<n, 2u>
 
-      template <std::size_t last>
-      struct nth_step<last-1u, last>
+      template <std::size_t n>
+      struct nth_step<n, 1u>
       {
         template <typename System, typename Function>
         static void call(System& system, Function&& function)
         {
           function(
-            ::pastel::system::particles<last-1u>(system),
-            ::pastel::system::external_force<last-1u>(system));
+            ::pastel::system::particles<n>(system),
+            ::pastel::system::external_force<n>(system));
         }
 
         template <typename System, typename Function>
         static void call(System const& system, Function&& function)
         {
           function(
-            ::pastel::system::particles<last-1u>(system),
-            ::pastel::system::external_force<last-1u>(system));
+            ::pastel::system::particles<n>(system),
+            ::pastel::system::external_force<n>(system));
         }
-      }; // struct nth_step<last-1u, last>
+      }; // struct nth_step<n, 1u>
 
-      template <std::size_t last>
-      struct nth_step<last, last>
+      template <std::size_t n>
+      struct nth_step<n, 0u>
       {
         template <typename System, typename Function>
-        static void call(System&, Function&&)
-        { }
+        static void call(System&, Function&&) { }
 
         template <typename System, typename Function>
-        static void call(System const&, Function&&)
-        { }
-      }; // struct nth_step<last, last>
+        static void call(System const&, Function&&) { }
+      }; // struct nth_step<n, 0u>
     } // namespace for_each_container_detail
 
 

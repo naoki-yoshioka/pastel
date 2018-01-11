@@ -40,7 +40,7 @@ namespace pastel
       static_assert(::pastel::utility::tuple::meta::is_tuple<ParticlesTuple>::value, "ParticlesTuple must be a tuple");
 
      public:
-      static constexpr int dimension
+      static constexpr std::size_t dimension
         = std::tuple_size<ParticlesTuple>::value > 0u
           ? ::pastel::container::meta::dimension_of<typename std::tuple_element<0u, ParticlesTuple>::type>::value
           : 0;

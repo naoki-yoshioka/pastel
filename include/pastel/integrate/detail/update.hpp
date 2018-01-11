@@ -2,6 +2,7 @@
 # define PASTEL_INTEGRATE_DETAIL_UPDATE_HPP
 
 # include <cstddef>
+# include <tuple>
 
 # include <pastel/system/for_each_neighbor_list.hpp>
 # include <pastel/system/for_each_boundary_neighbor_list.hpp>
@@ -14,6 +15,7 @@
 # include <pastel/system/particles.hpp>
 # include <pastel/system/boundary.hpp>
 # include <pastel/system/meta/dimension_of.hpp>
+# include <pastel/system/meta/boundary_particles_tuple_size_of.hpp>
 # include <pastel/neighbor/meta/interaction_pair_of.hpp>
 # include <pastel/utility/for_.hpp>
 
@@ -68,7 +70,7 @@ namespace pastel
             using interaction_pair_type
               = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
             using update_status_impl_func
-              = ::pastel::neighbor::detail::update_detail::update_status_impl<interaction_pair_type::first, interaction_pair_type::second>;
+              = ::pastel::integrate::detail::update_detail::update_status_impl<interaction_pair_type::first, interaction_pair_type::second>;
             update_status_impl_func::call(neighbor_list.updater(), neighbor_list, system, time_step_);
           }
         }; // struct update_status<Time>
@@ -139,7 +141,7 @@ namespace pastel
             using interaction_pair_type
               = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
             using reset_status_impl_func
-              = ::pastel::neighbor::detail::update_detail::reset_status_impl<interaction_pair_type::first, interaction_pair_type::second>;
+              = ::pastel::integrate::detail::update_detail::reset_status_impl<interaction_pair_type::first, interaction_pair_type::second>;
             reset_status_impl_func::call(neighbor_list.updater(), neighbor_list, system, time_step_);
           }
         }; // struct update_status<Time>
@@ -201,7 +203,7 @@ namespace pastel
             using interaction_pair_type
               = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
             using update_neighbor_list_impl_func
-              = ::pastel::neighbor::detail::update_detail::update_neighbor_list_impl<interaction_pair_type::first, interaction_pair_type::second>;
+              = ::pastel::integrate::detail::update_detail::update_neighbor_list_impl<interaction_pair_type::first, interaction_pair_type::second>;
             update_neighbor_list_impl_func::call(neighbor_list.updater(), neighbor_list, system);
           }
         }; // struct update_neighbor_list
@@ -239,30 +241,34 @@ namespace pastel
         }; // struct is_invalid
 
 
-        struct clear
+        template <std::size_t index>
+        struct call_clear_boundary_particles
         {
-          template <typename BoundaryParticles>
-          void operator()(BoundaryParticles& boundary_particles) const
-          { boundary_particles.clear(); }
-        }; // struct clear
+          template <typename System>
+          static void call(System& system)
+          { ::pastel::system::boundary_particles<index>(system).clear(); }
+        }; // struct call_clear_boundary_particles<index>
 
 
         template <std::size_t n, std::size_t index>
         struct call_modify_outside_particles_impl
         {
+          template <typename System>
           static void call(System& system)
-          { ::pastel::system::boundary<n>(system).modify_outside_particles<n, index>(system); }
+          { std::get<n>(::pastel::system::boundary(system)).template modify_outside_particles<n, index>(system); }
         }; // struct call_modify_outside_particles_impl<index>
 
         template <std::size_t n>
         struct call_modify_outside_particles
         {
+          template <std::size_t index>
+          using call_modify_outside_particles_impl_func
+            = ::pastel::integrate::detail::update_detail::call_modify_outside_particles_impl<n, index>;
+
+          template <typename System>
           static void call(System& system)
           {
-            template <std::size_t index>
-            using call_modify_outside_particles_impl_func
-              = ::pastel::integrate::detail::update_detail::call_modify_outside_particles_impl<n, index>;
-            ::pastel::utility::for_<std::size_t, 0u, ::pastel::system::meta::boundary_particle_size_of<System>::value, call_modify_outside_particles_impl_func>::call(system);
+            ::pastel::utility::for_<std::size_t, 0u, ::pastel::system::meta::boundary_particles_tuple_size_of<System>::value, call_modify_outside_particles_impl_func>::call(system);
           }
         }; // struct call_modify_outside_particles<n>
 
@@ -270,19 +276,22 @@ namespace pastel
         template <std::size_t n, std::size_t index>
         struct call_initialize_boundary_particles_impl
         {
+          template <typename System>
           static void call(System& system)
-          { ::pastel::system::boundary<n>(system).initialize_boundary_particles<n, index>(system); }
+          { std::get<n>(::pastel::system::boundary(system)).template initialize_boundary_particles<n, index>(system); }
         }; // struct call_initialize_boundary_particles_impl<index>
 
         template <std::size_t n>
         struct call_initialize_boundary_particles
         {
+          template <std::size_t index>
+          using call_initialize_boundary_particles_impl_func
+            = ::pastel::integrate::detail::update_detail::call_initialize_boundary_particles_impl<n, index>;
+
+          template <typename System>
           static void call(System& system)
           {
-            template <std::size_t index>
-            using call_initialize_boundary_particles_impl_func
-              = ::pastel::integrate::detail::update_detail::call_initialize_boundary_particles_impl<n, index>;
-            ::pastel::utility::for_<std::size_t, 0u, ::pastel::system::meta::boundary_particle_size_of<System>::value, call_initialize_boundary_particles_impl_func>::call(system);
+            ::pastel::utility::for_<std::size_t, 0u, ::pastel::system::meta::boundary_particles_tuple_size_of<System>::value, call_initialize_boundary_particles_impl_func>::call(system);
           }
         }; // struct call_initialize_boundary_particles<n>
 
@@ -290,19 +299,22 @@ namespace pastel
         template <std::size_t n, std::size_t index>
         struct call_update_boundary_particles_impl
         {
+          template <typename System>
           static void call(System& system)
-          { ::pastel::system::boundary<n>(system).update_boundary_particles<n, index>(system); }
+          { std::get<n>(::pastel::system::boundary(system)).template update_boundary_particles<n, index>(system); }
         }; // struct call_update_boundary_particles_impl<index>
 
         template <std::size_t n>
         struct call_update_boundary_particles
         {
+          template <std::size_t index>
+          using call_update_boundary_particles_impl_func
+            = ::pastel::integrate::detail::update_detail::call_update_boundary_particles_impl<n, index>;
+
+          template <typename System>
           static void call(System& system)
           {
-            template <std::size_t index>
-            using call_update_boundary_particles_impl_func
-              = ::pastel::integrate::detail::update_detail::call_update_boundary_particles_impl<n, index>;
-            ::pastel::utility::for_<std::size_t, 0u, ::pastel::system::meta::boundary_particle_size_of<System>::value, call_update_boundary_particles_impl_func>::call(system);
+            ::pastel::utility::for_<std::size_t, 0u, ::pastel::system::meta::boundary_particles_tuple_size_of<System>::value, call_update_boundary_particles_impl_func>::call(system);
           }
         }; // struct call_update_boundary_particles<n>
       } // namespace update_detail
@@ -324,7 +336,7 @@ namespace pastel
               ::pastel::integrate::detail::update_detail::is_invalid{})
             || ::pastel::system::any_of_boundary_neighbor_lists(
                  system,
-                 ::pastel::Integrate::detail::update_detail::is_invalid{}))
+                 ::pastel::integrate::detail::update_detail::is_invalid{}))
         {
           // modify positions (periodic boundary), erase/insert particles (mpi boundary)
           using modify_outside_particles_func
@@ -334,16 +346,18 @@ namespace pastel
           modify_outside_particles_func::call(system);
 
           // clear boundary_particles
-          ::pastel::system::for_each_boundary_container(
-            system,
-            ::pastel::integrate::detail::update_detail::clear{});
+          using clear_boundary_particles_func
+            = ::pastel::utility::for_<
+                std::size_t, 0u, ::pastel::system::meta::boundary_particles_tuple_size_of<System>::value,
+                ::pastel::integrate::detail::update_detail::call_clear_boundary_particles>;
+          clear_boundary_particles_func::call(system);
 
           // TODO: sort particles
 
           // initialize boundary
           using initialize_boundary_particles_func
             = ::pastel::utility::for_<
-                std::size_t, 0u, ::pastel::system::meta::dimension_of<Systm>::value,
+                std::size_t, 0u, ::pastel::system::meta::dimension_of<System>::value,
                 ::pastel::integrate::detail::update_detail::call_initialize_boundary_particles>;
           initialize_boundary_particles_func::call(system);
 
@@ -380,7 +394,7 @@ namespace pastel
           // update boundary
           using update_boundary_particles_func
             = ::pastel::utility::for_<
-                std::size_t, 0u, ::pastel::system::meta::dimension_of<Systm>::value,
+                std::size_t, 0u, ::pastel::system::meta::dimension_of<System>::value,
                 ::pastel::integrate::detail::update_detail::call_update_boundary_particles>;
           update_boundary_particles_func::call(system);
         }

@@ -4,7 +4,7 @@ all: bin/geometry
 all: bin/particles
 all: bin/fixed_neighbor_list
 all: bin/simple_system
-all: bin/system
+#all: bin/system
 all: bin/euler
 all: bin/vverlet
 all: bin/gear
@@ -17,7 +17,7 @@ test: all
 	./bin/particles
 	./bin/fixed_neighbor_list
 	./bin/simple_system
-	./bin/system
+#	./bin/system
 	./bin/euler
 	./bin/vverlet
 	./bin/gear
@@ -38,8 +38,8 @@ bin/fixed_neighbor_list: fixed_neighbor_list.cpp
 bin/simple_system: simple_system.cpp
 	g++ simple_system.cpp -Wall -I../include -o bin/simple_system
 
-bin/system: system.cpp
-	g++ system.cpp -Wall -I../include -o bin/system
+#bin/system: system.cpp
+#	g++ system.cpp -Wall -I../include -o bin/system
 
 bin/euler: euler.cpp
 	g++ euler.cpp -Wall -I../include -o bin/euler
@@ -55,5 +55,6 @@ bin/lennard_jones_collisions: lennard_jones_collisions.cpp
 
 .PHONY: clean
 clean: 
-	$(RM) bin/tuple_test bin/geometry bin/particles bin/fixed_neighbor_list bin/simple_system bin/system bin/euler bin/vverlet bin/gear bin/lennard_jones_collisions
+#	$(RM) bin/tuple_test bin/geometry bin/particles bin/fixed_neighbor_list bin/simple_system bin/system bin/euler bin/vverlet bin/gear bin/lennard_jones_collisions
+	$(RM) bin/tuple_test bin/geometry bin/particles bin/fixed_neighbor_list bin/simple_system bin/euler bin/vverlet bin/gear bin/lennard_jones_collisions
 

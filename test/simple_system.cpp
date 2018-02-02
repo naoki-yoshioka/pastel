@@ -18,7 +18,7 @@
 #include <pastel/container/meta/scalar_of.hpp>
 #include <pastel/geometry/vector_io.hpp>
 #include <pastel/geometry/point_io.hpp>
-#include <pastel/neighbor/aligned_fixed_neighbor_list.hpp>
+#include <pastel/neighbor/fixed_neighbor_list.hpp>
 #include <pastel/neighbor/neighbor_io.hpp>
 #include <pastel/neighbor/meta/interaction_pair_of.hpp>
 #include <pastel/force/linear_spring.hpp>
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(simple_system_test, * boost::unit_test::tolerance(0.000001)
 {
   using particles_type = pastel::container::aligned_particles<3u>;
   using force_type = pastel::force::linear_spring<>;
-  using neighbor_list_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type>;
+  using neighbor_list_type = pastel::neighbor::fixed_neighbor_list<force_type>;
   using system_type = pastel::system::simple_system<particles_type, neighbor_list_type>;
   BOOST_TEST(pastel::system::meta::particles_tuple_size_of<system_type>::value == 1u);
   BOOST_TEST(pastel::system::meta::neighbor_list_tuple_size_of<system_type>::value == 1u);
@@ -61,9 +61,11 @@ BOOST_AUTO_TEST_CASE(simple_system_test, * boost::unit_test::tolerance(0.000001)
   for (auto index = 0u; index < num_neighbors; ++index)
     neighbor_list.emplace_hint(neighbor_list.end(), index, index+1u);
 
-  auto system = system_type{particles, neighbor_list};
-  auto const is_same_particles = pastel::system::particles<0u>(system) == particles;
-  BOOST_TEST(is_same_particles);
+  auto const time_step = 0.001;
+  auto system = system_type{particles, neighbor_list, time_step};
+  // These are different particles because particles in system now have correct forces
+  //auto const is_same_particles = pastel::system::particles<0u>(system) == particles;
+  //BOOST_TEST(is_same_particles);
   auto const is_same_neighbor_list = pastel::system::neighbor_list<0u>(system) == neighbor_list;
   BOOST_TEST(is_same_neighbor_list);
 

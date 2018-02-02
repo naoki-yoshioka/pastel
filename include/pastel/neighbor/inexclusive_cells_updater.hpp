@@ -227,9 +227,9 @@ namespace pastel
       template <typename NeighborList, typename KeyParticles, typename PartnerParticles, typename Time>
       void reset_status(NeighborList const& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles, Time time_step)
       {
-        using interaction_pair_type
-          = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
-        static_assert(interaction_pair_type::first != interaction_pair_type::second, "NeighborList must be interparticle");
+        //using interaction_pair_type
+        //  = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
+        //static_assert(interaction_pair_type::first != interaction_pair_type::second, "NeighborList must be interparticle");
         static_assert(
           ::pastel::force::meta::has_cutoff<typename ::pastel::neighbor::meta::force_of<NeighborList const>::type>::value,
           "Force of NeighborList must have cutoff");
@@ -257,9 +257,9 @@ namespace pastel
       template <typename NeighborList, typename KeyParticles, typename PartnerParticles, typename Time>
       void update_status(NeighborList const& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles, Time time_step)
       {
-        using interaction_pair_type
-          = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
-        static_assert(interaction_pair_type::first != interaction_pair_type::second, "NeighborList must be interparticle");
+        //using interaction_pair_type
+        //  = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
+        //static_assert(interaction_pair_type::first != interaction_pair_type::second, "NeighborList must be interparticle");
         static_assert(
           ::pastel::force::meta::has_cutoff<typename ::pastel::neighbor::meta::force_of<NeighborList const>::type>::value,
           "Force of NeighborList must have cutoff");
@@ -288,9 +288,9 @@ namespace pastel
       template <typename NeighborList, typename KeyParticles, typename PartnerParticles, typename Time>
       void update_neighbor_list(NeighborList& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles)
       {
-        using interaction_pair_type
-          = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
-        static_assert(interaction_pair_type::first != interaction_pair_type::second, "NeighborList must be interparticle");
+        //using interaction_pair_type
+        //  = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
+        //static_assert(interaction_pair_type::first != interaction_pair_type::second, "NeighborList must be interparticle");
         static_assert(
           ::pastel::force::meta::has_cutoff<typename ::pastel::neighbor::meta::force_of<NeighborList>::type>::value,
           "Force of NeighborList must have cutoff");

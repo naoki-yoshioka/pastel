@@ -19,7 +19,7 @@
 #include <pastel/container/meta/scalar_of.hpp>
 #include <pastel/geometry/vector_io.hpp>
 #include <pastel/geometry/point_io.hpp>
-#include <pastel/neighbor/aligned_fixed_neighbor_list.hpp>
+#include <pastel/neighbor/fixed_neighbor_list.hpp>
 #include <pastel/neighbor/neighbor_io.hpp>
 #include <pastel/neighbor/meta/interaction_pair_of.hpp>
 #include <pastel/force/linear_spring.hpp>
@@ -31,9 +31,9 @@ BOOST_AUTO_TEST_CASE(system_test, * boost::unit_test::tolerance(0.000001))
 {
   using particles_type = pastel::container::aligned_particles<3u>;
   using force_type = pastel::force::linear_spring<>;
-  using neighbor_list1_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type, pastel::utility::size_pair<0u, 0u>>;
-  using neighbor_list2_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type, pastel::utility::size_pair<1u, 1u>>;
-  using neighbor_list12_type = pastel::neighbor::aligned_fixed_neighbor_list<force_type, pastel::utility::size_pair<0u, 1u>>;
+  using neighbor_list1_type = pastel::neighbor::fixed_neighbor_list<force_type, pastel::utility::size_pair<0u, 0u>>;
+  using neighbor_list2_type = pastel::neighbor::fixed_neighbor_list<force_type, pastel::utility::size_pair<1u, 1u>>;
+  using neighbor_list12_type = pastel::neighbor::fixed_neighbor_list<force_type, pastel::utility::size_pair<0u, 1u>>;
 
   using particles_tuple_type = std::tuple<particles_type, particles_type>;
   using neighbor_list_tuple_type = std::tuple<neighbor_list1_type, neighbor_list2_type, neighbor_list12_type>;

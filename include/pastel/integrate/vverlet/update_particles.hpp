@@ -8,14 +8,10 @@
 # include <pastel/integrate/detail/update_velocities.hpp>
 //# include <pastel/integrate/detail/update_orientations_order1.hpp>
 //# include <pastel/integrate/detail/update_local_angular_velocities_order1.hpp>
-# include <pastel/system/for_each.hpp>
-# include <pastel/system/for_each_neighbor_list.hpp>
-# include <pastel/container/clear_forces.hpp>
-# include <pastel/container/apply_external_forces.hpp>
+# include <pastel/system/for_each_container.hpp>
+# include <pastel/system/update_forces.hpp>
 //# include <pastel/container/modify_global_angular_velocities.hpp>
 //# include <pastel/container/modify_local_torques.hpp>
-# include <pastel/neighbor/meta/required_arguments_category_of.hpp>
-# include <pastel/neighbor/update_forces.hpp>
 
 
 namespace pastel
@@ -54,43 +50,6 @@ namespace pastel
           void operator()(Particles& particles, ExternalForce&&) const
           { ::pastel::integrate::detail::update_velocities<1u, std::tuple<>>(particles, time_step_); }
         }; // struct update_velocities<Time>
-
-
-        struct clear_forces
-        {
-          template <typename Particles, typename ExternalForce>
-          void operator()(Particles& particles, ExternalForce&&) const
-          { ::pastel::container::clear_forces(particles); }
-        }; // struct clear_forces
-
-
-        struct update_forces
-        {
-          template <typename NeighborList, typename System>
-          void operator()(NeighborList const& neighbor_list, System& system) const
-          {
-            this->call(
-              neighbor_list, system,
-              typename ::pastel::neighbor::meta::required_arguments_category_of<NeighborList>::type{});
-          }
-
-         private:
-          template <typename NeighborList, typename System>
-          void call(NeighborList const& neighbor_list, System& system, ::pastel::force::tags::requires_position) const
-          { ::pastel::neighbor::update_forces(neighbor_list, system); }
-
-          template <typename NeighborList, typename System>
-          void call(NeighborList const& neighbor_list, System& system, ::pastel::force::tags::requires_position_orientation) const
-          { ::pastel::neighbor::update_forces(neighbor_list, system); }
-        }; // struct update_force
-
-
-        struct apply_external_forces
-        {
-          template <typename Particles, typename ExternalForce>
-          void operator()(Particles& particles, ExternalForce&& external_force) const
-          { ::pastel::container::apply_external_forces(particles, std::forward<ExternalForce>(external_force)); }
-        };
       } // namespace update_particles_detail
 
 
@@ -102,27 +61,20 @@ namespace pastel
       inline void update_particles(System& system, Time time_step)
       {
         auto const half_time_step = time_step / Time{2};
-        ::pastel::system::for_each(
+        ::pastel::system::for_each_container(
           system,
           ::pastel::integrate::vverlet::update_particles_detail::update_velocities<Time>{half_time_step});
         // update_local_angular_velocities, modify_global_angular_velocities
 
-        ::pastel::system::for_each(
+        ::pastel::system::for_each_container(
           system,
           ::pastel::integrate::vverlet::update_particles_detail::update_positions<Time>{time_step});
         // update_orientations
-        ::pastel::system::for_each(
-          system,
-          ::pastel::integrate::vverlet::update_particles_detail::clear_forces());
-        ::pastel::system::for_each_neighbor_list(
-          system,
-          ::pastel::integrate::vverlet::update_particles_detail::update_forces());
-        ::pastel::system::for_each(
-          system,
-          ::pastel::integrate::vverlet::update_particles_detail::apply_external_forces());
+
+        ::pastel::system::update_forces(system);
         // modify_local_torques
 
-        ::pastel::system::for_each(
+        ::pastel::system::for_each_container(
           system,
           ::pastel::integrate::vverlet::update_particles_detail::update_velocities<Time>{half_time_step});
         // update_local_angular_velocities, modify_global_angular_velocities

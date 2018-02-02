@@ -11,6 +11,7 @@ namespace pastel
     template <typename T, T n, T m>
     struct pair
     {
+      using type = T;
       static constexpr T first = n;
       static constexpr T second = m;
     }; // struct pair<T, n, m>

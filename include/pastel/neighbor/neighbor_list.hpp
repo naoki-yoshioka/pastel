@@ -120,6 +120,7 @@ namespace pastel
       { lhs.swap(rhs); }
 
 
+      /*
       template <bool is_intraparticle_>
       struct assertion;
 
@@ -135,6 +136,7 @@ namespace pastel
       {
         static void call(std::size_t key, std::size_t partner) { }
       }; // struct assertion<false>
+      */
 
 
       template <bool is_const_iterator, typename KeyCompare, typename KeyEqual, typename Size>
@@ -205,15 +207,17 @@ namespace pastel
       Updater updater_;
 
      public:
-      static constexpr bool is_intraparticle = InteractionPair::first == InteractionPair::second;
+      //static constexpr bool is_intraparticle = InteractionPair::first == InteractionPair::second;
       static constexpr bool is_partner_data_accessible = true;
       using interaction_pair = InteractionPair;
 
       using index_allocator_type = IndexAllocator;
       using size_type = typename indices_type::size_type;
       using difference_type = typename indices_type::difference_type;
-      using key_type = ::pastel::neighbor::neighbor<is_intraparticle>;
-      using value_type = ::pastel::neighbor::neighbor<is_intraparticle>;
+      //using key_type = ::pastel::neighbor::neighbor<is_intraparticle>;
+      //using value_type = ::pastel::neighbor::neighbor<is_intraparticle>;
+      using key_type = ::pastel::neighbor::neighbor;
+      using value_type = ::pastel::neighbor::neighbor;
       using key_compare = std::less<key_type>;
       using value_compare = std::less<value_type>;
       using key_equal = std::equal_to<key_type>;
@@ -226,6 +230,17 @@ namespace pastel
       using partner_const_pointer = typename indices_type::const_pointer;
       using force_type = Force;
       using updater_type = Updater;
+
+     private:
+      using interaction_pair_key_type = typename interaction_pair::type;
+
+     public:
+      template <interaction_pair_key_type boundary_partner>
+      using boundary_neighbor_list_type
+        = ::pastel::neighbor::neighbor_list<
+            Force,
+            ::pastel::utility::pair<interaction_pair_key_type, interaction_pair::first, boundary_partner>,
+            Updater, IndexAllocator>;
 
       ~neighbor_list()
         noexcept(
@@ -717,7 +732,7 @@ namespace pastel
       void assign(std::initializer_list<value_type> initializer_list)
       { assign(std::begin(initializer_list), std::end(initializer_list)); }
 
-      index_allocator_type get_index_allocator() const { return partners_.allocator(); }
+      index_allocator_type get_index_allocator() const { return partners_.get_allocator(); }
 
       // Iterators
       iterator begin() noexcept { auto const first_key = size_type{0}; return {*this, first_key, this->partner_data(first_key)}; }
@@ -813,7 +828,7 @@ namespace pastel
 
       std::pair<iterator, bool> emplace(size_type new_key, size_type new_partner)
       {
-        ::pastel::neighbor::neighbor_list_detail::assertion<is_intraparticle>::call(new_key, new_partner);
+        //::pastel::neighbor::neighbor_list_detail::assertion<is_intraparticle>::call(new_key, new_partner);
 
         auto const num_keys = this->num_keys();
         if (new_key >= num_keys)
@@ -829,7 +844,7 @@ namespace pastel
 
       iterator emplace_hint(const_iterator hint, size_type new_key, size_type new_partner)
       {
-        ::pastel::neighbor::neighbor_list_detail::assertion<is_intraparticle>::call(new_key, new_partner);
+        //::pastel::neighbor::neighbor_list_detail::assertion<is_intraparticle>::call(new_key, new_partner);
 
         auto const hint_partner_ptr = hint.partner_ptr();
 
@@ -862,7 +877,7 @@ namespace pastel
 
       void unsafe_emplace_back(size_type new_key, size_type new_partner)
       {
-        ::pastel::neighbor::neighbor_list_detail::assertion<is_intraparticle>::call(new_key, new_partner);
+        //::pastel::neighbor::neighbor_list_detail::assertion<is_intraparticle>::call(new_key, new_partner);
 
         auto const num_keys = this->num_keys();
         if (new_key >= num_keys)

@@ -13,7 +13,7 @@ namespace pastel
     {
       namespace for_each_detail
       {
-        template <std::size_t index, std::size_t last>
+        template <std::size_t index, std::size_t num>
         struct for_each
         {
           template <typename Function, typename... Args>
@@ -23,7 +23,7 @@ namespace pastel
             function(std::get<index+1u>(tuple));
             function(std::get<index+2u>(tuple));
             function(std::get<index+3u>(tuple));
-            ::pastel::utility::tuple::for_each_detail::for_each<index+4u, last>::call(tuple, std::forward<Function>(function));
+            ::pastel::utility::tuple::for_each_detail::for_each<index+4u, num-4u>::call(tuple, std::forward<Function>(function));
           }
 
           template <typename Function, typename... Args>
@@ -33,7 +33,7 @@ namespace pastel
             function(std::get<index+1u>(tuple));
             function(std::get<index+2u>(tuple));
             function(std::get<index+3u>(tuple));
-            ::pastel::utility::tuple::for_each_detail::for_each<index+4u, last>::call(tuple, std::forward<Function>(function));
+            ::pastel::utility::tuple::for_each_detail::for_each<index+4u, num-4u>::call(tuple, std::forward<Function>(function));
           }
 
           template <typename Function, typename... Args>
@@ -43,94 +43,91 @@ namespace pastel
             function(std::move(std::get<index+1u>(tuple)));
             function(std::move(std::get<index+2u>(tuple)));
             function(std::move(std::get<index+3u>(tuple)));
-            ::pastel::utility::tuple::for_each_detail::for_each<index+4u, last>::call(tuple, std::forward<Function>(function));
+            ::pastel::utility::tuple::for_each_detail::for_each<index+4u, num-4u>::call(tuple, std::forward<Function>(function));
           }
-        }; // struct for_each<index, last>
+        }; // struct for_each<index, num>
 
-        template <std::size_t last>
-        struct for_each<last-3u, last>
+        template <std::size_t index>
+        struct for_each<index, 3u>
         {
           template <typename Function, typename... Args>
           static constexpr void call(std::tuple<Args...>& tuple, Function&& function)
           {
-            function(std::get<last-3u>(tuple));
-            function(std::get<last-2u>(tuple));
-            function(std::get<last-1u>(tuple));
+            function(std::get<index>(tuple));
+            function(std::get<index+1u>(tuple));
+            function(std::get<index+2u>(tuple));
           }
 
           template <typename Function, typename... Args>
           static constexpr void call(std::tuple<Args...> const& tuple, Function&& function)
           {
-            function(std::get<last-3u>(tuple));
-            function(std::get<last-2u>(tuple));
-            function(std::get<last-1u>(tuple));
+            function(std::get<index>(tuple));
+            function(std::get<index+1u>(tuple));
+            function(std::get<index+2u>(tuple));
           }
 
           template <typename Function, typename... Args>
           static constexpr void call(std::tuple<Args...> const& tuple, Function&& function)
           {
-            function(std::move(std::get<last-3u>(tuple)));
-            function(std::move(std::get<last-2u>(tuple)));
-            function(std::move(std::get<last-1u>(tuple)));
+            function(std::move(std::get<index>(tuple)));
+            function(std::move(std::get<index+1u>(tuple)));
+            function(std::move(std::get<index+2u>(tuple)));
           }
-        }; // struct for_each<last-3u, last>
+        }; // struct for_each<index, 3u>
 
-        template <std::size_t last>
-        struct for_each<last-2u, last>
+        template <std::size_t index>
+        struct for_each<index, 2u>
         {
           template <typename Function, typename... Args>
           static constexpr void call(std::tuple<Args...>& tuple, Function&& function)
           {
-            function(std::get<last-2u>(tuple));
-            function(std::get<last-1u>(tuple));
+            function(std::get<index>(tuple));
+            function(std::get<index+1u>(tuple));
           }
 
           template <typename Function, typename... Args>
           static constexpr void call(std::tuple<Args...> const& tuple, Function&& function)
           {
-            function(std::get<last-2u>(tuple));
-            function(std::get<last-1u>(tuple));
+            function(std::get<index>(tuple));
+            function(std::get<index+1u>(tuple));
           }
 
           template <typename Function, typename... Args>
           static constexpr void call(std::tuple<Args...> const& tuple, Function&& function)
           {
-            function(std::move(std::get<last-2u>(tuple)));
-            function(std::move(std::get<last-1u>(tuple)));
+            function(std::move(std::get<index>(tuple)));
+            function(std::move(std::get<index+1u>(tuple)));
           }
-        }; // struct for_each<last-2u, last>
+        }; // struct for_each<index, 2u>
 
-        template <std::size_t last>
-        struct for_each<last-1u, last>
+        template <std::size_t index>
+        struct for_each<index, 1u>
         {
           template <typename Function, typename... Args>
           static constexpr void call(std::tuple<Args...>& tuple, Function&& function)
-          { function(std::get<last-1u>(tuple)); }
+          { function(std::get<index>(tuple)); }
 
           template <typename Function, typename... Args>
           static constexpr void call(std::tuple<Args...> const& tuple, Function&& function)
-          { function(std::get<last-1u>(tuple)); }
+          { function(std::get<index>(tuple)); }
 
           template <typename Function, typename... Args>
           static constexpr void call(std::tuple<Args...> const& tuple, Function&& function)
-          { function(std::move(std::get<last-1u>(tuple))); }
-        }; // struct for_each<last-1u, last>
+          { function(std::move(std::get<index>(tuple))); }
+        }; // struct for_each<index, 1u>
 
-        template <std::size_t last>
-        struct for_each<last, last>
+        template <std::size_t index>
+        struct for_each<index, 0u>
         {
           template <typename Function, typename... Args>
-          static constexpr void call(std::tuple<Args...>&, Function&&)
-          { }
+          static constexpr void call(std::tuple<Args...>&, Function&&) { }
 
           template <typename Function, typename... Args>
-          static constexpr void call(std::tuple<Args...> const&, Function&&)
-          { }
+          static constexpr void call(std::tuple<Args...> const&, Function&&) { }
 
           template <typename Function, typename... Args>
-          static constexpr void call(std::tuple<Args...> const&, Function&&)
-          { }
-        }; // struct for_each<last, last>
+          static constexpr void call(std::tuple<Args...> const&, Function&&) { }
+        }; // struct for_each<index, 0u>
       } // namespace for_each_detail
 
 

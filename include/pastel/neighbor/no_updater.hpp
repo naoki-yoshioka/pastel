@@ -9,6 +9,7 @@ namespace pastel
     struct no_updater
     {
       constexpr bool is_valid() const { return true; }
+      constexpr bool is_invalid() const { return false; }
 
 
       template <typename NeighborList, typename Particles, typename Time>

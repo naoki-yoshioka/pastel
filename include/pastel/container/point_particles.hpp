@@ -21,16 +21,22 @@
 # include <pastel/container/increase_force.hpp>
 # include <pastel/container/clear_forces.hpp>
 # include <pastel/container/apply_external_forces.hpp>
-# include <pastel/container/meta/orientation_of.hpp>
+# include <pastel/container/add_particles.hpp>
+# include <pastel/container/copy_particles.hpp>
 # include <pastel/container/meta/is_data_accessible.hpp>
+# include <pastel/container/meta/size_of.hpp>
+# include <pastel/container/detail/copy_nth_property_vector.hpp>
+# include <pastel/container/detail/copy_nth_property_scalar.hpp>
 # include <pastel/particle/tags.hpp>
 # include <pastel/particle/get.hpp>
 # include <pastel/particle/point_particle.hpp>
 # include <pastel/geometry/vector.hpp>
 # include <pastel/geometry/point.hpp>
 # include <pastel/geometry/meta/dimension_of.hpp>
+# include <pastel/system/index_with_origin.hpp>
 # include <pastel/utility/is_nothrow_swappable.hpp>
 # include <pastel/utility/is_input_iterator.hpp>
+# include <pastel/utility/for_.hpp>
 
 
 namespace pastel
@@ -40,8 +46,9 @@ namespace pastel
     template <
       std::size_t dimension_,
       typename MobilityTag = ::pastel::container::mobility_tags::mobile,
-      std::size_t num_additional_vectors_ = 0u,
-      std::size_t num_additional_scalars_ = 0u,
+      std::size_t num_integration_vectors_ = 0u,
+      std::size_t num_property_vectors_ = 0u,
+      std::size_t num_property_scalars_ = 0u,
       typename Value = double,
       typename Point = ::pastel::geometry::point<dimension_, Value>,
       typename Vector = ::pastel::geometry::vector<dimension_, Value>,
@@ -53,17 +60,20 @@ namespace pastel
     namespace point_particles_detail
     {
       template <
-        typename Tag, std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+        typename Tag, std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
         typename Value, typename Point, typename Vector,
         typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
       struct data;
 
       template <
-        std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+        std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
         typename Value, typename Point, typename Vector,
         typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
       struct data<
-        ::pastel::particle::tags::position, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+        ::pastel::particle::tags::position, dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
         Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
       {
         using value_type = Point;
@@ -71,19 +81,22 @@ namespace pastel
         using const_pointer = value_type const*;
         using particles_type
           = ::pastel::container::point_particles<
-              dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+              dimension_, MobilityTag,
+              num_integration_vectors_, num_property_vectors_, num_property_scalars_,
               Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
         static pointer call(particles_type& particles) noexcept { return particles.positions_.data(); }
         static const_pointer call(particles_type const& particles) noexcept { return particles.positions_.data(); }
-      }; // struct data< ::pastel::particle::tags::position, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
+      }; // struct data< ::pastel::particle::tags::position, dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
 
       template <
-        std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+        std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
         typename Value, typename Point, typename Vector,
         typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
       struct data<
-        ::pastel::particle::tags::velocity, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+        ::pastel::particle::tags::velocity, dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
         Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
       {
         using value_type = Vector;
@@ -91,19 +104,22 @@ namespace pastel
         using const_pointer = value_type const*;
         using particles_type
           = ::pastel::container::point_particles<
-              dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+              dimension_, MobilityTag,
+              num_integration_vectors_, num_property_vectors_, num_property_scalars_,
               Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
         static pointer call(particles_type& particles) noexcept { return particles.velocities_.data(); }
         static const_pointer call(particles_type const& particles) noexcept { return particles.velocities_.data(); }
-      }; // struct data< ::pastel::particle::tags::velocity, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
+      }; // struct data< ::pastel::particle::tags::velocity, dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
 
       template <
-        std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+        std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
         typename Value, typename Point, typename Vector,
         typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
       struct data<
-        ::pastel::particle::tags::force, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+        ::pastel::particle::tags::force, dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
         Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
       {
         using value_type = Vector;
@@ -111,19 +127,22 @@ namespace pastel
         using const_pointer = value_type const*;
         using particles_type
           = ::pastel::container::point_particles<
-              dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+              dimension_, MobilityTag,
+              num_integration_vectors_, num_property_vectors_, num_property_scalars_,
               Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
         static pointer call(particles_type& particles) noexcept { return particles.forces_.data(); }
         static const_pointer call(particles_type const& particles) noexcept { return particles.forces_.data(); }
-      }; // struct data< ::pastel::particle::tags::force, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
+      }; // struct data< ::pastel::particle::tags::force, dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
 
       template <
-        std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+        std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
         typename Value, typename Point, typename Vector,
         typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
       struct data<
-        ::pastel::particle::tags::mass, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+        ::pastel::particle::tags::mass, dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
         Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
       {
         using value_type = Value;
@@ -131,19 +150,22 @@ namespace pastel
         using const_pointer = value_type const*;
         using particles_type
           = ::pastel::container::point_particles<
-              dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+              dimension_, MobilityTag,
+              num_integration_vectors_, num_property_vectors_, num_property_scalars_,
               Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
         static pointer call(particles_type& particles) noexcept { return particles.masses_.data(); }
         static const_pointer call(particles_type const& particles) noexcept { return particles.masses_.data(); }
-      }; // struct data< ::pastel::particle::tags::mass, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
+      }; // struct data< ::pastel::particle::tags::mass, dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
 
       template <
-        int n, std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+        int n, std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
         typename Value, typename Point, typename Vector,
         typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
       struct data<
-        ::pastel::container::tags::nth_additional_vector<n>, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+        ::pastel::container::tags::nth_integration_vector<n>, dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
         Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
       {
         using value_type = Vector;
@@ -151,19 +173,45 @@ namespace pastel
         using const_pointer = value_type const*;
         using particles_type
           = ::pastel::container::point_particles<
-              dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+              dimension_, MobilityTag,
+              num_integration_vectors_, num_property_vectors_, num_property_scalars_,
               Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
-        static pointer call(particles_type& particles) noexcept { return particles.additional_vectors_[n].data(); }
-        static const_pointer call(particles_type const& particles) noexcept { return particles.additional_vectors_[n].data(); }
-      }; // struct data< ::pastel::container::tags::nth_additional_vector<n>, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
+        static pointer call(particles_type& particles) noexcept { return particles.integration_vectors_[n].data(); }
+        static const_pointer call(particles_type const& particles) noexcept { return particles.integration_vectors_[n].data(); }
+      }; // struct data< ::pastel::container::tags::nth_property_vector<n>, dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
 
       template <
-        int n, std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+        int n, std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
         typename Value, typename Point, typename Vector,
         typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
       struct data<
-        ::pastel::container::tags::nth_additional_scalar<n>, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+        ::pastel::container::tags::nth_property_vector<n>, dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
+      {
+        using value_type = Vector;
+        using pointer = value_type*;
+        using const_pointer = value_type const*;
+        using particles_type
+          = ::pastel::container::point_particles<
+              dimension_, MobilityTag,
+              num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+              Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
+
+        static pointer call(particles_type& particles) noexcept { return particles.property_vectors_[n].data(); }
+        static const_pointer call(particles_type const& particles) noexcept { return particles.property_vectors_[n].data(); }
+      }; // struct data< ::pastel::container::tags::nth_property_vector<n>, dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
+
+      template <
+        int n, std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
+        typename Value, typename Point, typename Vector,
+        typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
+      struct data<
+        ::pastel::container::tags::nth_property_scalar<n>, dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
         Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
       {
         using value_type = Value;
@@ -171,12 +219,13 @@ namespace pastel
         using const_pointer = value_type const*;
         using particles_type
           = ::pastel::container::point_particles<
-              dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+              dimension_, MobilityTag,
+              num_integration_vectors_, num_property_vectors_, num_property_scalars_,
               Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
-        static pointer call(particles_type& particles) noexcept { return particles.additional_scalars_[n].data(); }
-        static const_pointer call(particles_type const& particles) noexcept { return particles.additional_scalars_[n].data(); }
-      }; // struct data< ::pastel::container::tags::nth_additional_scalar<n>, dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
+        static pointer call(particles_type& particles) noexcept { return particles.property_scalars_[n].data(); }
+        static const_pointer call(particles_type const& particles) noexcept { return particles.property_scalars_[n].data(); }
+      }; // struct data< ::pastel::container::tags::nth_property_scalar<n>, dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
 
 
       template <typename Particles>
@@ -259,40 +308,50 @@ namespace pastel
       { lhs.swap(rhs); }
 
       template<
-        std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+        std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
         typename Value, typename Point, typename Vector,
         typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
       using iterator
         = ::pastel::container::point_particles_detail::iterator_common<
             ::pastel::container::point_particles<
-              dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+              dimension_, MobilityTag,
+              num_integration_vectors_, num_property_vectors_, num_property_scalars_,
               Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>>;
       template<
-        std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+        std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
         typename Value, typename Point, typename Vector,
         typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
       using const_iterator
         = ::pastel::container::point_particles_detail::iterator_common<
             ::pastel::container::point_particles<
-              dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+              dimension_, MobilityTag,
+              num_integration_vectors_, num_property_vectors_, num_property_scalars_,
               Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const>;
     } // namespace point_particles_detail
 
 
     template <
-      std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+      std::size_t dimension_, typename MobilityTag,
+      std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
       typename Value, typename Point, typename Vector,
       typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
     class point_particles final
     {
-      static_assert(::pastel::geometry::meta::dimension_of<Point>::value == dimension_, "Dimension of Point must be equal to dimension_");
-      static_assert(::pastel::geometry::meta::dimension_of<Vector>::value == dimension_, "Dimension of Vector must be equal to dimension_");
+      static_assert(
+        ::pastel::geometry::meta::dimension_of<Point>::value == dimension_,
+        "Dimension of Point must be equal to dimension_");
+      static_assert(
+        ::pastel::geometry::meta::dimension_of<Vector>::value == dimension_,
+        "Dimension of Vector must be equal to dimension_");
 
      public:
       static constexpr std::size_t dimension = dimension_;
       using mobility_tag = MobilityTag;
-      static constexpr std::size_t num_additional_vectors = num_additional_vectors_;
-      static constexpr std::size_t num_additional_scalars = num_additional_scalars_;
+      static constexpr std::size_t num_integration_vectors = num_integration_vectors_;
+      static constexpr std::size_t num_property_vectors = num_property_vectors_;
+      static constexpr std::size_t num_property_scalars = num_property_scalars_;
       static constexpr bool has_mass = true;
       static constexpr bool is_data_accessible = true;
       using point_type = Point;
@@ -302,6 +361,11 @@ namespace pastel
       using point_allocator_type = PointAllocator;
       using vector_allocator_type = VectorAllocator;
       using scalar_allocator_type = ScalarAllocator;
+      using boundary_container_type
+        = ::pastel::container::point_particles<
+            dimension_, ::pastel::container::mobility_tags::immobile,
+            0u, num_property_vectors_, num_property_scalars_,
+            Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
      private:
       using points_type = std::vector<Point, point_allocator_type>;
@@ -312,8 +376,9 @@ namespace pastel
       vectors_type forces_;
       scalars_type masses_;
 
-      vectors_type additional_vectors_[num_additional_vectors];
-      scalars_type additional_scalars_[num_additional_scalars];
+      vectors_type integration_vectors_[num_integration_vectors];
+      vectors_type property_vectors_[num_property_vectors];
+      scalars_type property_scalars_[num_property_scalars];
 
      public:
       using value_type
@@ -322,11 +387,13 @@ namespace pastel
       using difference_type = typename points_type::difference_type;
       using iterator
         = ::pastel::container::point_particles_detail::iterator<
-            dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+            dimension_, MobilityTag,
+            num_integration_vectors_, num_property_vectors_, num_property_scalars_,
             Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
       using const_iterator
         = ::pastel::container::point_particles_detail::const_iterator<
-            dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_,
+            dimension_, MobilityTag,
+            num_integration_vectors_, num_property_vectors_, num_property_scalars_,
             Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
       using reverse_iterator = std::reverse_iterator<iterator>;
       using const_reverse_iterator = std::reverse_iterator<const_iterator>;
@@ -358,19 +425,23 @@ namespace pastel
           && std::is_nothrow_move_assignable<scalars_type>::value)
         = default;
 
-      point_particles(PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
+      point_particles(
+        PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
         noexcept(noexcept(points_type{point_allocator}) && noexcept(vectors_type{vector_allocator}) && noexcept(scalars_type{scalar_allocator}))
         : positions_{point_allocator},
           velocities_{vector_allocator},
           forces_{vector_allocator},
           masses_{scalar_allocator},
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       {
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index] = vectors_type{vector_allocator};
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index] = scalars_type{scalar_allocator};
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index] = vectors_type{vector_allocator};
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index] = vectors_type{vector_allocator};
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index] = scalars_type{scalar_allocator};
       }
 
       explicit point_particles(size_type count)
@@ -378,13 +449,16 @@ namespace pastel
           velocities_(count),
           forces_(count),
           masses_(count),
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       {
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index] = vectors_type(count);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index] = scalars_type(count);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index] = vectors_type(count);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index] = vectors_type(count);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index] = scalars_type(count);
       }
 
       point_particles(size_type count, value_type const& particle)
@@ -392,97 +466,130 @@ namespace pastel
           velocities_(count, ::pastel::particle::get< ::pastel::particle::tags::velocity >(particle)),
           forces_(count, ::pastel::particle::get< ::pastel::particle::tags::force >(particle)),
           masses_(count, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle)),
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       {
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index] = vectors_type(count);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index] = scalars_type(count);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index] = vectors_type(count);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index] = vectors_type(count);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index] = scalars_type(count);
       }
 
       /* Since C++14
-      point_particles(size_type count, PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
+      point_particles(
+        size_type count,
+        PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
         : positions_(count, point_allocator),
           velocities_(count, vector_allocator),
           forces_(count, vector_allocator),
           masses_(count, scalar_allocator),
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       {
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index] = vectors_type(count, vector_allocator);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index] = scalars_type(count, scalar_allocator);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index] = vectors_type(count, vector_allocator);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index] = vectors_type(count, vector_allocator);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index] = scalars_type(count, scalar_allocator);
       }
       */
 
-      point_particles(size_type count, value_type const& particle, PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
+      point_particles(
+        size_type count, value_type const& particle,
+        PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
         : positions_(count, ::pastel::particle::get< ::pastel::particle::tags::position >(particle), point_allocator),
           velocities_(count, ::pastel::particle::get< ::pastel::particle::tags::velocity >(particle), vector_allocator),
           forces_(count, ::pastel::particle::get< ::pastel::particle::tags::force >(particle), vector_allocator),
           masses_(count, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle), scalar_allocator),
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       {
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index] = vectors_type(count, vector_allocator);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index] = scalars_type(count, scalar_allocator);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index] = vectors_type(count, vector_allocator);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index] = vectors_type(count, vector_allocator);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index] = scalars_type(count, scalar_allocator);
       }
 
-      template <typename Iterator, typename = typename std::enable_if< ::pastel::utility::is_input_iterator<Iterator>::value >::type>
+      template <
+        typename Iterator,
+        typename = typename std::enable_if< ::pastel::utility::is_input_iterator<Iterator>::value >::type>
       point_particles(Iterator first, Iterator last)
         : positions_{},
           velocities_{},
           forces_{},
           masses_{},
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       { assign(first, last); }
 
-      template <typename Iterator, typename = typename std::enable_if< ::pastel::utility::is_input_iterator<Iterator>::value >::type>
-      point_particles(Iterator first, Iterator last, PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
+      template <
+        typename Iterator,
+        typename = typename std::enable_if< ::pastel::utility::is_input_iterator<Iterator>::value >::type>
+      point_particles(
+        Iterator first, Iterator last,
+        PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
         : positions_{point_allocator},
           velocities_{vector_allocator},
           forces_{vector_allocator},
           masses_{scalar_allocator},
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       {
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index] = vectors_type{vector_allocator};
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index] = scalars_type{scalar_allocator};
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index] = vectors_type{vector_allocator};
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index] = vectors_type{vector_allocator};
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index] = scalars_type{scalar_allocator};
         assign(first, last);
       }
 
-      point_particles(point_particles const& other, PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
+      point_particles(
+        point_particles const& other,
+        PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
         : positions_{other.positions_, point_allocator},
           velocities_{other.velocities_, vector_allocator},
           forces_{other.forces_, vector_allocator},
           masses_{other.masses_, scalar_allocator},
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       {
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index] = vectors_type{other.additional_vectors_[index], vector_allocator};
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index] = scalars_type{other.additional_scalars_[index], scalar_allocator};
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index] = vectors_type{other.integration_vectors_[index], vector_allocator};
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index] = vectors_type{other.property_vectors_[index], vector_allocator};
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index] = scalars_type{other.property_scalars_[index], scalar_allocator};
       }
 
-      point_particles(point_particles&& other, PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
+      point_particles(
+        point_particles&& other,
+        PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
         : positions_{std::move(other.positions_), point_allocator},
           velocities_{std::move(other.velocities_), vector_allocator},
           forces_{std::move(other.forces_), vector_allocator},
           masses_{std::move(other.masses_), scalar_allocator},
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       {
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index] = vectors_type{std::move(other.additional_vectors_[index]), vector_allocator};
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index] = scalars_type{std::move(other.additional_scalars_[index]), scalar_allocator};
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index] = vectors_type{std::move(other.integration_vectors_[index]), vector_allocator};
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index] = vectors_type{std::move(other.property_vectors_[index]), vector_allocator};
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index] = scalars_type{std::move(other.property_scalars_[index]), scalar_allocator};
       }
 
       point_particles(std::initializer_list<value_type> initializer_list)
@@ -490,22 +597,28 @@ namespace pastel
           velocities_{},
           forces_{},
           masses_{},
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       { assign(initializer_list); }
 
-      point_particles(std::initializer_list<value_type> initializer_list, PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
+      point_particles(
+        std::initializer_list<value_type> initializer_list,
+        PointAllocator const& point_allocator, VectorAllocator const& vector_allocator, ScalarAllocator const& scalar_allocator)
         : positions_{point_allocator},
           velocities_{vector_allocator},
           forces_{vector_allocator},
           masses_{scalar_allocator},
-          additional_vectors_{},
-          additional_scalars_{}
+          integration_vectors_{},
+          property_vectors_{},
+          property_scalars_{}
       {
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index] = vectors_type{vector_allocator};
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index] = scalars_type{scalar_allocator};
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index] = vectors_type{vector_allocator};
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index] = vectors_type{vector_allocator};
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index] = scalars_type{scalar_allocator};
         assign(initializer_list);
       }
 
@@ -520,10 +633,12 @@ namespace pastel
         forces_.assign(count, ::pastel::particle::get< ::pastel::particle::tags::force >(particle));
         masses_.assign(count, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle));
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].assign(count, vector_type{});
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].assign(count, scalar_type{});
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].assign(count, vector_type{});
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].assign(count, vector_type{});
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].assign(count, scalar_type{});
       }
 
      private:
@@ -580,10 +695,12 @@ namespace pastel
         assign_from_iterators(first, last, typename std::iterator_traits<Iterator>::iterator_category());
 
         auto const count = positions_.size();
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].assign(count, vector_type{});
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].assign(count, scalar_type{});
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].assign(count, vector_type{});
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].assign(count, vector_type{});
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].assign(count, scalar_type{});
       }
 
       void assign(std::initializer_list<value_type> initializer_list)
@@ -596,13 +713,13 @@ namespace pastel
 
       // Element access
      private:
-      template <typename Tag, std::size_t, typename, std::size_t, std::size_t, typename, typename, typename, typename, typename, typename>
+      template <typename Tag, std::size_t, typename, std::size_t, std::size_t, std::size_t, typename, typename, typename, typename, typename, typename>
       friend class ::pastel::container::point_particles_detail::data;
 
       template <typename Tag>
       using point_particles_data
         = ::pastel::container::point_particles_detail::data<
-            Tag, dimension, MobilityTag, num_additional_vectors, num_additional_scalars,
+            Tag, dimension, MobilityTag, num_integration_vectors, num_property_vectors, num_property_scalars,
             Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
 
      public:
@@ -676,8 +793,9 @@ namespace pastel
         struct dummy_type
         {
           value_type particle_;
-          vector_type additional_vector[num_additional_vectors];
-          scalar_type additional_scalar[num_additional_scalars]; 
+          vector_type integration_vector[num_integration_vectors];
+          vector_type property_vector[num_property_vectors];
+          scalar_type property_scalar[num_property_scalars]; 
         };
         return std::vector<dummy_type>{}.max_size();
       }
@@ -688,10 +806,12 @@ namespace pastel
         forces_.reserve(new_capacity);
         masses_.reserve(new_capacity);
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].reserve(new_capacity);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].reserve(new_capacity);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].reserve(new_capacity);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].reserve(new_capacity);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].reserve(new_capacity);
       }
       size_type capacity() const noexcept { return positions_.capacity(); }
       void shrink_to_fit()
@@ -701,10 +821,12 @@ namespace pastel
         forces_.shrink_to_fit();
         masses_.shrink_to_fit();
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].shrink_to_fit();
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].shrink_to_fit();
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].shrink_to_fit();
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].shrink_to_fit();
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].shrink_to_fit();
       }
 
       // Modifiers
@@ -715,10 +837,12 @@ namespace pastel
         forces_.clear();
         masses_.clear();
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].clear();
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].clear();
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].clear();
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].clear();
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].clear();
       }
 
       iterator insert(const_iterator pos, value_type const& particle)
@@ -730,10 +854,12 @@ namespace pastel
         forces_.insert(std::begin(forces_) + pos_index, ::pastel::particle::get< ::pastel::particle::tags::force >(particle));
         masses_.insert(std::begin(masses_) + pos_index, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle));
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].emplace(std::begin(additional_vectors_[index]) + pos_index);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].emplace(std::begin(additional_scalars_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].emplace(std::begin(integration_vectors_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].emplace(std::begin(property_vectors_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].emplace(std::begin(property_scalars_[index]) + pos_index);
 
         return {*this, static_cast<size_type>(new_position_iter - std::begin(positions_))};
       }
@@ -747,10 +873,12 @@ namespace pastel
         forces_.insert(std::begin(forces_) + pos_index, std::move(::pastel::particle::get< ::pastel::particle::tags::force >(particle)));
         masses_.insert(std::begin(masses_) + pos_index, std::move(::pastel::particle::get< ::pastel::particle::tags::mass >(particle)));
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].emplace(std::begin(additional_vectors_[index]) + pos_index);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].emplace(std::begin(additional_scalars_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].emplace(std::begin(integration_vectors_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].emplace(std::begin(property_vectors_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].emplace(std::begin(property_scalars_[index]) + pos_index);
 
         return {*this, static_cast<size_type>(new_position_iter - std::begin(positions_))};
       }
@@ -764,10 +892,12 @@ namespace pastel
         forces_.insert(std::begin(forces_) + pos_index, count, ::pastel::particle::get< ::pastel::particle::tags::force >(particle));
         masses_.insert(std::begin(masses_) + pos_index, count, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle));
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].insert(std::begin(additional_vectors_[index]) + pos_index, count, vector_type{});
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].insert(std::begin(additional_scalars_[index]) + pos_index, count, scalar_type{});
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].insert(std::begin(integration_vectors_[index]) + pos_index, count, vector_type{});
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].insert(std::begin(property_vectors_[index]) + pos_index, count, vector_type{});
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].insert(std::begin(property_scalars_[index]) + pos_index, count, scalar_type{});
 
         return {*this, static_cast<size_type>(new_position_iter - std::begin(positions_))};
       }
@@ -790,10 +920,12 @@ namespace pastel
 
         auto const new_pos_index = static_cast<size_type>(position_iter - std::begin(positions_));
         auto const count = new_pos_index - pos_index;
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].insert(std::begin(additional_vectors_[index]) + pos_index, count, vector_type{});
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].insert(std::begin(additional_scalars_[index]) + pos_index, count, scalar_type{});
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].insert(std::begin(integration_vectors_[index]) + pos_index, count, vector_type{});
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].insert(std::begin(property_vectors_[index]) + pos_index, count, vector_type{});
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].insert(std::begin(property_scalars_[index]) + pos_index, count, scalar_type{});
 
         return {*this, new_pos_index};
       }
@@ -811,10 +943,12 @@ namespace pastel
         forces_.insert(std::begin(forces_) + pos_index, std::forward<Force>(force));
         masses_.insert(std::begin(masses_) + pos_index, std::forward<Mass>(mass));
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].emplace(std::begin(additional_vectors_[index]) + pos_index);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].emplace(std::begin(additional_scalars_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].emplace(std::begin(integration_vectors_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].emplace(std::begin(property_vectors_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].emplace(std::begin(property_scalars_[index]) + pos_index);
 
         return {*this, static_cast<size_type>(new_position_iter - std::begin(positions_))};
       }
@@ -828,10 +962,12 @@ namespace pastel
         forces_.erase(std::begin(forces_) + pos_index);
         masses_.erase(std::begin(masses_) + pos_index);
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].erase(std::begin(additional_vectors_[index]) + pos_index);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].erase(std::begin(additional_scalars_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].erase(std::begin(integration_vectors_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].erase(std::begin(property_vectors_[index]) + pos_index);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].erase(std::begin(property_scalars_[index]) + pos_index);
 
         return {*this, static_cast<size_type>(new_position_iter - std::begin(positions_))};
       }
@@ -846,14 +982,18 @@ namespace pastel
         forces_.erase(std::begin(forces_) + first_index, std::begin(forces_) + last_index);
         masses_.erase(std::begin(masses_) + first_index, std::begin(masses_) + last_index);
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].erase(
-            std::begin(additional_vectors_[index]) + first_index,
-            std::begin(additional_vectors_[index]) + last_index);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].erase(
-            std::begin(additional_scalars_[index]) + first_index,
-            std::begin(additional_vectors_[index]) + last_index);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].erase(
+            std::begin(integration_vectors_[index]) + first_index,
+            std::begin(integration_vectors_[index]) + last_index);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].erase(
+            std::begin(property_vectors_[index]) + first_index,
+            std::begin(property_vectors_[index]) + last_index);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].erase(
+            std::begin(property_scalars_[index]) + first_index,
+            std::begin(property_vectors_[index]) + last_index);
 
         return {*this, static_cast<size_type>(new_position_iter - std::begin(positions_))};
       }
@@ -865,10 +1005,12 @@ namespace pastel
         forces_.push_back(::pastel::particle::get< ::pastel::particle::tags::force >(particle));
         masses_.push_back(::pastel::particle::get< ::pastel::particle::tags::mass >(particle));
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].emplace_back();
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].emplace_back();
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].emplace_back();
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].emplace_back();
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].emplace_back();
       }
 
       void push_back(value_type&& particle)
@@ -878,10 +1020,12 @@ namespace pastel
         forces_.push_back(std::move(::pastel::particle::get< ::pastel::particle::tags::force >(particle)));
         masses_.push_back(std::move(::pastel::particle::get< ::pastel::particle::tags::mass >(particle)));
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].emplace_back();
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].emplace_back();
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].emplace_back();
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].emplace_back();
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].emplace_back();
       }
 
       template <typename Position, typename Velocity, typename Force, typename Mass>
@@ -892,10 +1036,12 @@ namespace pastel
         forces_.push_back(std::forward<Force>(force));
         masses_.push_back(std::forward<Mass>(mass));
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].emplace_back();
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].emplace_back();
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].emplace_back();
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].emplace_back();
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].emplace_back();
       }
 
       void pop_back()
@@ -905,10 +1051,12 @@ namespace pastel
         forces_.pop_back();
         masses_.pop_back();
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].pop_back();
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].pop_back();
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].pop_back();
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].pop_back();
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].pop_back();
       }
 
       void resize(size_type count)
@@ -918,10 +1066,12 @@ namespace pastel
         forces_.resize(count);
         masses_.resize(count);
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].resize(count);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].resize(count);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].resize(count);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].resize(count);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].resize(count);
       }
 
       void resize(size_type count, value_type const& particle)
@@ -931,10 +1081,12 @@ namespace pastel
         forces_.resize(count, ::pastel::particle::get< ::pastel::particle::tags::force >(particle));
         masses_.resize(count, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle));
 
-        for (auto index = std::size_t{0}; index < num_additional_vectors; ++index)
-          additional_vectors_[index].resize(count);
-        for (auto index = std::size_t{0}; index < num_additional_scalars; ++index)
-          additional_scalars_[index].resize(count);
+        for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
+          integration_vectors_[index].resize(count);
+        for (auto index = std::size_t{0}; index < num_property_vectors; ++index)
+          property_vectors_[index].resize(count);
+        for (auto index = std::size_t{0}; index < num_property_scalars; ++index)
+          property_scalars_[index].resize(count);
       }
 
       void swap(point_particles& other)
@@ -949,8 +1101,9 @@ namespace pastel
         swap(forces_, other.forces_);
         swap(masses_, other.masses_);
 
-        swap(additional_vectors_, other.additional_vectors_);
-        swap(additional_scalars_, other.additional_scalars_);
+        swap(integration_vectors_, other.integration_vectors_);
+        swap(property_vectors_, other.property_vectors_);
+        swap(property_scalars_, other.property_scalars_);
       }
 
 
@@ -961,8 +1114,9 @@ namespace pastel
           && velocities_ == other.velocities_
           && forces_ == other.forces_
           && masses_ == other.masses_
-          && std::equal(additional_vectors_, additional_vectors_ + num_additional_vectors, other.additional_vectors_)
-          && std::equal(additional_scalars_, additional_scalars_ + num_additional_scalars, other.additional_scalars_);
+          && std::equal(integration_vectors_, integration_vectors_ + num_integration_vectors, other.integration_vectors_)
+          && std::equal(property_vectors_, property_vectors_ + num_property_vectors, other.property_vectors_)
+          && std::equal(property_scalars_, property_scalars_ + num_property_scalars, other.property_scalars_);
       }
 
       bool operator<(point_particles const& other) const
@@ -972,56 +1126,244 @@ namespace pastel
           && velocities_ < other.velocities_
           && forces_ < other.forces_
           && masses_ < other.masses_
-          && std::lexicographical_compare(additional_vectors_, additional_vectors_ + num_additional_vectors, other.additional_vectors_, other.additional_vectors_ + num_additional_vectors)
-          && std::lexicographical_compare(additional_scalars_, additional_scalars_ + num_additional_scalars, other.additional_scalars_, other.additional_scalars_ + num_additional_scalars);
+          && std::lexicographical_compare(
+               integration_vectors_, integration_vectors_ + num_integration_vectors,
+               other.integration_vectors_, other.integration_vectors_ + num_integration_vectors)
+          && std::lexicographical_compare(
+               property_vectors_, property_vectors_ + num_property_vectors,
+               other.property_vectors_, other.property_vectors_ + num_property_vectors)
+          && std::lexicographical_compare(
+               property_scalars_, property_scalars_ + num_property_scalars,
+               other.property_scalars_, other.property_scalars_ + num_property_scalars);
       }
-    }; // class point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
+    }; // class point_particles<dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
 
     template <
-      std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+      std::size_t dimension_, typename MobilityTag,
+      std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
       typename Value, typename Point, typename Vector,
       typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
     inline bool operator!=(
-      ::pastel::container::point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& lhs,
-      ::pastel::container::point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& rhs)
+      ::pastel::container::point_particles<
+        dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& lhs,
+      ::pastel::container::point_particles<
+        dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& rhs)
     { return !(lhs == rhs); }
 
     template <
-      std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+      std::size_t dimension_, typename MobilityTag,
+      std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
       typename Value, typename Point, typename Vector,
       typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
     inline bool operator>(
-      ::pastel::container::point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& lhs,
-      ::pastel::container::point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& rhs)
+      ::pastel::container::point_particles<
+        dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& lhs,
+      ::pastel::container::point_particles<
+        dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& rhs)
     { return rhs < lhs; }
 
     template <
-      std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+      std::size_t dimension_, typename MobilityTag,
+      std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
       typename Value, typename Point, typename Vector,
       typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
     inline bool operator<=(
-      ::pastel::container::point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& lhs,
-      ::pastel::container::point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& rhs)
+      ::pastel::container::point_particles<
+        dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& lhs,
+      ::pastel::container::point_particles<
+        dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& rhs)
     { return !(lhs > rhs); }
 
     template <
-      std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+      std::size_t dimension_, typename MobilityTag,
+      std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
       typename Value, typename Point, typename Vector,
       typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
     inline bool operator>=(
-      ::pastel::container::point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& lhs,
-      ::pastel::container::point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& rhs)
+      ::pastel::container::point_particles<
+        dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& lhs,
+      ::pastel::container::point_particles<
+        dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& rhs)
     { return !(lhs < rhs); }
 
     template <
-      std::size_t dimension_, typename MobilityTag, std::size_t num_additional_vectors_, std::size_t num_additional_scalars_,
+      std::size_t dimension_, typename MobilityTag,
+      std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
       typename Value, typename Point, typename Vector,
       typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
     inline void swap(
-      ::pastel::container::point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>& lhs,
-      ::pastel::container::point_particles<dimension_, MobilityTag, num_additional_vectors_, num_additional_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>& rhs)
+      ::pastel::container::point_particles<
+        dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>& lhs,
+      ::pastel::container::point_particles<
+        dimension_, MobilityTag,
+        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>& rhs)
       noexcept(noexcept(lhs.swap(rhs)))
     { lhs.swap(rhs); }
+
+
+    namespace dispatch
+    {
+      template <
+        std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
+        typename Value, typename Point, typename Vector,
+        typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
+      struct add_particles<
+        ::pastel::container::point_particles<
+          dimension_, MobilityTag,
+          num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+          Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>>
+      {
+        template <
+          typename TargetParticles, typename BoundaryParticles,
+          typename Allocator, typename Size>
+        static void call(
+          TargetParticles& target_particles,
+          ::pastel::container::point_particles<
+            dimension_, MobilityTag,
+            num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+            Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& particles,
+          BoundaryParticles const& boundary_particles,
+          std::vector< ::pastel::system::index_with_origin<typename ::pastel::container::meta::size_of<TargetParticles>::type>, Allocator > const& particle_indices_for_boundary,
+          Size first, Size last)
+        {
+          auto const positions_data
+            = particles.template data< ::pastel::particle::tags::position >();
+          auto const velocities_data
+            = particles.template data< ::pastel::particle::tags::velocity >();
+          auto const masses_data
+            = particles.template data< ::pastel::particle::tags::mass >();
+
+          for (auto particle_index = first; particle_index < last; ++particle_index)
+          {
+            auto const index = particle_indices_for_boundary[particle_index].index();
+            auto const origin = particle_indices_for_boundary[particle_index].origin();
+            if (origin == ::pastel::system::origin::particles)
+            {
+              target_particles.emplace_back(
+                positions_data[index], velocities_data[index], Vector{}, masses_data[index]);
+
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
+                particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::detail::copy_nth_property_scalar>::call(
+                particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+            }
+            else // if (origin == ::pastel::system::origin::boundary_particles)
+            {
+              target_particles.emplace_back(
+                ::pastel::container::get< ::pastel::particle::tags::position >(boundary_particles, index),
+                ::pastel::container::get< ::pastel::particle::tags::velocity >(boundary_particles, index),
+                Vector{},
+                ::pastel::container::get< ::pastel::particle::tags::mass >(boundary_particles, index));
+
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
+                boundary_particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::detail::copy_nth_property_scalar>::call(
+                boundary_particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+            }
+          }
+        }
+      }; // struct add_particles< ::pastel::container::point_particles<dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> >
+
+      template <
+        std::size_t dimension_, typename MobilityTag,
+        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
+        typename Value, typename Point, typename Vector,
+        typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
+      struct copy_particles<
+        ::pastel::container::point_particles<
+          dimension_, MobilityTag,
+          num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+          Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>>
+      {
+        template <
+          typename TargetMobilityTag, std::size_t target_num_integration_vectors_,
+          typename BoundaryMobilityTag, std::size_t boundary_num_integration_vectors_,
+          typename Allocator, typename Size>
+        static void call(
+          ::pastel::container::point_particles<
+            dimension_, TargetMobilityTag,
+            target_num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+            Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>& target_particles,
+          ::pastel::container::point_particles<
+            dimension_, MobilityTag,
+            num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+            Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& particles,
+          ::pastel::container::point_particles<
+            dimension_, BoundaryMobilityTag,
+            boundary_num_integration_vectors_, num_property_vectors_, num_property_scalars_,
+            Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> const& boundary_particles,
+          std::vector< ::pastel::system::index_with_origin<Size>, Allocator > const& particle_indices_for_boundary,
+          Size first, Size last)
+        {
+          auto const positions_data
+            = particles.template data< ::pastel::particle::tags::position >();
+          auto const velocities_data
+            = particles.template data< ::pastel::particle::tags::velocity >();
+          auto const masses_data
+            = particles.template data< ::pastel::particle::tags::mass >();
+          auto const boundary_positions_data
+            = boundary_particles.template data< ::pastel::particle::tags::position >();
+          auto const boundary_velocities_data
+            = boundary_particles.template data< ::pastel::particle::tags::velocity >();
+          auto const boundary_masses_data
+            = boundary_particles.template data< ::pastel::particle::tags::mass >();
+          auto const target_positions_data
+            = target_particles.template data< ::pastel::particle::tags::position >();
+          auto const target_velocities_data
+            = target_particles.template data< ::pastel::particle::tags::velocity >();
+          auto const target_masses_data
+            = target_particles.template data< ::pastel::particle::tags::mass >();
+
+          for (auto particle_index = first; particle_index < last; ++particle_index)
+          {
+            auto const index = particle_indices_for_boundary[particle_index].index();
+            auto const origin = particle_indices_for_boundary[particle_index].origin();
+            if (origin == ::pastel::system::origin::particles)
+            {
+              target_positions_data[particle_index] = positions_data[index];
+              target_velocities_data[particle_index] = velocities_data[index];
+              target_masses_data[particle_index] = masses_data[index];
+
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
+                particles, index, target_particles, particle_index);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::detail::copy_nth_property_scalar>::call(
+                particles, index, target_particles, particle_index);
+            }
+            else // if (origin == ::pastel::system::origin::boundary_particles)
+            {
+              target_positions_data[particle_index] = boundary_positions_data[index];
+              target_velocities_data[particle_index] = boundary_velocities_data[index];
+              target_masses_data[particle_index] = boundary_masses_data[index];
+
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
+                boundary_particles, index, target_particles, particle_index);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::detail::copy_nth_property_scalar>::call(
+                boundary_particles, index, target_particles, particle_index);
+            }
+          }
+        }
+      }; // struct copy_particles< ::pastel::container::point_particles<dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator> >
+    } // namespace dispatch
   } // namespace container
 } // namespace pastel
 

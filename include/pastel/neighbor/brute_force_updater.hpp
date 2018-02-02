@@ -208,8 +208,6 @@ namespace pastel
       bool is_valid() const { return buffer_length_ > Value{0}; }
       bool is_invalid() const { return !this->is_valid(); }
 
-      bool make_invalid_if_possible() { buffer_length_ = Value{-1}; return true; }
-
 
       template <typename NeighborList, typename Particles, typename Time>
       void reset_status(NeighborList const& neighbor_list, Particles const& particles, Time time_step)

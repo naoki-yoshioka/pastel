@@ -25,6 +25,8 @@
 # include <pastel/container/copy_particles.hpp>
 # include <pastel/container/meta/is_data_accessible.hpp>
 # include <pastel/container/meta/size_of.hpp>
+# include <pastel/container/detail/copy_nth_property_vector.hpp>
+# include <pastel/container/detail/copy_nth_property_scalar.hpp>
 # include <pastel/particle/tags.hpp>
 # include <pastel/particle/get.hpp>
 # include <pastel/particle/simple_particle.hpp>
@@ -1194,31 +1196,6 @@ namespace pastel
     { lhs.swap(rhs); }
 
 
-    namespace simple_particles_detail
-    {
-      template <std::size_t n>
-      struct copy_nth_property_vector
-      {
-        template <typename Particles, typename TargetParticles, typename Index>
-        static void call(Particles const& particles, TargetParticles& target_particles, Index index)
-        {
-          ::pastel::container::get< ::pastel::container::tags::nth_property_vector<n> >(target_particles, index)
-            = ::pastel::container::get< ::pastel::container::tags::nth_property_vector<n> >(particles, index);
-        }
-      }; // struct copy_nth_property_vector<n>
-
-      template <std::size_t n>
-      struct copy_nth_property_scalar
-      {
-        template <typename Particles, typename TargetParticles, typename Index>
-        static void call(Particles const& particles, Index particle_index, TargetParticles& target_particles, Index target_particle_index)
-        {
-          ::pastel::container::get< ::pastel::container::tags::nth_property_scalar<n> >(target_particles, target_particle_index)
-            = ::pastel::container::get< ::pastel::container::tags::nth_property_scalar<n> >(particles, particle_index);
-        }
-      }; // struct copy_nth_property_scalar<n>
-    } // namespace simple_particles_detail
-
     namespace dispatch
     {
       template <
@@ -1259,9 +1236,9 @@ namespace pastel
               target_particles.emplace_back(
                 positions_data[index], velocities_data[index], Vector{});
 
-              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::simple_particles_detail::copy_nth_property_vector>::call(
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
                 particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
-              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::simple_particles_detail::copy_nth_property_scalar>::call(
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::detail::copy_nth_property_scalar>::call(
                 particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
             }
             else // if (origin == ::pastel::system::origin::boundary_particles)
@@ -1271,9 +1248,9 @@ namespace pastel
                 ::pastel::container::get< ::pastel::particle::tags::velocity >(boundary_particles, index),
                 Vector{});
 
-              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::simple_particles_detail::copy_nth_property_vector>::call(
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
                 boundary_particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
-              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::simple_particles_detail::copy_nth_property_scalar>::call(
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::detail::copy_nth_property_scalar>::call(
                 boundary_particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
             }
           }
@@ -1330,23 +1307,23 @@ namespace pastel
             auto const origin = particle_indices_for_boundary[particle_index].origin();
             if (origin == ::pastel::system::origin::particles)
             {
-              target_positions_data[index] = positions_data[index];
-              target_velocities_data[index] = velocities_data[index];
+              target_positions_data[particle_index] = positions_data[index];
+              target_velocities_data[particle_index] = velocities_data[index];
 
-              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::simple_particles_detail::copy_nth_property_vector>::call(
-                particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
-              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::simple_particles_detail::copy_nth_property_scalar>::call(
-                particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
+                particles, index, target_particles, particle_index);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::detail::copy_nth_property_scalar>::call(
+                particles, index, target_particles, particle_index);
             }
             else // if (origin == ::pastel::system::origin::boundary_particles)
             {
-              target_positions_data[index] = boundary_positions_data[index];
-              target_velocities_data[index] = boundary_velocities_data[index];
+              target_positions_data[particle_index] = boundary_positions_data[index];
+              target_velocities_data[particle_index] = boundary_velocities_data[index];
 
-              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::simple_particles_detail::copy_nth_property_vector>::call(
-                boundary_particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
-              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::simple_particles_detail::copy_nth_property_scalar>::call(
-                boundary_particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
+                boundary_particles, index, target_particles, particle_index);
+              ::pastel::utility::for_<std::size_t, 0u, num_property_scalars_, ::pastel::container::detail::copy_nth_property_scalar>::call(
+                boundary_particles, index, target_particles, particle_index);
             }
           }
         }

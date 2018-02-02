@@ -12,6 +12,8 @@
 # include <pastel/system/boundary_neighbor_list.hpp>
 # include <pastel/system/particle_indices_for_boundary.hpp>
 # include <pastel/system/boundary_particle_indices.hpp>
+# include <pastel/system/initialize.hpp>
+# include <pastel/system/update_forces.hpp>
 # include <pastel/system/no_boundary.hpp>
 # include <pastel/system/index_with_origin.hpp>
 # include <pastel/system/meta/boundary_particles_of.hpp>
@@ -92,6 +94,9 @@ namespace pastel
       static_assert(
         interaction_pair_type::first == 0u && interaction_pair_type::second == 0u,
         "Interaction pair of NeighborList must be <0, 0>");
+      static_assert(
+        ::pastel::container::meta::dimension_of<Particles>::value == std::tuple_size<Boundary>::value,
+        "Size of Boundary must be equal to dimension of system");
 
       Particles particles_;
       NeighborList neighbor_list_;
@@ -138,47 +143,54 @@ namespace pastel
       static constexpr std::size_t boundary_particles_tuple_size = 1u;
       static constexpr std::size_t boundary_neighbor_list_tuple_size = 1u;
 
-      simple_system()
-        : simple_system{Particles{}, NeighborList{}, Boundary{}, ExternalForce{}}
+      simple_system() = delete;
+
+      template <typename Time>
+      explicit simple_system(Time time_step)
+        : simple_system{Particles{}, NeighborList{}, Boundary{}, ExternalForce{}, time_step}
       { }
 
-      template <typename Particles_, typename NeighborList_>
-      simple_system(Particles_&& particles, NeighborList_&& neighbor_list)
+      template <typename Particles_, typename NeighborList_, typename Time>
+      simple_system(Particles_&& particles, NeighborList_&& neighbor_list, Time time_step)
         : simple_system{
             std::forward<Particles_>(particles), std::forward<NeighborList_>(neighbor_list),
-            Boundary{}, ExternalForce{}}
+            Boundary{}, ExternalForce{}, time_step}
       { }
 
-      template <typename Particles_, typename NeighborList_>
-      simple_system(Particles_&& particles, NeighborList_&& neighbor_list, Boundary const& boundary)
+      template <typename Particles_, typename NeighborList_, typename Time>
+      simple_system(Particles_&& particles, NeighborList_&& neighbor_list, Boundary const& boundary, Time time_step)
         : simple_system{
             std::forward<Particles_>(particles), std::forward<NeighborList_>(neighbor_list),
-            boundary, ExternalForce{}}
+            boundary, ExternalForce{}, time_step}
       { }
 
-      template <typename Particles_, typename NeighborList_>
-      simple_system(Particles_&& particles, NeighborList_&& neighbor_list, Boundary&& boundary)
+      template <typename Particles_, typename NeighborList_, typename Time>
+      simple_system(Particles_&& particles, NeighborList_&& neighbor_list, Boundary&& boundary, Time time_step)
         : simple_system{
             std::forward<Particles_>(particles), std::forward<NeighborList_>(neighbor_list),
-            std::move(boundary), ExternalForce{}}
+            std::move(boundary), ExternalForce{}, time_step}
       { }
 
-      template <typename Particles_, typename NeighborList_>
-      simple_system(Particles_&& particles, NeighborList_&& neighbor_list, ExternalForce const& external_force)
+      template <typename Particles_, typename NeighborList_, typename Time>
+      simple_system(Particles_&& particles, NeighborList_&& neighbor_list, ExternalForce const& external_force, Time time_step)
         : simple_system{
             std::forward<Particles_>(particles), std::forward<NeighborList_>(neighbor_list),
-            Boundary{}, external_force}
+            Boundary{}, external_force, time_step}
       { }
 
-      template <typename Particles_, typename NeighborList_>
-      simple_system(Particles_&& particles, NeighborList_&& neighbor_list, ExternalForce&& external_force)
+      template <typename Particles_, typename NeighborList_, typename Time>
+      simple_system(Particles_&& particles, NeighborList_&& neighbor_list, ExternalForce&& external_force, Time time_step)
         : simple_system{
             std::forward<Particles_>(particles), std::forward<NeighborList_>(neighbor_list),
-            Boundary{}, std::move(external_force)}
+            Boundary{}, std::move(external_force), time_step}
       { }
 
-      template <typename Particles_, typename NeighborList_, typename Boundary_, typename ExternalForce_>
-      simple_system(Particles_&& particles, NeighborList_&& neighbor_list, Boundary_&& boundary, ExternalForce_&& external_force)
+      template <
+        typename Particles_, typename NeighborList_,
+        typename Boundary_, typename ExternalForce_, typename Time>
+      simple_system(
+        Particles_&& particles, NeighborList_&& neighbor_list,
+        Boundary_&& boundary, ExternalForce_&& external_force, Time time_step)
         : particles_{std::forward<Particles_>(particles)},
           neighbor_list_{std::forward<NeighborList_>(neighbor_list)},
           external_force_{std::forward<ExternalForce_>(external_force)},
@@ -187,7 +199,10 @@ namespace pastel
           boundary_neighbor_list_{neighbor_list_.force(), neighbor_list_.updater(), neighbor_list_.get_index_allocator()},
           particle_indices_for_boundary_{},
           boundary_particle_indices_array_{}
-      { boundary_neighbor_list_.updater().make_invalid_if_possible(); }
+      {
+        ::pastel::system::initialize(*this, time_step);
+        ::pastel::system::update_forces(*this);
+      }
 
 
       Particles const& particles() const { return particles_; }
@@ -242,7 +257,7 @@ namespace pastel
           ::pastel::system::simple_system<Particles, NeighborList, Boundary, ExternalForce>& system,
           Particles_&& new_particles)
         { return system.particles(std::forward<Particles_>(new_particles)); }
-      }; // struct call_particles<0u, Particles, NeighborList, Boundary, ExternalForce>
+      }; // struct call_particles<0u, ::pastel::system::simple_system<Particles, NeighborList, Boundary, ExternalForce>>
 
 
       template <typename Particles, typename NeighborList, typename Boundary, typename ExternalForce>
@@ -261,7 +276,7 @@ namespace pastel
           ::pastel::system::simple_system<Particles, NeighborList, Boundary, ExternalForce>& system,
           NeighborList_&& new_neighbor_list)
         { return system.neighbor_list(std::forward<NeighborList_>(new_neighbor_list)); }
-      }; // struct call_neighbor_list<0u, Particles, NeighborList, Boundary, ExternalForce>
+      }; // struct call_neighbor_list<0u, ::pastel::system::simple_system<Particles, NeighborList, Boundary, ExternalForce>>
 
 
       template <typename Particles, typename NeighborList, typename Boundary, typename ExternalForce>
@@ -280,7 +295,7 @@ namespace pastel
           ::pastel::system::simple_system<Particles, NeighborList, Boundary, ExternalForce>& system,
           ExternalForce_&& new_external_force)
         { return system.external_force(std::forward<ExternalForce_>(new_external_force)); }
-      }; // struct call_external_force<0u, Particles, NeighborList, Boundary, ExternalForce>
+      }; // struct call_external_force<0u, ::pastel::system::simple_system<Particles, NeighborList, Boundary, ExternalForce>>
 
 
       template <typename Particles, typename NeighborList, typename Boundary, typename ExternalForce>

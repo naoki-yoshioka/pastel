@@ -12,6 +12,7 @@ namespace pastel
 {
   namespace neighbor
   {
+    /*
     namespace neighbor_detail
     {
       template <typename Index>
@@ -88,23 +89,27 @@ namespace pastel
         static constexpr void call(Tuple const& tuple) { }
       }; // struct assertion<false>
     } // namespace neighbor_detail
+    */
 
 
-    template <bool is_intraparticle_ = true>
+    //template <bool is_intraparticle_ = true>
     class neighbor
     {
       std::size_t key_;
       std::size_t partner_;
 
      public:
-      static constexpr bool is_intraparticle = is_intraparticle_;
+      //static constexpr bool is_intraparticle = is_intraparticle_;
 
       constexpr neighbor() : neighbor{0u, 1u} { }
 
-      constexpr neighbor(std::size_t index1, std::size_t index2)
-        : neighbor{std::make_tuple(index1, index2)}
+      //constexpr neighbor(std::size_t index1, std::size_t index2)
+      //  : neighbor{std::make_tuple(index1, index2)}
+      constexpr neighbor(std::size_t key, std::size_t partner)
+        : key_{key}, partner_{partner}
       { }
 
+      /*
       template <typename Index>
       explicit constexpr neighbor(std::pair<Index, Index> const& neighbor_pair)
         : key_{::pastel::neighbor::neighbor_detail::key<is_intraparticle>::call(neighbor_pair)},
@@ -116,18 +121,21 @@ namespace pastel
         : key_{::pastel::neighbor::neighbor_detail::key<is_intraparticle>::call(neighbor_tuple)},
           partner_{::pastel::neighbor::neighbor_detail::partner<is_intraparticle>::call(neighbor_tuple)}
       { ::pastel::neighbor::neighbor_detail::assertion<is_intraparticle>::call(neighbor_tuple); }
+      */
 
       constexpr std::size_t key() const noexcept { return key_; }
       void key(std::size_t new_key) { key_ = new_key; }
       constexpr std::size_t partner() const noexcept { return partner_; }
-      void partner(std::size_t new_partner) { return partner_ = new_partner; }
+      void partner(std::size_t new_partner) { partner_ = new_partner; }
 
       constexpr bool operator==(neighbor const& other) const
       { return key_ == other.key_ && partner_ == other.partner_; }
       constexpr bool operator<(neighbor const& other) const
       { return key_ < other.key_ || (key_ == other.key_ && partner_ < other.partner_); }
-    }; // class neighbor<is_intraparticle_>
+    //}; // class neighbor<is_intraparticle_>
+    }; // class neighbor
 
+  /*
     template <bool is_intraparticle_>
     inline constexpr bool operator!=(
       ::pastel::neighbor::neighbor<is_intraparticle_> const& lhs,
@@ -150,6 +158,26 @@ namespace pastel
     inline constexpr bool operator>=(
       ::pastel::neighbor::neighbor<is_intraparticle_> const& lhs,
       ::pastel::neighbor::neighbor<is_intraparticle_> const& rhs)
+    { return !(lhs < rhs); }
+    */
+    inline constexpr bool operator!=(
+      ::pastel::neighbor::neighbor const& lhs,
+      ::pastel::neighbor::neighbor const& rhs)
+    { return !(lhs == rhs); }
+
+    inline constexpr bool operator>(
+      ::pastel::neighbor::neighbor const& lhs,
+      ::pastel::neighbor::neighbor const& rhs)
+    { return rhs < lhs; }
+
+    inline constexpr bool operator<=(
+      ::pastel::neighbor::neighbor const& lhs,
+      ::pastel::neighbor::neighbor const& rhs)
+    { return !(lhs > rhs); }
+
+    inline constexpr bool operator>=(
+      ::pastel::neighbor::neighbor const& lhs,
+      ::pastel::neighbor::neighbor const& rhs)
     { return !(lhs < rhs); }
   } // namespace neighbor
 } // namespace pastel

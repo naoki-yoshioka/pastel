@@ -29,10 +29,10 @@ namespace pastel
     namespace periodic_boundary_detail
     {
       template <std::size_t n, bool is_data_accessible>
-      struct increase_position_if;
+      struct increase_positions_if;
 
       template <std::size_t n>
-      struct increase_position_if<n, true>
+      struct increase_positions_if<n, true>
       {
         template <typename Particles, typename Value, typename Predicate>
         static void call(Particles& particles, Value const& length_increment, Predicate predicate)
@@ -46,10 +46,10 @@ namespace pastel
             position = predicate(position) ? position + length_increment : position;
           }
         }
-      }; // struct increase_position_if<n, true>
+      }; // struct increase_positions_if<n, true>
 
       template <std::size_t n>
-      struct increase_position_if<n, false>
+      struct increase_positions_if<n, false>
       {
         template <typename Particles, typename Value, typename Predicate>
         static void call(Particles& particles, Value const& length_increment, Predicate predicate)
@@ -61,7 +61,7 @@ namespace pastel
             position = predicate(position) ? position + length_increment : position;
           }
         }
-      }; // struct increase_position_if<n, false>
+      }; // struct increase_positions_if<n, false>
 
 
       template <std::size_t n, bool is_data_accessible, bool is_boundary_data_accessible>
@@ -83,7 +83,7 @@ namespace pastel
           {
             auto const& position = ::pastel::geometry::get<n>(positions_data[index]);
             if (position >= lower_bound && position < upper_bound)
-              original_indices.emplace_back(index, ::patel::system::origin::particles);
+              particle_indices_for_boundary.emplace_back(index, ::pastel::system::origin::particles);
           }
 
           auto const boundary_positions_data = boundary_particles.template data< ::pastel::particle::tags::position >();
@@ -93,7 +93,7 @@ namespace pastel
           {
             auto const& position = ::pastel::geometry::get<n>(boundary_positions_data[index]);
             if (position >= lower_bound && position < upper_bound)
-              original_indices.emplace_back(index, ::pastel::system::origin::boundary_particles);
+              particle_indices_for_boundary.emplace_back(index, ::pastel::system::origin::boundary_particles);
           }
         }
       }; // struct add_indices_within<n, true, true>
@@ -113,7 +113,7 @@ namespace pastel
             auto const& position
               = ::pastel::geometry::get<n>(::pastel::container::get< ::pastel::particle::tags::position >(particles, index));
             if (position >= lower_bound && position < upper_bound)
-              original_indices.emplace_back(index, ::patel::system::origin::particles);
+              particle_indices_for_boundary.emplace_back(index, ::pastel::system::origin::particles);
           }
 
           auto const boundary_positions_data = boundary_particles.template data< ::pastel::particle::tags::position >();
@@ -123,7 +123,7 @@ namespace pastel
           {
             auto const& position = ::pastel::geometry::get<n>(boundary_positions_data[index]);
             if (position >= lower_bound && position < upper_bound)
-              original_indices.emplace_back(index, ::pastel::system::origin::boundary_particles);
+              particle_indices_for_boundary.emplace_back(index, ::pastel::system::origin::boundary_particles);
           }
         }
       }; // struct add_indices_within<n, false, true>
@@ -144,7 +144,7 @@ namespace pastel
           {
             auto const& position = ::pastel::geometry::get<n>(positions_data[index]);
             if (position >= lower_bound && position < upper_bound)
-              original_indices.emplace_back(index, ::patel::system::origin::particles);
+              particle_indices_for_boundary.emplace_back(index, ::pastel::system::origin::particles);
           }
 
           auto const num_boundary_particles = ::pastel::container::num_particles(boundary_particles);
@@ -153,7 +153,7 @@ namespace pastel
             auto const& position
               = ::pastel::geometry::get<n>(::pastel::container::get< ::pastel::particle::tags::position >(boundary_particles, index));
             if (position >= lower_bound && position < upper_bound)
-              original_indices.emplace_back(index, ::pastel::system::origin::boundary_particles);
+              particle_indices_for_boundary.emplace_back(index, ::pastel::system::origin::boundary_particles);
           }
         }
       }; // struct add_indices_within<n, true, false>
@@ -173,7 +173,7 @@ namespace pastel
             auto const& position
               = ::pastel::geometry::get<n>(::pastel::container::get< ::pastel::particle::tags::position >(particles, index));
             if (position >= lower_bound && position < upper_bound)
-              original_indices.emplace_back(index, ::patel::system::origin::particles);
+              particle_indices_for_boundary.emplace_back(index, ::pastel::system::origin::particles);
           }
 
           auto const num_boundary_particles = ::pastel::container::num_particles(boundary_particles);
@@ -182,7 +182,7 @@ namespace pastel
             auto const& position
               = ::pastel::geometry::get<n>(::pastel::container::get< ::pastel::particle::tags::position >(boundary_particles, index));
             if (position >= lower_bound && position < upper_bound)
-              original_indices.emplace_back(index, ::pastel::system::origin::boundary_particles);
+              particle_indices_for_boundary.emplace_back(index, ::pastel::system::origin::boundary_particles);
           }
         }
       }; // struct add_indices_within<n, false, false>
@@ -194,7 +194,6 @@ namespace pastel
       template <std::size_t n>
       struct apply_periodic_boundary<n, true>
       {
-        template <typename ParticleIndicesForBoundary, typename Particles, typename BoundaryParticles, typename Value>
         template <typename BoundaryParticles, typename Size, typename Value>
         static void call(
           BoundaryParticles& boundary_particles, Size first, Size last,
@@ -206,13 +205,27 @@ namespace pastel
             ::pastel::geometry::get<n>(boundary_positions_data[index]) += length_increment;
         }
       }; // struct apply_periodic_boundary<n, true>
+
+      template <std::size_t n>
+      struct apply_periodic_boundary<n, false>
+      {
+        template <typename BoundaryParticles, typename Size, typename Value>
+        static void call(
+          BoundaryParticles& boundary_particles, Size first, Size last,
+          Value const& length_increment)
+        {
+          for (Size index = first; index < last; ++index)
+            ::pastel::geometry::get<n>(::pastel::container::get< ::pastel::particle::tags::position >(boundary_particles, index))
+              += length_increment;
+        }
+      }; // struct apply_periodic_boundary<n, false>
     } // namespace periodic_boundary_detail
 
 
     // lower_bound_ ... lower_bound_+boundary_width ... upper_bound_-boundary_width ... upper_bound_
     //               ^                                                               ^
     //       lower_near_boundary                                             upper_near_boundary
-    template <typename Value>
+    template <typename Value = double>
     class periodic_boundary
     {
       // lower_bound_ <= x < upper_bound_
@@ -253,7 +266,7 @@ namespace pastel
 
         using increase_positions_if_func
           = ::pastel::system::periodic_boundary_detail::increase_positions_if<dimension, is_data_accessible>;
-        using value_type = typename ::pastel::geometry::meta::value_of<typename ::pastel::system::meta::point_of<System>::type>::type;
+        using value_type = typename ::pastel::geometry::meta::value_of<typename ::pastel::system::meta::point_of<index, System>::type>::type;
         increase_positions_if_func::call(particles, system_length_, [this](value_type const& position) { return position < this->lower_bound_; });
         increase_positions_if_func::call(particles, -system_length_, [this](value_type const& position) { return position >= this->upper_bound_; });
       }
@@ -271,20 +284,20 @@ namespace pastel
           = ::pastel::container::meta::is_data_accessible<typename std::remove_reference<decltype(boundary_particles)>::type>::value;
 
         // lower_near_boundary => upper_boundary
-        auto const upper_boundary_particle_first = particles_indices_for_boundary.size();
+        auto const upper_boundary_particle_first = particle_indices_for_boundary.size();
         using add_indices_within_func
           = ::pastel::system::periodic_boundary_detail::add_indices_within<dimension, is_data_accessible, is_boundary_data_accessible>;
         add_indices_within_func::call(
-          particle_indices_for_boundary, particles, boundar_particles,
+          particle_indices_for_boundary, particles, boundary_particles,
           lower_bound_, upper_bound_of_lower_near_boundary_);
-        auto const upper_boundary_particle_last = particles_indices_for_boundary.size();
+        auto const upper_boundary_particle_last = particle_indices_for_boundary.size();
         ::pastel::container::add_particles(
           boundary_particles,
           particles, boundary_particles, particle_indices_for_boundary,
           upper_boundary_particle_first, upper_boundary_particle_last);
         using apply_periodic_boundary_func
           = ::pastel::system::periodic_boundary_detail::apply_periodic_boundary<dimension, is_boundary_data_accessible>;
-        apply_periodic_boundary::call(
+        apply_periodic_boundary_func::call(
           boundary_particles,
           upper_boundary_particle_first, upper_boundary_particle_last,
           system_length_);
@@ -293,18 +306,18 @@ namespace pastel
         add_indices_within_func::call(
           particle_indices_for_boundary, particles, boundary_particles,
           lower_bound_of_upper_near_boundary_, upper_bound_);
-        auto const lower_boundary_particle_last = particles_indices_for_boundary.size();
+        auto const lower_boundary_particle_last = particle_indices_for_boundary.size();
         ::pastel::container::add_particles(
           boundary_particles,
           particles, boundary_particles, particle_indices_for_boundary,
           upper_boundary_particle_last, lower_boundary_particle_last);
-        apply_periodic_boundary::call(
+        apply_periodic_boundary_func::call(
           boundary_particles,
           upper_boundary_particle_last, lower_boundary_particle_last,
           -system_length_);
 
         ::pastel::system::boundary_particle_indices<index, dimension>(system)
-          = {upper_boudnary_particle_first, upper_boundary_particle_last, lower_boundary_particle_last};
+          = {upper_boundary_particle_first, upper_boundary_particle_last, lower_boundary_particle_last};
       }
 
 
@@ -329,7 +342,7 @@ namespace pastel
           upper_boundary_particle_first, upper_boundary_particle_last);
         using apply_periodic_boundary_func
           = ::pastel::system::periodic_boundary_detail::apply_periodic_boundary<dimension, is_boundary_data_accessible>;
-        apply_periodic_boundary::call(
+        apply_periodic_boundary_func::call(
           boundary_particles,
           upper_boundary_particle_first, upper_boundary_particle_last,
           system_length_);
@@ -339,7 +352,7 @@ namespace pastel
           boundary_particles,
           particles, boundary_particles, particle_indices_for_boundary,
           upper_boundary_particle_last, lower_boundary_particle_last);
-        apply_periodic_boundary::call(
+        apply_periodic_boundary_func::call(
           boundary_particles,
           upper_boundary_particle_last, lower_boundary_particle_last,
           -system_length_);

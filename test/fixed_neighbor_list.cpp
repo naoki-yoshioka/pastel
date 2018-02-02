@@ -30,7 +30,7 @@ void test(typename pastel::neighbor::meta::force_of<NeighborList>::type&& force)
   auto const tmp_force = force;
   constexpr auto num_neighbors1 = 5u;
   using value_type = typename pastel::neighbor::meta::value_of<NeighborList>::type;
-  value_type neighbors1[num_neighbors1] = {{0u, 1u}, {0u, 3u}, {3u, 2u}, {4u, 0u}, {2u, 4u}};
+  value_type neighbors1[num_neighbors1] = {{0u, 1u}, {0u, 3u}, {2u, 3u}, {0u, 4u}, {2u, 4u}};
   constexpr std::size_t possible_num_keys1 = 3u;
   constexpr std::size_t num_partners1[possible_num_keys1] = {3u, 0u, 2u};
   constexpr std::size_t possible_partners1[num_neighbors1] = {1u, 3u, 4u, 3u, 4u};
@@ -62,7 +62,7 @@ void test(typename pastel::neighbor::meta::force_of<NeighborList>::type&& force)
   BOOST_TEST(std::equal(std::begin(partners), std::end(partners), possible_partners1));
 
   constexpr auto num_neighbors2 = 3u;
-  value_type neighbors2[num_neighbors2] = {{0u, 2u}, {2u, 1u}, {4u, 5u}};
+  value_type neighbors2[num_neighbors2] = {{0u, 2u}, {1u, 2u}, {4u, 5u}};
   constexpr auto possible_num_keys2 = 5u;
   constexpr std::size_t num_partners2[possible_num_keys2] = {1u, 1u, 0u, 0u, 1u};
   constexpr std::size_t possible_partners2[num_neighbors2] = {2u, 2u, 5u};
@@ -93,7 +93,7 @@ void test(typename pastel::neighbor::meta::force_of<NeighborList>::type&& force)
   neighbor_list2.insert(neighbor_list2.end(), {6u, 8u});
   BOOST_TEST((*neighbor_list2.rbegin() == value_type{6u, 8u}));
 
-  neighbor_list2.insert({value_type{0u, 3u}, value_type{5u, 4u}, value_type{3u, 5u}});
+  neighbor_list2.insert({value_type{0u, 3u}, value_type{4u, 5u}, value_type{3u, 5u}});
   neighbor_list2.emplace_hint(neighbor_list2.begin(), 0u, 1u);
   constexpr auto num_neighbors2_2 = 7u;
   constexpr auto possible_num_keys2_2 = 7u;
@@ -113,11 +113,11 @@ void test(typename pastel::neighbor::meta::force_of<NeighborList>::type&& force)
   }
   BOOST_TEST(std::equal(std::begin(partners), std::end(partners), possible_partners2_2));
 
-  BOOST_TEST((neighbor_list2.erase({7u, 1u}) == 0u));
-  BOOST_TEST((neighbor_list2.erase({8u, 6u}) == 1u));
+  BOOST_TEST((neighbor_list2.erase({1u, 7u}) == 0u));
+  BOOST_TEST((neighbor_list2.erase({6u, 8u}) == 1u));
   BOOST_TEST((neighbor_list2.count({0u, 2u}) == 1u));
   BOOST_TEST((neighbor_list2.count({6u, 8u}) == 0u));
-  auto const is_6_8_pair_erased = neighbor_list2.find({8u, 6u}) == neighbor_list2.end();
+  auto const is_6_8_pair_erased = neighbor_list2.find({6u, 8u}) == neighbor_list2.end();
   BOOST_TEST(is_6_8_pair_erased);
   auto const iter = neighbor_list2.find({0u, 2u});
   auto const exists_0_2_pair = iter != neighbor_list2.end();

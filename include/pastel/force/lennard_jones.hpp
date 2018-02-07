@@ -16,6 +16,9 @@ namespace pastel
     template <bool has_cutoff, bool has_diameter = true, typename Value = double>
     class lennard_jones;
 
+    template <bool has_diameter, typename Value>
+    class weeks_chandler_andersen;
+
     template <typename Value>
     class lennard_jones<false, true, Value>
     {
@@ -97,6 +100,8 @@ namespace pastel
      private:
       template <bool, bool, typename>
       friend class ::pastel::force::lennard_jones;
+      template <bool, typename>
+      friend class ::pastel::force::weeks_chandler_andersen;
 
       template <typename Vector>
       auto calculate_force(Vector const& difference, Value squared_distance) const
@@ -326,6 +331,8 @@ namespace pastel
      private:
       template <bool, bool, typename>
       friend class ::pastel::force::lennard_jones;
+      template <bool, typename>
+      friend class ::pastel::force::weeks_chandler_andersen;
 
       template <typename Vector>
       auto calculate_force(Vector const& difference, Value squared_distance, Value squared_diameter) const
@@ -387,9 +394,11 @@ namespace pastel
     {
       using bare_force_type = ::pastel::force::lennard_jones<false, false, Value>;
       bare_force_type bare_force_;
-      Value cutoff_length_;
 
-      Value squared_cutoff_length_;
+      Value max_cutoff_length_;
+      Value cutoff_length_coefficient_;
+
+      Value squared_cutoff_length_coefficient_;
 
      public:
       using value_type = Value;
@@ -399,8 +408,9 @@ namespace pastel
 
       constexpr lennard_jones() noexcept
         : bare_force_{},
-          cutoff_length_{Value{3}},
-          squared_cutoff_length_{cutoff_length_ * cutoff_length_}
+          max_cutoff_length_{Value{3}},
+          cutoff_length_coefficient_{max_cutoff_length_},
+          squared_cutoff_length_coefficient_{cutoff_length_coefficient_ * cutoff_length_coefficient_}
       { }
 
       ~lennard_jones() noexcept = default;
@@ -410,22 +420,25 @@ namespace pastel
       lennard_jones& operator=(lennard_jones&&) noexcept = default;
 
       explicit constexpr lennard_jones(Value const& energy_depth) noexcept
-        : lennard_jones{energy_depth, Value{3}}
+        : lennard_jones{energy_depth, Value{1}}
       { }
 
-      constexpr lennard_jones(Value const& energy_depth, Value const& cutoff_length) noexcept
+      constexpr lennard_jones(Value const& energy_depth, Value const& max_diameter, Value const& cutoff_length_coefficient = Value{3}) noexcept
         : bare_force_{energy_depth},
-          cutoff_length_{cutoff_length},
-          squared_cutoff_length_{cutoff_length * cutoff_length}
-      { assert(energy_depth > Value{0} && cutoff_length > Value{0}); }
+          max_cutoff_length_{max_diameter * cutoff_length_coefficient},
+          cutoff_length_coefficient_{cutoff_length_coefficient},
+          squared_cutoff_length_coefficient_{cutoff_length_coefficient * cutoff_length_coefficient}
+      { assert(energy_depth > Value{0} && max_diameter > Value{0} && cutoff_length_coefficient > Value{0}); }
 
       constexpr bool operator==(lennard_jones const& other) const
       {
 # ifdef NDEBUG
-        return bare_force_ == other.bare_force_ && cutoff_length_ == other.cutoff_length_;
+        return bare_force_ == other.bare_force_ && max_cutoff_length_ == other.max_cutoff_length_
+          && cutoff_length_coefficient_ == other.cutoff_length_coefficient_;
 # else
-        return bare_force_ == other.bare_force_ && cutoff_length_ == other.cutoff_length_
-          && squared_cutoff_length_ == other.squared_cutoff_length_;
+        return bare_force_ == other.bare_force_ && max_cutoff_length_ == other.max_cutoff_length_
+          && cutoff_length_coefficient_ == other.cutoff_length_coefficient_
+          && squared_cutoff_length_coefficient_ == other.squared_cutoff_length_coefficient_;
 # endif
       }
 
@@ -436,8 +449,9 @@ namespace pastel
       {
         using std::swap;
         swap(bare_force_, other.bare_force_);
-        swap(cutoff_length_, other.cutoff_length_);
-        swap(squared_cutoff_length_, other.squared_cutoff_length_);
+        swap(max_cutoff_length_, other.max_cutoff_length_);
+        swap(cutoff_length_coefficient_, other.cutoff_length_coefficient_);
+        swap(squared_cutoff_length_coefficient_, other.squared_cutoff_length_coefficient_);
       }
 
       constexpr Value const& energy_depth() const { return bare_force_.energy_depth(); }
@@ -447,36 +461,46 @@ namespace pastel
         bare_force_.energy_depth(new_energy_depth);
       }
 
-      constexpr Value const& cutoff_length() const { return cutoff_length_; }
+      constexpr Value const& cutoff_length() const { return max_cutoff_length_; }
       void cutoff_length(Value const& new_cutoff_length)
       {
         assert(new_cutoff_length > Value{0});
-        cutoff_length_ = new_cutoff_length;
-        squared_cutoff_length_ = cutoff_length_ * cutoff_length_;
+        max_cutoff_length_ = new_cutoff_length;
+      }
+
+      constexpr Value const& cutoff_length_coefficient() const { return cutoff_length_coefficient_; }
+      void cutoff_length_coefficient(Value const& new_cutoff_length_coefficient)
+      {
+        assert(new_cutoff_length_coefficient > Value{0});
+        max_cutoff_length_ *= new_cutoff_length_coefficient / cutoff_length_coefficient_;
+        cutoff_length_coefficient_ = new_cutoff_length_coefficient;
+        squared_cutoff_length_coefficient_ = cutoff_length_coefficient_ * cutoff_length_coefficient_;
       }
 
       template <typename Point>
       auto operator()(Point const& position1, Value const& diameter1, Point const& position2, Value const& diameter2) const
         -> decltype(bare_force_.calculate_force(position1 - position2, (diameter1 + diameter2) / Value{2}))
       {
+        auto const diameter = (diameter1 + diameter2) / Value{2};
+        auto const squared_diameter = diameter * diameter;
         auto const difference = position1 - position2;
         auto const squared_distance = ::pastel::geometry::squared_norm(difference);
-        if (squared_distance > squared_cutoff_length_)
-          return decltype(bare_force_.calculate_force(difference, squared_distance, diameter1 * diameter2)){};
+        if (squared_distance > squared_cutoff_length_coefficient_ * squared_diameter)
+          return decltype(bare_force_.calculate_force(difference, squared_distance, squared_diameter)){};
 
-        auto const diameter = (diameter1 + diameter2) / Value{2};
-        return bare_force_.calculate_force(difference, squared_distance, diameter * diameter);
+        return bare_force_.calculate_force(difference, squared_distance, squared_diameter);
       }
 
       template <typename Point>
       Value energy(Point const& position1, Value const& diameter1, Point const& position2, Value const& diameter2) const
       {
+        auto const diameter = (diameter1 + diameter2) / Value{2};
+        auto const squared_cutoff_length = squared_cutoff_length_coefficient_ * diameter * diameter;
         auto const squared_distance = ::pastel::geometry::squared_norm(position1 - position2);
-        if (squared_distance > squared_cutoff_length_)
+        if (squared_distance > squared_cutoff_length)
           return Value{};
 
-        auto const diameter = (diameter1 + diameter2) / Value{2};
-        return bare_force_.calculate_energy(squared_distance, diameter) - bare_force_.calculate_energy(squared_cutoff_length_, diameter);
+        return bare_force_.calculate_energy(squared_distance, diameter) - bare_force_.calculate_energy(squared_cutoff_length, diameter);
       }
     }; // lennard_jones<true, false, Value>
 

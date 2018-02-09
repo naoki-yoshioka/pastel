@@ -164,7 +164,8 @@ namespace pastel
       return
         lhs.template get< ::pastel::particle::tags::position >() == rhs.template get< ::pastel::particle::tags::position >()
         && lhs.template get< ::pastel::particle::tags::velocity >() == rhs.template get< ::pastel::particle::tags::velocity >()
-        && lhs.template get< ::pastel::particle::tags::force >() == rhs.template get< ::pastel::particle::tags::force >();
+        && lhs.template get< ::pastel::particle::tags::force >() == rhs.template get< ::pastel::particle::tags::force >()
+        && lhs.template get< ::pastel::particle::tags::mass >() == rhs.template get< ::pastel::particle::tags::mass >();
     }
 
     template <std::size_t dimension_, typename Value, typename Point, typename Vector>
@@ -182,7 +183,8 @@ namespace pastel
         = ::pastel::particle::detail::lexicographical_compare<
             ::pastel::particle::tags::position,
             ::pastel::particle::tags::velocity,
-            ::pastel::particle::tags::force>;
+            ::pastel::particle::tags::force,
+            ::pastel::particle::tags::mass>;
       return lexicographical_compare::call(lhs, rhs);
     }
 

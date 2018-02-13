@@ -190,7 +190,8 @@ namespace pastel
 
 
     // W(x, h) = H^{-1} w(|x|/H) = (C_1/H) psi_{1+1+floor(1/2),1}(|x|/H)
-    //  C_1=5/4
+    // div_a W(r_{ab}, h) = C_1/H^2 psi'_{2,1}(|r_{ab}|/H) n_{ab}
+    //  C_1=5/4, r_{ab} = r_a - r_b, n_{ab} = r_{ab} / |r_{ab}|
     template <typename Value>
     class wendland<1u, 1u, Value>
     {
@@ -198,18 +199,21 @@ namespace pastel
 
       Value inverse_support_radius_;
       Value coefficient_;
+      Value derivative_coefficient_;
 
      public:
       wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
-          coefficient_{Value{5} / Value{4}}
+          coefficient_{Value{5} / Value{4}},
+          derivative_coefficient_{coefficient_}
       { }
 
       explicit wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
-          coefficient_{Value{5} * inverse_support_radius_ / Value{4}}
+          coefficient_{Value{5} * inverse_support_radius_ / Value{4}},
+          derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
       Value operator()(Value const& value) const
@@ -221,7 +225,7 @@ namespace pastel
       Value derivative(Value const& value) const
       {
         assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland21(value * inverse_support_radius_);
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland21(value * inverse_support_radius_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -230,11 +234,13 @@ namespace pastel
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{5} * inverse_support_radius_ / Value{4};
+        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
     }; // class wendland<1u, 1u, Value>
 
     // W(x, h) = H^{-2} w(|x|/H) = (C_2/H^2) psi_{1+1+floor(2/2),1}(|x|/H)
-    //  C_2=7/pi
+    // div_a W(r_{ab}, h) = C_2/H^3 psi'_{3,1}(|r_{ab}|/H) n_{ab}
+    //  C_2=7/pi, r_{ab} = r_a - r_b, n_{ab} = r_{ab} / |r_{ab}|
     template <typename Value>
     class wendland<1u, 2u, Value>
     {
@@ -242,18 +248,21 @@ namespace pastel
 
       Value inverse_support_radius_;
       Value coefficient_;
+      Value derivative_coefficient_;
 
      public:
       wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
-          coefficient_{Value{7} / boost::math::constants::pi<Value>()}
+          coefficient_{Value{7} / boost::math::constants::pi<Value>()},
+          derivative_coefficient_{coefficient_}
       { }
 
       explicit wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
-          coefficient_{Value{7} * inverse_support_radius_ * inverse_support_radius_ / boost::math::constants::pi<Value>()}
+          coefficient_{Value{7} * inverse_support_radius_ * inverse_support_radius_ / boost::math::constants::pi<Value>()},
+          derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
       Value operator()(Value const& value) const
@@ -265,7 +274,7 @@ namespace pastel
       Value derivative(Value const& value) const
       {
         assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland31(value * inverse_support_radius_);
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland31(value * inverse_support_radius_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -275,11 +284,13 @@ namespace pastel
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{7} * inverse_support_radius_ * inverse_support_radius_ / boost::math::constants::pi<Value>();
+        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
     }; // class wendland<1u, 2u, Value>
 
     // W(x, h) = H^{-3} w(|x|/H) = (C_3/H^3) \psi_{1+1+floor(3/2),1}(|x|/H)
-    //  C_3=21/2pi
+    // div_a W(r_{ab}, h) = C_3/H^4 psi'_{3,1}(|r_{ab}|/H) n_{ab}
+    //  C_3=21/2pi, r_{ab} = r_a - r_b, n_{ab} = r_{ab} / |r_{ab}|
     template <typename Value>
     class wendland<1u, 3u, Value>
     {
@@ -287,18 +298,21 @@ namespace pastel
 
       Value inverse_support_radius_;
       Value coefficient_;
+      Value derivative_coefficient_;
 
      public:
       wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
-          coefficient_{Value{21} * boost::math::constants::one_div_two_pi<Value>()}
+          coefficient_{Value{21} * boost::math::constants::one_div_two_pi<Value>()},
+          derivative_coefficient_{coefficient_}
       { }
 
       explicit wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
-          coefficient_{Value{21} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>()}
+          coefficient_{Value{21} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>()},
+          derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
       Value operator()(Value const& value) const
@@ -310,7 +324,7 @@ namespace pastel
       Value derivative(Value const& value) const
       {
         assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland31(value * inverse_support_radius_);
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland31(value * inverse_support_radius_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -320,12 +334,14 @@ namespace pastel
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{21} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>();
+        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
     }; // class wendland<1u, 3u, Value>
 
 
     // W(x, h) = H^{-1} w(|x|/H) = (C_1/H) psi_{2+1+floor(1/2),2}(|x|/H)
-    //  C_1=3/2
+    // div_a W(r_{ab}, h) = C_1/H^2 psi'_{3,2}(|r_{ab}|/H) n_{ab}
+    //  C_1=3/2, r_{ab} = r_a - r_b, n_{ab} = r_{ab} / |r_{ab}|
     template <typename Value>
     class wendland<2u, 1u, Value>
     {
@@ -333,25 +349,28 @@ namespace pastel
 
       Value inverse_support_radius_;
       Value coefficient_;
+      Value derivative_coefficient_;
 
      public:
       wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
-          coefficient_{Value{3} / Value{2}}
+          coefficient_{Value{3} / Value{2}},
+          derivative_coefficient_{coefficient_}
       { }
 
       explicit wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
-          coefficient_{Value{3} * inverse_support_radius_ / Value{2}}
+          coefficient_{Value{3} * inverse_support_radius_ / Value{2}},
+          derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
       Value operator()(Value const& value) const
       { return coefficient_ * ::pastel::kernel::wendland_detail::wendland32(value * inverse_support_radius_); }
 
       Value derivative(Value const& value) const
-      { return coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland32(value * inverse_support_radius_); }
+      { return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland32(value * inverse_support_radius_); }
 
       Value const& support_radius() const { return support_radius_; }
       void support_radius(Value const& new_support_radius)
@@ -359,11 +378,13 @@ namespace pastel
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{3} * inverse_support_radius_ / Value{2};
+        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
     }; // class wendland<2u, 1u, Value>
 
     // W(x, h) = H^{-2} w(|x|/H) = (C_2/H^2) psi_{2+1+floor(2/2),2}(|x|/H)
-    //  C_2=9/pi
+    // div_a W(r_{ab}, h) = C_2/H^3 psi'_{4,2}(|r_{ab}|/H) n_{ab}
+    //  C_2=9/pi, r_{ab} = r_a - r_b, n_{ab} = r_{ab} / |r_{ab}|
     template <typename Value>
     class wendland<2u, 2u, Value>
     {
@@ -371,18 +392,21 @@ namespace pastel
 
       Value inverse_support_radius_;
       Value coefficient_;
+      Value derivative_coefficient_;
 
      public:
       wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
-          coefficient_{Value{9} / boost::math::constants::pi<Value>()}
+          coefficient_{Value{9} / boost::math::constants::pi<Value>()},
+          derivative_coefficient_{coefficient_}
       { }
 
       explicit wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
-          coefficient_{Value{9} * inverse_support_radius_ * inverse_support_radius_ / boost::math::constants::pi<Value>()}
+          coefficient_{Value{9} * inverse_support_radius_ * inverse_support_radius_ / boost::math::constants::pi<Value>()},
+          derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
       Value operator()(Value const& value) const
@@ -394,7 +418,7 @@ namespace pastel
       Value derivative(Value const& value) const
       {
         assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland42(value * inverse_support_radius_);
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland42(value * inverse_support_radius_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -404,11 +428,13 @@ namespace pastel
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{9} * inverse_support_radius_ * inverse_support_radius_ / boost::math::constants::pi<Value>();
+        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
     }; // class wendland<2u, 2u, Value>
 
     // W(x, h) = H^{-3} w(|x|/H) = (C_3/H^3) \psi_{2+1+floor(3/2),2}(|x|/H)
-    //  C_3=495/32pi
+    // div_a W(r_{ab}, h) = C_3/H^4 psi'_{4,2}(|r_{ab}|/H) n_{ab}
+    //  C_3=495/32pi, r_{ab} = r_a - r_b, n_{ab} = r_{ab} / |r_{ab}|
     template <typename Value>
     class wendland<2u, 3u, Value>
     {
@@ -416,18 +442,21 @@ namespace pastel
 
       Value inverse_support_radius_;
       Value coefficient_;
+      Value derivative_coefficient_;
 
      public:
       wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
-          coefficient_{Value{495} / Value{16} * boost::math::constants::one_div_two_pi<Value>()}
+          coefficient_{Value{495} / Value{16} * boost::math::constants::one_div_two_pi<Value>()},
+          derivative_coefficient_{coefficient_}
       { }
 
       explicit wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
-          coefficient_{Value{495} / Value{16} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>()}
+          coefficient_{Value{495} / Value{16} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>()},
+          derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
       Value operator()(Value const& value) const
@@ -439,7 +468,7 @@ namespace pastel
       Value derivative(Value const& value) const
       {
         assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland42(value * inverse_support_radius_);
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland42(value * inverse_support_radius_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -449,12 +478,14 @@ namespace pastel
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{495} / Value{16} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>();
+        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
     }; // class wendland<2u, 3u, Value>
 
 
     // W(x, h) = H^{-1} w(|x|/H) = (C_1/H) psi_{3+1+floor(1/2),3}(|x|/H)
-    //  C_1=55/32
+    // div_a W(r_{ab}, h) = C_1/H^2 psi'_{4,3}(|r_{ab}|/H) n_{ab}
+    //  C_1=55/32, r_{ab} = r_a - r_b, n_{ab} = r_{ab} / |r_{ab}|
     template <typename Value>
     class wendland<3u, 1u, Value>
     {
@@ -462,25 +493,28 @@ namespace pastel
 
       Value inverse_support_radius_;
       Value coefficient_;
+      Value derivative_coefficient_;
 
      public:
       wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
-          coefficient_{Value{55} / Value{32}}
+          coefficient_{Value{55} / Value{32}},
+          derivative_coefficient_{coefficient_}
       { }
 
       explicit wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
-          coefficient_{Value{55} * inverse_support_radius_ / Value{32}}
+          coefficient_{Value{55} * inverse_support_radius_ / Value{32}},
+          derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
       Value operator()(Value const& value) const
       { return coefficient_ * ::pastel::kernel::wendland_detail::wendland43(value * inverse_support_radius_); }
 
       Value derivative(Value const& value) const
-      { return coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland43(value * inverse_support_radius_); }
+      { return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland43(value * inverse_support_radius_); }
 
       Value const& support_radius() const { return support_radius_; }
       void support_radius(Value const& new_support_radius)
@@ -488,11 +522,13 @@ namespace pastel
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{55} * inverse_support_radius_ / Value{32};
+        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
     }; // class wendland<3u, 1u, Value>
 
     // W(x, h) = H^{-2} w(|x|/H) = (C_2/H^2) psi_{3+1+floor(2/2),3}(|x|/H)
-    //  C_2=78/7pi
+    // div_a W(r_{ab}, h) = C_2/H^3 psi'_{5,3}(|r_{ab}|/H) n_{ab}
+    //  C_2=78/7pi, r_{ab} = r_a - r_b, n_{ab} = r_{ab} / |r_{ab}|
     template <typename Value>
     class wendland<3u, 2u, Value>
     {
@@ -500,18 +536,21 @@ namespace pastel
 
       Value inverse_support_radius_;
       Value coefficient_;
+      Value derivative_coefficient_;
 
      public:
       wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
-          coefficient_{Value{78} / Value{7} / boost::math::constants::pi<Value>()}
+          coefficient_{Value{78} / Value{7} / boost::math::constants::pi<Value>()},
+          derivative_coefficient_{coefficient_}
       { }
 
       explicit wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
-          coefficient_{Value{78} * inverse_support_radius_ * inverse_support_radius_ / Value{7} / boost::math::constants::pi<Value>()}
+          coefficient_{Value{78} * inverse_support_radius_ * inverse_support_radius_ / Value{7} / boost::math::constants::pi<Value>()},
+          derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
       Value operator()(Value const& value) const
@@ -523,7 +562,7 @@ namespace pastel
       Value derivative(Value const& value) const
       {
         assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland53(value * inverse_support_radius_);
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland53(value * inverse_support_radius_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -533,11 +572,13 @@ namespace pastel
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{78} * inverse_support_radius_ * inverse_support_radius_ / Value{7} / boost::math::constants::pi<Value>();
+        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
     }; // class wendland<3u, 2u, Value>
 
     // W(x, h) = H^{-3} w(|x|/H) = (C_3/H^3) \psi_{3+1+floor(3/2),3}(|x|/H)
-    //  C_3=1365/64pi
+    // div_a W(r_{ab}, h) = C_3/H^4 psi'_{5,3}(|r_{ab}|/H) n_{ab}
+    //  C_3=1365/64pi, r_{ab} = r_a - r_b, n_{ab} = r_{ab} / |r_{ab}|
     template <typename Value>
     class wendland<3u, 3u, Value>
     {
@@ -545,18 +586,21 @@ namespace pastel
 
       Value inverse_support_radius_;
       Value coefficient_;
+      Value derivative_coefficient_;
 
      public:
       wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
-          coefficient_{Value{1365} / Value{32} * boost::math::constants::one_div_two_pi<Value>()}
+          coefficient_{Value{1365} / Value{32} * boost::math::constants::one_div_two_pi<Value>()},
+          derivative_coefficient_{coefficient_}
       { }
 
       explicit wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
-          coefficient_{Value{1365} / Value{32} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>()}
+          coefficient_{Value{1365} / Value{32} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>()},
+          derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
       Value operator()(Value const& value) const
@@ -568,7 +612,7 @@ namespace pastel
       Value derivative(Value const& value) const
       {
         assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland53(value * inverse_support_radius_);
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland53(value * inverse_support_radius_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -578,6 +622,7 @@ namespace pastel
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{1365} / Value{32} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>();
+        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
     }; // class wendland<3u, 3u, Value>
   } // namespace kernel

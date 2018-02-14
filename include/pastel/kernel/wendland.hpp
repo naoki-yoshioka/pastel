@@ -22,8 +22,10 @@ namespace pastel
       inline Value wendland21(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_3 = one_minus_value * one_minus_value * one_minus_value;
@@ -35,8 +37,10 @@ namespace pastel
       inline Value derivative_wendland21(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;
@@ -48,8 +52,10 @@ namespace pastel
       inline Value wendland31(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;
@@ -62,8 +68,10 @@ namespace pastel
       inline Value derivative_wendland31(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_3 = one_minus_value * one_minus_value * one_minus_value;
@@ -76,8 +84,10 @@ namespace pastel
       inline Value wendland32(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;
@@ -90,8 +100,10 @@ namespace pastel
       inline Value derivative_wendland32(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;
@@ -104,8 +116,10 @@ namespace pastel
       inline Value wendland42(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;
@@ -118,8 +132,10 @@ namespace pastel
       inline Value derivative_wendland42(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;
@@ -133,8 +149,10 @@ namespace pastel
       inline Value wendland43(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;
@@ -148,8 +166,10 @@ namespace pastel
       inline Value derivative_wendland43(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;
@@ -162,8 +182,10 @@ namespace pastel
       inline Value wendland53(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;
@@ -178,8 +200,10 @@ namespace pastel
       inline Value derivative_wendland53(Value const& value)
       {
         assert(value >= Value{0});
+# ifndef NDEBUG
         if (value >= Value{1})
           return Value{0};
+# endif
 
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;

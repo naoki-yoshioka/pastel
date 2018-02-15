@@ -30,7 +30,8 @@ namespace pastel
 
           using scalar_type = typename ::pastel::container::meta::scalar_of<Particles const>::type;
           using vector_type = typename ::pastel::container::meta::vector_of<Particles const>::type;
-          return std::sqrt(
+          using std::sqrt;
+          return sqrt(
             std::accumulate(
               velocities_data, velocities_data+num_particles, scalar_type{0},
               [](scalar_type last_maximal_squared_speed, vector_type const& velocity)
@@ -54,7 +55,8 @@ namespace pastel
             last_maximal_squared_speed = std::max(squared_speed, last_maximal_squared_speed);
           }
 
-          return std::sqrt(last_maximal_squared_speed);
+          using std::sqrt;
+          return sqrt(last_maximal_squared_speed);
         }
       }; // struct maximal_speed<false>
     } // namespace maximal_speed_detail

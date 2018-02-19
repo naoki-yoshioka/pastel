@@ -88,6 +88,18 @@ namespace pastel
       }; // struct get< ::pastel::particle::tags::density, dimension_, Value, Point, Vector>
 
       template <std::size_t dimension_, typename Value, typename Point, typename Vector>
+      struct get< ::pastel::particle::tags::density_force, dimension_, Value, Point, Vector>
+      {
+        using value_type = Value;
+        using reference = value_type&;
+        using const_reference = value_type const&;
+        using particle_type = ::pastel::particle::newtonian_sph_particle<dimension_, Value, Point, Vector>;
+
+        static reference call(particle_type& particle) noexcept { return particle.density_force_; }
+        static const_reference call(particle_type const& particle) noexcept { return particle.density_force_; }
+      }; // struct get< ::pastel::particle::tags::density_force, dimension_, Value, Point, Vector>
+
+      template <std::size_t dimension_, typename Value, typename Point, typename Vector>
       struct get< ::pastel::particle::tags::pressure, dimension_, Value, Point, Vector>
       {
         using value_type = Value;
@@ -118,6 +130,7 @@ namespace pastel
       vector_type force_;
       scalar_type mass_;
       scalar_type density_;
+      scalar_type density_force_;
       scalar_type pressure_;
 
      public:
@@ -130,23 +143,25 @@ namespace pastel
 
       constexpr newtonian_sph_particle(
         point_type const& position, vector_type const& velocity, vector_type const& force,
-        scalar_type const& mass, scalar_type const& density, scalar_type const& pressure)
+        scalar_type const& mass, scalar_type const& density, scalar_type const& density_force, scalar_type const& pressure)
         : position_{position},
           velocity_{velocity},
           force_{force},
           mass_{mass},
           density_{density},
+          density_force_{density_force},
           pressure_{pressure}
       { }
 
       constexpr newtonian_sph_particle(
         point_type&& position, vector_type&& velocity, vector_type&& force,
-        scalar_type&& mass, scalar_type&& density, scalar_type&& pressure)
+        scalar_type&& mass, scalar_type&& density, scalar_type&& density_force, scalar_type&& pressure)
         : position_{std::move(position)},
           velocity_{std::move(velocity)},
           force_{std::move(force)},
           mass_{std::move(mass)},
           density_{std::move(density)},
+          density_force_{std::move(density_force)},
           pressure_{std::move(pressure)}
       { }
 
@@ -163,6 +178,7 @@ namespace pastel
         swap(force_, other.force_);
         swap(mass_, other.mass_);
         swap(density_, other.density_);
+        swap(density_force_, other.density_force_);
         swap(pressure_, other.pressure_);
       }
 
@@ -199,6 +215,7 @@ namespace pastel
         && lhs.template get< ::pastel::particle::tags::force >() == rhs.template get< ::pastel::particle::tags::force >()
         && lhs.template get< ::pastel::particle::tags::mass >() == rhs.template get< ::pastel::particle::tags::mass >()
         && lhs.template get< ::pastel::particle::tags::density >() == rhs.template get< ::pastel::particle::tags::density >()
+        && lhs.template get< ::pastel::particle::tags::density_force >() == rhs.template get< ::pastel::particle::tags::density_force >()
         && lhs.template get< ::pastel::particle::tags::pressure >() == rhs.template get< ::pastel::particle::tags::pressure >();
     }
 
@@ -220,6 +237,7 @@ namespace pastel
             ::pastel::particle::tags::force,
             ::pastel::particle::tags::mass,
             ::pastel::particle::tags::density,
+            ::pastel::particle::tags::density_force,
             ::pastel::particle::tags::pressure>;
       return lexicographical_compare::call(lhs, rhs);
     }

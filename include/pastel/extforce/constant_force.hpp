@@ -1,6 +1,8 @@
 #ifndef PASTEL_EXTFORCE_CONSTANT_FORCE_HPP
 # define PASTEL_EXTFORCE_CONSTANT_FORCE_HPP
 
+# include <utility>
+
 # include <pastel/container/meta/size_of.hpp>
 
 
@@ -19,6 +21,11 @@ namespace pastel
       explicit constexpr constant_force(Vector const& force) noexcept
         : force_{force}
       { }
+
+      Vector const& force() const { return force_; }
+      template <typename Vector_>
+      void force(Vector_&& new_force)
+      { force_ = std::forward<Vector_>(new_force); }
 
       template <typename Particles>
       Vector const& operator()(

@@ -104,8 +104,8 @@ namespace pastel
       // (m_i m_j/|r_{ij}|) W'(|r_{ij}|, h) [-(P_i/rho_i^2 + P_j/rho_j^2) r_{ij} + (2mu / rho_i rho_j) v_{ij}]
       template <typename Point, typename Vector>
       Vector operator()(
-        Point const& position1, Vector const& velocity1, Value const& density1, Value const& mass1, Value const& pressure1,
-        Point const& position2, Vector const& velocity2, Value const& density2, Value const& mass2, Value const& pressure2) const
+        Point const& position1, Vector const& velocity1, Value const& mass1, Value const& density1, Value const& pressure1,
+        Point const& position2, Vector const& velocity2, Value const& mass2, Value const& density2, Value const& pressure2) const
       {
         auto const difference = position1 - position2;
         auto const squared_distance = ::pastel::geometry::squared_norm(difference);

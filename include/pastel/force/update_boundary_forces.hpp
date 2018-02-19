@@ -110,6 +110,60 @@ namespace pastel
             ::pastel::container::increase_force(key_particles, key, key_force);
           }
         }
+
+        template <typename Force, typename BoundaryNeighborList, typename System>
+        static void call(
+          Force const& force, BoundaryNeighborList const& boundary_neighbor_list, System& system,
+          ::pastel::force::tags::newtonian_sph_requirement)
+        {
+          using interaction_pair_type
+            = typename ::pastel::neighbor::meta::interaction_pair_of<BoundaryNeighborList>::type;
+          auto& key_particles
+            = ::pastel::system::particles<interaction_pair_type::first>(system);
+          auto& partner_particles
+            = ::pastel::system::boundary_particles<interaction_pair_type::second>(system);
+
+          auto const num_keys = ::pastel::neighbor::num_keys(boundary_neighbor_list);
+          for (auto key = static_cast<decltype(num_keys)>(0); key < num_keys; ++key)
+          {
+            auto const& key_position
+              = ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key);
+            auto const& key_velocity
+              = ::pastel::container::get< ::pastel::particle::tags::velocity >(key_particles, key);
+            auto const& key_mass
+              = ::pastel::container::get< ::pastel::particle::tags::mass >(key_particles, key);
+            auto const& key_density
+              = ::pastel::container::get< ::pastel::particle::tags::density >(key_particles, key);
+            auto const& key_pressure
+              = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
+            using vector_type
+              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+            auto key_force = vector_type{};
+
+            auto const num_partners = ::pastel::neighbor::num_partners(boundary_neighbor_list, key);
+            auto const partner_data = boundary_neighbor_list.partner_data(key);
+            for (auto partner_index = static_cast<decltype(num_partners)>(0); partner_index < num_partners; ++partner_index)
+            {
+              auto const partner = partner_data[partner_index];
+              auto const force_increment
+                = force(
+                    key_position, key_velocity, key_mass, key_density, key_pressure,
+                    ::pastel::container::get< ::pastel::particle::tags::position >(
+                      partner_particles, partner),
+                    ::pastel::container::get< ::pastel::particle::tags::velocity >(
+                      partner_particles, partner),
+                    ::pastel::container::get< ::pastel::particle::tags::mass >(
+                      partner_particles, partner),
+                    ::pastel::container::get< ::pastel::particle::tags::density >(
+                      partner_particles, partner),
+                    ::pastel::container::get< ::pastel::particle::tags::pressure >(
+                      partner_particles, partner));
+              key_force += force_increment;
+              // partner_particles must be immobile because of boundary_particles
+            }
+            ::pastel::container::increase_force(key_particles, key, key_force);
+          }
+        }
       }; // struct update_boundary_forces<true>
 
 
@@ -186,6 +240,59 @@ namespace pastel
                     ::pastel::container::get< ::pastel::particle::tags::position >(
                       partner_particles, *partner_iter),
                     ::pastel::container::get< ::pastel::particle::tags::velocity >(
+                      partner_particles, *partner_iter));
+              key_force += force_increment;
+              // partner_particles must be immobile because of boundary_particles
+            }
+            ::pastel::container::increase_force(key_particles, key, key_force);
+          }
+        }
+
+        template <typename Force, typename BoundaryNeighborList, typename System>
+        static void call(
+          Force const& force, BoundaryNeighborList const& boundary_neighbor_list, System& system,
+          ::pastel::force::tags::newtonian_sph_requirement)
+        {
+          using interaction_pair_type
+            = typename ::pastel::neighbor::meta::interaction_pair_of<BoundaryNeighborList>::type;
+          auto& key_particles
+            = ::pastel::system::particles<interaction_pair_type::first>(system);
+          auto& partner_particles
+            = ::pastel::system::boundary_particles<interaction_pair_type::second>(system);
+
+          auto const num_keys = ::pastel::neighbor::num_keys(boundary_neighbor_list);
+          for (auto key = static_cast<decltype(num_keys)>(0); key < num_keys; ++key)
+          {
+            auto const& key_position
+              = ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key);
+            auto const& key_velocity
+              = ::pastel::container::get< ::pastel::particle::tags::velocity >(key_particles, key);
+            auto const& key_mass
+              = ::pastel::container::get< ::pastel::particle::tags::mass >(key_particles, key);
+            auto const& key_density
+              = ::pastel::container::get< ::pastel::particle::tags::density >(key_particles, key);
+            auto const& key_pressure
+              = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
+            using vector_type
+              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+            auto key_force = vector_type{};
+
+            auto const partner_end = ::pastel::neighbor::partner_end(boundary_neighbor_list, key);
+            for (auto partner_iter = ::pastel::neighbor::partner_begin(boundary_neighbor_list, key);
+                 partner_iter != partner_end; ++partner_iter)
+            {
+              auto const force_increment
+                = force(
+                    key_position, key_velocity, key_mass, key_density, key_pressure,
+                    ::pastel::container::get< ::pastel::particle::tags::position >(
+                      partner_particles, *partner_iter),
+                    ::pastel::container::get< ::pastel::particle::tags::velocity >(
+                      partner_particles, *partner_iter),
+                    ::pastel::container::get< ::pastel::particle::tags::mass >(
+                      partner_particles, *partner_iter),
+                    ::pastel::container::get< ::pastel::particle::tags::density >(
+                      partner_particles, *partner_iter),
+                    ::pastel::container::get< ::pastel::particle::tags::pressure >(
                       partner_particles, *partner_iter));
               key_force += force_increment;
               // partner_particles must be immobile because of boundary_particles

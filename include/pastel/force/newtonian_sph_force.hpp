@@ -6,6 +6,7 @@
 # include <utility>
 
 # include <pastel/force/tags.hpp>
+# include <pastel/force/squared_cutoff_length.hpp>
 # include <pastel/geometry/squared_norm.hpp>
 # include <pastel/utility/is_nothrow_swappable.hpp>
 
@@ -20,7 +21,6 @@ namespace pastel
       Kernel kernel_;
 
       Value cutoff_length_;
-      Value inverse_cutoff_length_;
       Value squared_cutoff_length_;
 
       Value shear_viscosity_;
@@ -33,20 +33,18 @@ namespace pastel
       static constexpr bool has_cutoff = true;
 
       template <typename Kernel_>
-      explicit constexpr newtonian_sph_force(Kernel_&& kernel)
+      explicit newtonian_sph_force(Kernel_&& kernel)
         : kernel_{std::forward<Kernel_>(kernel)},
           cutoff_length_{Value{1}},
-          inverse_cutoff_length_{Value{1}},
           squared_cutoff_length_{Value{1}},
           shear_viscosity_{Value{1}},
           viscous_coefficient_{Value{2}}
       { }
 
       template <typename Kernel_>
-      constexpr newtonian_sph_force(Kernel_&& kernel, Value const& cutoff_length, Value const& shear_viscosity)
+      newtonian_sph_force(Kernel_&& kernel, Value const& cutoff_length, Value const& shear_viscosity)
         : kernel_{std::forward<Kernel_>(kernel)},
           cutoff_length_{cutoff_length},
-          inverse_cutoff_length_{Value{1} / cutoff_length},
           squared_cutoff_length_{cutoff_length * cutoff_length},
           shear_viscosity_{shear_viscosity},
           viscous_coefficient_{Value{2} * shear_viscosity}
@@ -61,7 +59,6 @@ namespace pastel
 # else
         return kernel_ == other.kernel_
           && cutoff_length_ == other.cutoff_length_
-          && inverse_cutoff_length_ == other.inverse_cutoff_length_
           && squared_cutoff_length_ == other.squared_cutoff_length_
           && shear_viscosity_ == other.shear_viscosity_
           && viscous_coefficient_ == other.viscous_coefficient_;
@@ -69,18 +66,19 @@ namespace pastel
       }
 
       void swap(newtonian_sph_force& other)
-        noexcept(::pastel::utility::is_nothrow_swappable<Kernel>::value && ::pastel::utility::is_nothrow_swappable<Value>::value)
+        noexcept(
+          ::pastel::utility::is_nothrow_swappable<Kernel>::value
+          && ::pastel::utility::is_nothrow_swappable<Value>::value)
       {
         using std::swap;
         swap(kernel_, other.kernel_);
         swap(cutoff_length_, other.cutoff_length_);
-        swap(inverse_cutoff_length_, other.inverse_cutoff_length_);
         swap(squared_cutoff_length_, other.squared_cutoff_length_);
         swap(shear_viscosity_, other.shear_viscosity_);
         swap(viscous_coefficient_, other.viscous_coefficient_);
       }
 
-      constexpr Kernel const& kernel() const { return kernel_; }
+      Kernel const& kernel() const { return kernel_; }
       template <typename Kernel_>
       void kernel(Kernel_&& new_kernel) { kernel_ = std::forward<Kernel_>(new_kernel); }
 
@@ -89,9 +87,10 @@ namespace pastel
       {
         assert(new_cutoff_length > Value{0});
         cutoff_length_ = new_cutoff_length;
-        inverse_cutoff_length_ = Value{1} / new_cutoff_length;
         squared_cutoff_length_ = new_cutoff_length * new_cutoff_length;
       }
+
+      constexpr Value const& squared_cutoff_length() const { return squared_cutoff_length_; }
 
       constexpr Value const& shear_viscosity() const { return shear_viscosity_; }
       void shear_viscosity(Value const& new_shear_viscosity)
@@ -107,6 +106,11 @@ namespace pastel
         Point const& position1, Vector const& velocity1, Value const& mass1, Value const& density1, Value const& pressure1,
         Point const& position2, Vector const& velocity2, Value const& mass2, Value const& density2, Value const& pressure2) const
       {
+        // Assume pressure1 and pressure2 are pressure(density1) and pressure(density2), respectively, where pressure(...) is a pressure function
+
+        if (density1 <= Value{0} || density2 <= Value{0})
+          return Vector{};
+
         auto const difference = position1 - position2;
         auto const squared_distance = ::pastel::geometry::squared_norm(difference);
 
@@ -116,14 +120,24 @@ namespace pastel
         using std::sqrt;
         auto const distance = sqrt(squared_distance);
 
-        auto const coefficient = mass1 * mass2 / distance * kernel_.derivative(distance * inverse_cutoff_length_);
+        auto const coefficient = mass1 * mass2 / distance * kernel_.derivative(distance);
 
         auto const inverse_density1 = Value{1} / density1;
         auto const inverse_density2 = Value{1} / density2;
         return (coefficient * (pressure1 * inverse_density1 * inverse_density1 + pressure2 * inverse_density2 * inverse_density2)) * difference
           + (coefficient * viscous_coefficient_ * inverse_density1 * inverse_density2) * (velocity1 - velocity2);
       }
-    }; // class newtonian_sph_force
+    }; // class newtonian_sph_force<Kernel, Value>
+
+    namespace dispatch
+    {
+      template <typename Kernel, typename Value>
+      struct squared_cutoff_length< ::pastel::force::newtonian_sph_force<Kernel, Value> >
+      {
+        static Value const& call(Force const& force)
+        { return force.squared_cutoff_length(); }
+      }; // struct squared_cutoff_length< ::pastel::force::newtonian_sph_force<Kernel, Value> >
+    } // namespace dispatch
   } // namespace force
 } // namespace pastel
 

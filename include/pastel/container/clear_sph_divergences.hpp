@@ -6,7 +6,7 @@
 # include <pastel/container/meta/value_of.hpp>
 # include <pastel/container/meta/scalar_of.hpp>
 # include <pastel/particle/tags.hpp>
-# include <pastel/particle/meta/is_sph_particle.hpp>
+# include <pastel/particle/meta/has_divergence.hpp>
 
 
 namespace pastel
@@ -15,8 +15,11 @@ namespace pastel
   {
     namespace clear_sph_divergences
     {
-      template <bool is_sph_particle>
-      struct clear
+      template <bool has_divergence>
+      struct clear;
+
+      template <>
+      struct clear<true>
       {
         template <typename Particles>
         static void call(Particles& particles)
@@ -24,9 +27,9 @@ namespace pastel
           auto const num_particles = ::pastel::container::num_particles(particles);
           using scalar_type = typename ::pastel::container::meta::scalar_of<Particles>::type;
           for (auto index = static_cast<decltype(num_particles)>(0); index < num_particles; ++index)
-            ::pastel::container::get< ::pastel::particle::tags::sph_divergences >(particles, index) = scalar_type{};
+            ::pastel::container::get< ::pastel::particle::tags::sph_divergence >(particles, index) = scalar_type{};
         }
-      }; // struct clear<is_sph_particle>
+      }; // struct clear<true>
 
       template <>
       struct clear<false>
@@ -39,9 +42,9 @@ namespace pastel
     template <typename Particles>
     inline void clear_sph_divergences(Particles& particles)
     {
-      static constexpr bool is_sph_particle
-        = ::pastel::particle::meta::is_sph_particle<typename ::pastel::container::meta::value_of<Particles>::type>::value;
-      ::pastel::container::clear_sph_divergences_detail::clear<is_sph_particle>::call(particles);
+      static constexpr bool has_divergence
+        = ::pastel::particle::meta::has_divergence<typename ::pastel::container::meta::value_of<Particles>::type>::value;
+      ::pastel::container::clear_sph_divergences_detail::clear<has_divergence>::call(particles);
     }
   } // namespace container
 } // namespace pastel

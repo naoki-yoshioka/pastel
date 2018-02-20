@@ -11,6 +11,8 @@ namespace pastel
   {
     struct no_force
     {
+      static constexpr bool is_sph_external_force = false;
+
       template <typename Particles>
       typename ::pastel::container::meta::vector_of<Particles const>::type operator()(
         Particles const&,

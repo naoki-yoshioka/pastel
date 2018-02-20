@@ -24,7 +24,6 @@ namespace pastel
         << ::pastel::particle::get< ::pastel::particle::tags::velocity >(particle) << ','
         << ::pastel::particle::get< ::pastel::particle::tags::force >(particle) << ','
         << ::pastel::particle::get< ::pastel::particle::tags::density >(particle) << ','
-        << ::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(particle) << ','
         << ::pastel::particle::get< ::pastel::particle::tags::pressure >(particle)
         << '}';
     }

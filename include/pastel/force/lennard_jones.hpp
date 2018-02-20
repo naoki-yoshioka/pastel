@@ -5,6 +5,7 @@
 # include <utility>
 
 # include <pastel/force/tags.hpp>
+# include <pastel/force/squared_cutoff_length.hpp>
 # include <pastel/geometry/squared_norm.hpp>
 # include <pastel/utility/is_nothrow_swappable.hpp>
 
@@ -236,6 +237,8 @@ namespace pastel
         energy_shift_ = -bare_force_.calculate_energy(squared_cutoff_length_);
       }
 
+      constexpr Value const& squared_cutoff_length() const { return squared_cutoff_length_; }
+
       void change_length(Value const& new_diameter, Value const& new_cutoff_length)
       {
         assert(new_diameter > Value{0} && new_cutoff_length > Value{0} && new_cutoff_length > new_diameter);
@@ -265,6 +268,16 @@ namespace pastel
         return bare_force_.calculate_energy(squared_distance) + energy_shift_;
       }
     }; // lennard_jones<true, true, Value>
+
+    namespace dispatch
+    {
+      template <typename Value>
+      struct squared_cutoff_length< ::pastel::force::lennard_jones<true, true, Value> >
+      {
+        static Value const& call(Force const& force)
+        { return force.squared_cutoff_length(); }
+      }; // struct squared_cutoff_length< ::pastel::force::lennard_jones<true, true, Value> >
+    } // namespace dispatch
 
 
     template <typename Value>

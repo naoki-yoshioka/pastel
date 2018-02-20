@@ -1,5 +1,5 @@
-#ifndef PASTEL_EXTFORCE_GRAVITATIONAL_FORCE_HPP
-# define PASTEL_EXTFORCE_GRAVITATIONAL_FORCE_HPP
+#ifndef PASTEL_EXTFORCE_SPH_GRAVITATIONAL_FORCE_HPP
+# define PASTEL_EXTFORCE_SPH_GRAVITATIONAL_FORCE_HPP
 
 # include <utility>
 
@@ -13,7 +13,7 @@ namespace pastel
 {
   namespace extforce
   {
-    namespace gravitational_force_detail
+    namespace sph_gravitational_force_detail
     {
       template <bool has_mass>
       struct force
@@ -39,18 +39,21 @@ namespace pastel
     } // namespace gravitational_force_detail
 
 
-    template <typename Vector>
-    class gravitational_force
+    template <typename Pressure, typename Vector>
+    class sph_gravitational_force
     {
+      Pressure pressure_;
       Vector gravitational_acceleration_;
 
      public:
       static constexpr bool is_sph_external_force = false;
 
-      constexpr gravitational_force() noexcept = default;
-      explicit constexpr gravitational_force(Vector const& gravitational_acceleration) noexcept
-        : gravitational_acceleration_{gravitational_acceleration}
+      gravitational_force(Pressure const& pressure, Vector const& gravitational_acceleration) noexcept
+        : pressure_{pressure},
+          gravitational_acceleration_{gravitational_acceleration}
       { }
+
+      Pressure const& pressure() const { return pressure_; }
 
       Vector const& gravitational_acceleration() const { return gravitational_acceleration_; }
       template <typename Vector_>
@@ -67,10 +70,10 @@ namespace pastel
         return ::pastel::extforce::gravitational_force_detail::force<has_mass>::call(
           particles, index, gravitational_acceleration_);
       }
-    }; // class gravitational_force<Vector>
+    }; // class sph_gravitational_force<Vector>
   } // namespacd extforce
 } // namespace pastel
 
 
-#endif // PASTEL_EXTFORCE_GRAVITATIONAL_FORCE_HPP
+#endif // PASTEL_EXTFORCE_SPH_GRAVITATIONAL_FORCE_HPP
 

@@ -17,6 +17,8 @@ namespace pastel
       Vector force_;
 
      public:
+      static constexpr bool is_sph_external_force = false;
+
       constexpr constant_force() noexcept = default;
       explicit constexpr constant_force(Vector const& force) noexcept
         : force_{force}

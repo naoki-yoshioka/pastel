@@ -7,6 +7,7 @@
 
 # include <pastel/force/lennard_jones.hpp>
 # include <pastel/force/tags.hpp>
+# include <pastel/force/squared_cutoff_length.hpp>
 # include <pastel/geometry/squared_norm.hpp>
 # include <pastel/utility/is_nothrow_swappable.hpp>
 
@@ -99,6 +100,7 @@ namespace pastel
       }
 
       constexpr Value const& cutoff_length() const { return cutoff_length_; }
+      constexpr Value const& squared_cutoff_length() const { return squared_cutoff_length_; }
 
       template <typename Point>
       auto operator()(Point const& position1, Point const& position2) const
@@ -120,6 +122,16 @@ namespace pastel
         return bare_force_.calculate_energy(squared_distance) + bare_force_.energy_depth();
       }
     }; // weeks_chandler_andersen<true, Value>
+
+    namespace dispatch
+    {
+      template <typename Value>
+      struct squared_cutoff_length< ::pastel::force::weeks_chandler_andersen<true, Value> >
+      {
+        static Value const& call(Force const& force)
+        { return force.squared_cutoff_length(); }
+      }; // struct squared_cutoff_length< ::pastel::force::weeks_chandler_andersen<true, Value> >
+    } // namespace dispatch
 
 
     template <typename Value>

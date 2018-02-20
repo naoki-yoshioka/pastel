@@ -1,15 +1,16 @@
-#ifndef PASTEL_FORCE_DETAIL_CALCULATE_SPH_DIVERGENCE_HPP
-# define PASTEL_FORCE_DETAIL_CALCULATE_SPH_DIVERGENCE_HPP
+#ifndef PASTEL_SPH_DETAIL_CALCULATE_SPH_DIVERGENCE_HPP
+# define PASTEL_SPH_DETAIL_CALCULATE_SPH_DIVERGENCE_HPP
 
 # include <cmath>
 
+# include <pastel/force/squared_cutoff_length.hpp>
 # include <pastel/geometry/squared_norm.hpp>
 # include <pastel/geometry/dot_product.hpp>
 
 
 namespace pastel
 {
-  namespace force
+  namespace sph
   {
     namespace detail
     {
@@ -22,13 +23,13 @@ namespace pastel
         auto const difference = position1 - position2;
         auto const squared_distance = ::pastel::geometry::squared_norm(difference);
 
-        if (squared_distance > force.cutoff_length() * force.cutoff_length())
+        if (squared_distance > ::pastel::force::squared_cutoff_length(force))
           return Scalar{};
 
         using std::sqrt;
         auto const distance = sqrt(squared_distance);
 
-        return mass1 * mass2 / distance * force.kernel().derivative(distance / force.cutoff_length())
+        return mass1 * mass2 / distance * force.kernel().derivative(distance)
           * ::pastel::geometry::dot_product(velocity1 - velocity2, difference);
       }
 
@@ -41,13 +42,13 @@ namespace pastel
         auto const difference = position1 - position2;
         auto const squared_distance = ::pastel::geometry::squared_norm(difference);
 
-        if (squared_distance > force.cutoff_length() * force.cutoff_length())
+        if (squared_distance > ::pastel::force::squared_cutoff_length(force))
           return Scalar{};
 
         using std::sqrt;
         auto const distance = sqrt(squared_distance);
 
-        return mass2 / distance * force.kernel().derivative(distance / force.cutoff_length())
+        return mass2 / distance * force.kernel().derivative(distance)
           * ::pastel::geometry::dot_product(velocity1 - velocity2, difference);
       }
 
@@ -60,13 +61,13 @@ namespace pastel
         auto const difference = position1 - position2;
         auto const squared_distance = ::pastel::geometry::squared_norm(difference);
 
-        if (squared_distance > force.cutoff_length() * force.cutoff_length())
+        if (squared_distance > ::pastel::force::squared_cutoff_length(force))
           return Scalar{};
 
         using std::sqrt;
         auto const distance = sqrt(squared_distance);
 
-        return mass1 / distance * force.kernel().derivative(distance / force.cutoff_length())
+        return mass1 / distance * force.kernel().derivative(distance)
           * ::pastel::geometry::dot_product(velocity1 - velocity2, difference);
       }
 
@@ -79,19 +80,19 @@ namespace pastel
         auto const difference = position1 - position2;
         auto const squared_distance = ::pastel::geometry::squared_norm(difference);
 
-        if (squared_distance > force.cutoff_length() * force.cutoff_length())
+        if (squared_distance > ::pastel::force::squared_cutoff_length(force))
           return Scalar{};
 
         using std::sqrt;
         auto const distance = sqrt(squared_distance);
 
-        return distance * force.kernel().derivative(distance / force.cutoff_length())
+        return force.kernel().derivative(distance) / distance
           * ::pastel::geometry::dot_product(velocity1 - velocity2, difference);
       }
     } // namespace detail
-  } // namespace force
+  } // namespace sph
 } // namespace pastel
 
 
-#endif // PASTEL_FORCE_DETAIL_CALCULATE_SPH_DIVERGENCE_HPP
+#endif // PASTEL_SPH_DETAIL_CALCULATE_SPH_DIVERGENCE_HPP
 

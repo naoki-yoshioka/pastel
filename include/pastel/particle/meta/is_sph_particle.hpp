@@ -1,6 +1,8 @@
 #ifndef PASTEL_PARTICLE_META_IS_SPH_PARTICLE_HPP
 # define PASTEL_PARTICLE_META_IS_SPH_PARTICLE_HPP
 
+# include <type_traits>
+
 
 namespace pastel
 {
@@ -17,5 +19,5 @@ namespace pastel
 } // namespace pastel
 
 
-#ifndef PASTEL_PARTICLE_META_IS_SPH_PARTICLE_HPP
+#endif // PASTEL_PARTICLE_META_IS_SPH_PARTICLE_HPP
 

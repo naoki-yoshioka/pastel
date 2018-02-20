@@ -1,8 +1,10 @@
-#ifndef PASTEL_FORCE_UPDATE_SPH_DIVERGENCES_HPP
-# define PASTEL_FORCE_UPDATE_SPH_DIVERGENCES_HPP
+// TODO this code probably has bugs CHECK IT
+#ifndef PASTEL_SPH_UPDATE_SPH_DIVERGENCES_HPP
+# define PASTEL_SPH_UPDATE_SPH_DIVERGENCES_HPP
 
-# include <pastel/force/detail/calculate_sph_divergence.hpp>
+# include <pastel/sph/detail/calculate_sph_divergence.hpp>
 # include <pastel/particle/tags.hpp>
+# include <pastel/particle/meta/has_divergence.hpp>
 # include <pastel/container/get.hpp>
 # include <pastel/container/increase_sph_divergence.hpp>
 # include <pastel/container/decrease_sph_divergence.hpp>
@@ -20,11 +22,11 @@
 
 namespace pastel
 {
-  namespace force
+  namespace sph
   {
     namespace update_sph_divergences_detail
     {
-      template <bool is_sph_particles, bool is_partner_data_accessible, bool has_key_mass, bool has_partner_mass>
+      template <bool has_divergences, bool is_partner_data_accessible, bool has_key_mass, bool has_partner_mass>
       struct update_sph_divergences;
 
       template <>
@@ -53,7 +55,7 @@ namespace pastel
               auto const partner = partner_data[partner_index];
 
               auto const sph_divergence_increment
-                = ::pastel::force::detail::calculate_sph_divergence(
+                = ::pastel::sph::detail::calculate_sph_divergence(
                     key_position, key_velocity, key_mass,
                     ::pastel::container::get< ::pastel::particle::tags::position >(
                       partner_particles, partner),
@@ -96,7 +98,7 @@ namespace pastel
               auto const partner = partner_data[partner_index];
 
               auto const sph_divergence_increment
-                = ::pastel::force::detail::calculate_sph_divergence(
+                = ::pastel::sph::detail::calculate_sph_divergence(
                     key_position, key_velocity, key_mass,
                     ::pastel::container::get< ::pastel::particle::tags::position >(
                       partner_particles, partner),
@@ -135,7 +137,7 @@ namespace pastel
               auto const partner = partner_data[partner_index];
 
               auto const sph_divergence_increment
-                = ::pastel::force::detail::calculate_sph_divergence(
+                = ::pastel::sph::detail::calculate_sph_divergence(
                     key_position, key_velocity,
                     ::pastel::container::get< ::pastel::particle::tags::position >(
                       partner_particles, partner),
@@ -176,7 +178,7 @@ namespace pastel
               auto const partner = partner_data[partner_index];
 
               auto const sph_divergence_increment
-                = ::pastel::force::detail::calculate_sph_divergence(
+                = ::pastel::sph::detail::calculate_sph_divergence(
                     key_position, key_velocity,
                     ::pastel::container::get< ::pastel::particle::tags::position >(
                       partner_particles, partner),
@@ -216,7 +218,7 @@ namespace pastel
                  partner_iter != partner_end; ++partner_iter)
             {
               auto const sph_divergence_increment
-                = ::pastel::force::detail::calculate_sph_divergence(
+                = ::pastel::sph::detail::calculate_sph_divergence(
                     key_position, key_velocity, key_mass,
                     ::pastel::container::get< ::pastel::particle::tags::position >(
                       partner_particles, *partner_iter),
@@ -257,7 +259,7 @@ namespace pastel
                  partner_iter != partner_end; ++partner_iter)
             {
               auto const sph_divergence_increment
-                = ::pastel::force::detail::calculate_sph_divergence(
+                = ::pastel::sph::detail::calculate_sph_divergence(
                     key_position, key_velocity, key_mass,
                     ::pastel::container::get< ::pastel::particle::tags::position >(
                       partner_particles, *partner_iter),
@@ -294,7 +296,7 @@ namespace pastel
                  partner_iter != partner_end; ++partner_iter)
             {
               auto const sph_divergence_increment
-                = ::pastel::force::detail::calculate_sph_divergence(
+                = ::pastel::sph::detail::calculate_sph_divergence(
                     key_position, key_velocity,
                     ::pastel::container::get< ::pastel::particle::tags::position >(
                       partner_particles, *partner_iter),
@@ -333,7 +335,7 @@ namespace pastel
                  partner_iter != partner_end; ++partner_iter)
             {
               auto const sph_divergence_increment
-                = ::pastel::force::detail::calculate_sph_divergence(
+                = ::pastel::sph::detail::calculate_sph_divergence(
                     key_position, key_velocity,
                     ::pastel::container::get< ::pastel::particle::tags::position >(
                       partner_particles, *partner_iter),
@@ -421,22 +423,22 @@ namespace pastel
       using interaction_pair_type = ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
       using key_particles = ::pastel::system::meta::particles_of<interaction_pair_type::first, System>::type;
       using partner_particles = ::pastel::system::meta::particles_of<interaction_pair_type::second, System>::type;
-      static constexpr bool is_sph_particles
-        = ::pastel::particle::meta::is_sph_particle<typename ::pastel::container::meta::value_of<key_particles>::type>::value
-          && ::pastel::particle::meta::is_sph_particle<typename ::pastel::container::meta::value_of<partner_particles>::type>::value;
+      static constexpr bool has_divergences
+        = ::pastel::particle::meta::has_divergence<typename ::pastel::container::meta::value_of<key_particles>::type>::value
+          && ::pastel::particle::meta::has_divergence<typename ::pastel::container::meta::value_of<partner_particles>::type>::value;
 
       static constexpr bool is_partner_data_accessible
         = ::pastel::neighbor::meta::is_partner_data_accessible<NeighborList>::value;
       static constexpr bool has_key_mass = ::pastel::container::meta::has_mass<key_particles>::value;
       static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles>::value;
-      ::pastel::force::update_sph_divergences_detail::update_sph_divergences<is_sph_particles, is_partner_data_accessible, has_key_mass, has_partner_mass>::call(
+      ::pastel::sph::update_sph_divergences_detail::update_sph_divergences<has_divergences, is_partner_data_accessible, has_key_mass, has_partner_mass>::call(
         force, neighbor_list,
         ::pastel::system::particles<interaction_pair_type::first>(system),
         ::pastel::system::particles<interaction_pair_type::second>(system));
     }
-  } // namespace force
+  } // namespace sph
 } // namespace pastel
 
 
-#endif // PASTEL_FORCE_UPDATE_SPH_DIVERGENCES_HPP
+#endif // PASTEL_SPH_UPDATE_SPH_DIVERGENCES_HPP
 

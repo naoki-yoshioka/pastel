@@ -187,29 +187,6 @@ namespace pastel
         typename Value, typename Point, typename Vector,
         typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
       struct data<
-        ::pastel::particle::tags::sph_divergence, dimension_, MobilityTag,
-        num_integration_vectors_, num_property_vectors_, num_property_scalars_,
-        Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
-      {
-        using value_type = Value;
-        using pointer = value_type*;
-        using const_pointer = value_type const*;
-        using particles_type
-          = ::pastel::container::newtonian_sph_particles<
-              dimension_, MobilityTag,
-              num_integration_vectors_, num_property_vectors_, num_property_scalars_,
-              Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>;
-
-        static pointer call(particles_type& particles) noexcept { return particles.sph_divergences_.data(); }
-        static const_pointer call(particles_type const& particles) noexcept { return particles.sph_divergences_.data(); }
-      }; // struct data< ::pastel::particle::tags::sph_divergence, dimension_, MobilityTag, num_integration_vectors_, num_property_vectors_, num_property_scalars_, Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
-
-      template <
-        std::size_t dimension_, typename MobilityTag,
-        std::size_t num_integration_vectors_, std::size_t num_property_vectors_, std::size_t num_property_scalars_,
-        typename Value, typename Point, typename Vector,
-        typename PointAllocator, typename VectorAllocator, typename ScalarAllocator>
-      struct data<
         ::pastel::particle::tags::pressure, dimension_, MobilityTag,
         num_integration_vectors_, num_property_vectors_, num_property_scalars_,
         Value, Point, Vector, PointAllocator, VectorAllocator, ScalarAllocator>
@@ -335,7 +312,6 @@ namespace pastel
             ::pastel::container::get< ::pastel::particle::tags::force >(*particles_ptr_, index_),
             ::pastel::container::get< ::pastel::particle::tags::mass >(*particles_ptr_, index_),
             ::pastel::container::get< ::pastel::particle::tags::density >(*particles_ptr_, index_),
-            ::pastel::container::get< ::pastel::particle::tags::sph_divergence >(*particles_ptr_, index_),
             ::pastel::container::get< ::pastel::particle::tags::pressure >(*particles_ptr_, index_)};
         }
 
@@ -448,7 +424,6 @@ namespace pastel
       vectors_type forces_;
       scalars_type masses_;
       scalars_type densities_;
-      scalars_type sph_divergences_;
       scalars_type pressures_;
 
       vectors_type integration_vectors_[num_integration_vectors];
@@ -508,7 +483,6 @@ namespace pastel
           forces_{vector_allocator},
           masses_{scalar_allocator},
           densities_{scalar_allocator},
-          sph_divergences_{scalar_allocator},
           pressures_{scalar_allocator},
           integration_vectors_{},
           property_vectors_{},
@@ -528,7 +502,6 @@ namespace pastel
           forces_(count),
           masses_(count),
           densities_(count),
-          sph_divergences_(count),
           pressures_(count),
           integration_vectors_{},
           property_vectors_{},
@@ -548,7 +521,6 @@ namespace pastel
           forces_(count, ::pastel::particle::get< ::pastel::particle::tags::force >(particle)),
           masses_(count, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle)),
           densities_(count, ::pastel::particle::get< ::pastel::particle::tags::density >(particle)),
-          sph_divergences_(count, ::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(particle)),
           pressures_(count, ::pastel::particle::get< ::pastel::particle::tags::pressure >(particle)),
           integration_vectors_{},
           property_vectors_{},
@@ -571,7 +543,6 @@ namespace pastel
           forces_(count, vector_allocator),
           masses_(count, scalar_allocator),
           densities_(count, scalar_allocator),
-          sph_divergences_(count, scalar_allocator),
           pressures_(count, scalar_allocator),
           integration_vectors_{},
           property_vectors_{},
@@ -594,7 +565,6 @@ namespace pastel
           forces_(count, ::pastel::particle::get< ::pastel::particle::tags::force >(particle), vector_allocator),
           masses_(count, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle), scalar_allocator),
           densities_(count, ::pastel::particle::get< ::pastel::particle::tags::density >(particle), scalar_allocator),
-          sph_divergences_(count, ::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(particle), scalar_allocator),
           pressures_(count, ::pastel::particle::get< ::pastel::particle::tags::pressure >(particle), scalar_allocator),
           integration_vectors_{},
           property_vectors_{},
@@ -617,7 +587,6 @@ namespace pastel
           forces_{},
           masses_{},
           densities_{},
-          sph_divergences_{},
           pressures_{},
           integration_vectors_{},
           property_vectors_{},
@@ -635,7 +604,6 @@ namespace pastel
           forces_{vector_allocator},
           masses_{scalar_allocator},
           densities_{scalar_allocator},
-          sph_divergences_{scalar_allocator},
           pressures_{scalar_allocator},
           integration_vectors_{},
           property_vectors_{},
@@ -658,7 +626,6 @@ namespace pastel
           forces_{other.forces_, vector_allocator},
           masses_{other.masses_, scalar_allocator},
           densities_{other.densities_, scalar_allocator},
-          sph_divergences_{other.sph_divergences_, scalar_allocator},
           pressures_{other.pressures_, scalar_allocator},
           integration_vectors_{},
           property_vectors_{},
@@ -680,7 +647,6 @@ namespace pastel
           forces_{std::move(other.forces_), vector_allocator},
           masses_{std::move(other.masses_), scalar_allocator},
           densities_{std::move(other.densities_), scalar_allocator},
-          sph_divergences_{std::move(other.sph_divergences_), scalar_allocator},
           pressures_{std::move(other.pressures_), scalar_allocator},
           integration_vectors_{},
           property_vectors_{},
@@ -700,7 +666,6 @@ namespace pastel
           forces_{},
           masses_{},
           densities_{},
-          sph_divergences_{},
           pressures_{},
           integration_vectors_{},
           property_vectors_{},
@@ -715,7 +680,6 @@ namespace pastel
           forces_{vector_allocator},
           masses_{scalar_allocator},
           densities_{scalar_allocator},
-          sph_divergences_{scalar_allocator},
           pressures_{scalar_allocator},
           integration_vectors_{},
           property_vectors_{},
@@ -741,7 +705,6 @@ namespace pastel
         forces_.assign(count, ::pastel::particle::get< ::pastel::particle::tags::force >(particle));
         masses_.assign(count, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle));
         densities_.assign(count, ::pastel::particle::get< ::pastel::particle::tags::density >(particle));
-        sph_divergences_.assign(count, ::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(particle));
         pressures_.assign(count, ::pastel::particle::get< ::pastel::particle::tags::pressure >(particle));
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -761,7 +724,6 @@ namespace pastel
         forces_.clear();
         masses_.clear();
         densities_.clear();
-        sph_divergences_.clear();
         pressures_.clear();
 
         for (; first != last; ++first)
@@ -771,7 +733,6 @@ namespace pastel
           forces_.push_back(::pastel::particle::get< ::pastel::particle::tags::force >(*first));
           masses_.push_back(::pastel::particle::get< ::pastel::particle::tags::mass >(*first));
           densities_.push_back(::pastel::particle::get< ::pastel::particle::tags::density >(*first));
-          sph_divergences_.push_back(::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(*first));
           pressures_.push_back(::pastel::particle::get< ::pastel::particle::tags::pressure >(*first));
         }
 
@@ -780,7 +741,6 @@ namespace pastel
         forces_.shrink_to_fit();
         masses_.shrink_to_fit();
         densities_.shrink_to_fit();
-        sph_divergences_.shrink_to_fit();
         pressures_.shrink_to_fit();
       }
 
@@ -792,7 +752,6 @@ namespace pastel
         forces_.clear();
         masses_.clear();
         densities_.clear();
-        sph_divergences_.clear();
         pressures_.clear();
 
         auto const count = std::distance(first, last);
@@ -802,7 +761,6 @@ namespace pastel
         forces_.reserve(count);
         masses_.reserve(count);
         densities_.reserve(count);
-        sph_divergences_.reserve(count);
         pressures_.reserve(count);
 
         for (; first != last; ++first)
@@ -812,7 +770,6 @@ namespace pastel
           forces_.push_back(::pastel::particle::get< ::pastel::particle::tags::force >(*first));
           masses_.push_back(::pastel::particle::get< ::pastel::particle::tags::mass >(*first));
           densities_.push_back(::pastel::particle::get< ::pastel::particle::tags::density >(*first));
-          sph_divergences_.push_back(::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(*first));
           pressures_.push_back(::pastel::particle::get< ::pastel::particle::tags::pressure >(*first));
         }
       }
@@ -935,7 +892,6 @@ namespace pastel
         forces_.reserve(new_capacity);
         masses_.reserve(new_capacity);
         densities_.reserve(new_capacity);
-        sph_divergences_.reserve(new_capacity);
         pressures_.reserve(new_capacity);
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -953,7 +909,6 @@ namespace pastel
         forces_.shrink_to_fit();
         masses_.shrink_to_fit();
         densities_.shrink_to_fit();
-        sph_divergences_.shrink_to_fit();
         pressures_.shrink_to_fit();
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -972,7 +927,6 @@ namespace pastel
         forces_.clear();
         masses_.clear();
         densities_.clear();
-        sph_divergences_.clear();
         pressures_.clear();
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -992,7 +946,6 @@ namespace pastel
         forces_.insert(std::begin(forces_) + pos_index, ::pastel::particle::get< ::pastel::particle::tags::force >(particle));
         masses_.insert(std::begin(masses_) + pos_index, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle));
         densities_.insert(std::begin(densities_) + pos_index, ::pastel::particle::get< ::pastel::particle::tags::density >(particle));
-        sph_divergences_.insert(std::begin(sph_divergences_) + pos_index, ::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(particle));
         pressures_.insert(std::begin(pressures_) + pos_index, ::pastel::particle::get< ::pastel::particle::tags::pressure >(particle));
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1014,7 +967,6 @@ namespace pastel
         forces_.insert(std::begin(forces_) + pos_index, std::move(::pastel::particle::get< ::pastel::particle::tags::force >(particle)));
         masses_.insert(std::begin(masses_) + pos_index, std::move(::pastel::particle::get< ::pastel::particle::tags::mass >(particle)));
         densities_.insert(std::begin(densities_) + pos_index, std::move(::pastel::particle::get< ::pastel::particle::tags::density >(particle)));
-        sph_divergences_.insert(std::begin(sph_divergences_) + pos_index, std::move(::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(particle)));
         pressures_.insert(std::begin(pressures_) + pos_index, std::move(::pastel::particle::get< ::pastel::particle::tags::pressure >(particle)));
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1036,7 +988,6 @@ namespace pastel
         forces_.insert(std::begin(forces_) + pos_index, count, ::pastel::particle::get< ::pastel::particle::tags::force >(particle));
         masses_.insert(std::begin(masses_) + pos_index, count, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle));
         densities_.insert(std::begin(densities_) + pos_index, count, ::pastel::particle::get< ::pastel::particle::tags::density >(particle));
-        sph_divergences_.insert(std::begin(sph_divergences_) + pos_index, count, ::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(particle));
         pressures_.insert(std::begin(pressures_) + pos_index, count, ::pastel::particle::get< ::pastel::particle::tags::pressure >(particle));
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1058,7 +1009,6 @@ namespace pastel
         auto force_iter = std::begin(forces_) + pos_index;
         auto mass_iter = std::begin(masses_) + pos_index;
         auto density_iter = std::begin(densities_) + pos_index;
-        auto sph_divergence_iter = std::begin(sph_divergences_) + pos_index;
         auto pressure_iter = std::begin(pressures_) + pos_index;
         for (; first != last; ++first)
         {
@@ -1067,7 +1017,6 @@ namespace pastel
           force_iter = ++forces_.insert(force_iter, ::pastel::particle::get< ::pastel::particle::tags::force >(*first));
           mass_iter = ++masses_.insert(mass_iter, ::pastel::particle::get< ::pastel::particle::tags::mass >(*first));
           density_iter = ++densities_.insert(density_iter, ::pastel::particle::get< ::pastel::particle::tags::density >(*first));
-          sph_divergence_iter = ++sph_divergences_.insert(sph_divergence_iter, ::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(*first));
           pressure_iter = ++pressures_.insert(pressure_iter, ::pastel::particle::get< ::pastel::particle::tags::pressure >(*first));
         }
 
@@ -1088,10 +1037,10 @@ namespace pastel
 
       template <
         typename Position, typename Velocity, typename Force, typename Mass,
-        typename Density, typename DensityForce, typename Pressure>
+        typename Density, typename Pressure>
       iterator emplace(
         const_iterator pos, Position&& position, Velocity&& velocity, Force&& force, Mass&& mass,
-        Density&& density, DensityForce&& sph_divergence, Pressure&& pressure)
+        Density&& density, Pressure&& pressure)
       {
         auto const pos_index = pos.index();
         auto const new_position_iter
@@ -1100,7 +1049,6 @@ namespace pastel
         forces_.insert(std::begin(forces_) + pos_index, std::forward<Force>(force));
         masses_.insert(std::begin(masses_) + pos_index, std::forward<Mass>(mass));
         densities_.insert(std::begin(densities_) + pos_index, std::forward<Density>(density));
-        sph_divergences_.insert(std::begin(sph_divergences_) + pos_index, std::forward<DensityForce>(sph_divergence));
         pressures_.insert(std::begin(pressures_) + pos_index, std::forward<Pressure>(pressure));
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1122,7 +1070,6 @@ namespace pastel
         forces_.erase(std::begin(forces_) + pos_index);
         masses_.erase(std::begin(masses_) + pos_index);
         densities_.erase(std::begin(densities_) + pos_index);
-        sph_divergences_.erase(std::begin(sph_divergences_) + pos_index);
         pressures_.erase(std::begin(pressures_) + pos_index);
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1145,7 +1092,6 @@ namespace pastel
         forces_.erase(std::begin(forces_) + first_index, std::begin(forces_) + last_index);
         masses_.erase(std::begin(masses_) + first_index, std::begin(masses_) + last_index);
         densities_.erase(std::begin(densities_) + first_index, std::begin(densities_) + last_index);
-        sph_divergences_.erase(std::begin(sph_divergences_) + first_index, std::begin(sph_divergences_) + last_index);
         pressures_.erase(std::begin(pressures_) + first_index, std::begin(pressures_) + last_index);
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1171,7 +1117,6 @@ namespace pastel
         forces_.push_back(::pastel::particle::get< ::pastel::particle::tags::force >(particle));
         masses_.push_back(::pastel::particle::get< ::pastel::particle::tags::mass >(particle));
         densities_.push_back(::pastel::particle::get< ::pastel::particle::tags::density >(particle));
-        sph_divergences_.push_back(::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(particle));
         pressures_.push_back(::pastel::particle::get< ::pastel::particle::tags::pressure >(particle));
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1189,7 +1134,6 @@ namespace pastel
         forces_.push_back(std::move(::pastel::particle::get< ::pastel::particle::tags::force >(particle)));
         masses_.push_back(std::move(::pastel::particle::get< ::pastel::particle::tags::mass >(particle)));
         densities_.push_back(std::move(::pastel::particle::get< ::pastel::particle::tags::density >(particle)));
-        sph_divergences_.push_back(std::move(::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(particle)));
         pressures_.push_back(std::move(::pastel::particle::get< ::pastel::particle::tags::pressure >(particle)));
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1205,14 +1149,13 @@ namespace pastel
         typename Density, typename DensityForce, typename Pressure>
       void emplace_back(
         Position&& position, Velocity&& velocity, Force&& force, Mass&& mass,
-        Density&& density, DensityForce&& sph_divergence, Pressure&& pressure)
+        Density&& density, Pressure&& pressure)
       {
         positions_.push_back(std::forward<Position>(position));
         velocities_.push_back(std::forward<Velocity>(velocity));
         forces_.push_back(std::forward<Force>(force));
         masses_.push_back(std::forward<Mass>(mass));
         densities_.push_back(std::forward<Density>(density));
-        sph_divergences_.push_back(std::forward<DensityForce>(sph_divergence));
         pressures_.push_back(std::forward<Pressure>(pressure));
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1230,7 +1173,6 @@ namespace pastel
         forces_.pop_back();
         masses_.pop_back();
         densities_.pop_back();
-        sph_divergences_.pop_back();
         pressures_.pop_back();
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1248,7 +1190,6 @@ namespace pastel
         forces_.resize(count);
         masses_.resize(count);
         densities_.resize(count);
-        sph_divergences_.resize(count);
         pressures_.resize(count);
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1266,7 +1207,6 @@ namespace pastel
         forces_.resize(count, ::pastel::particle::get< ::pastel::particle::tags::force >(particle));
         masses_.resize(count, ::pastel::particle::get< ::pastel::particle::tags::mass >(particle));
         densities_.resize(count, ::pastel::particle::get< ::pastel::particle::tags::density >(particle));
-        sph_divergences_.resize(count, ::pastel::particle::get< ::pastel::particle::tags::sph_divergence >(particle));
         pressures_.resize(count, ::pastel::particle::get< ::pastel::particle::tags::pressure >(particle));
 
         for (auto index = std::size_t{0}; index < num_integration_vectors; ++index)
@@ -1289,7 +1229,6 @@ namespace pastel
         swap(forces_, other.forces_);
         swap(masses_, other.masses_);
         swap(densities_, other.densities_);
-        swap(sph_divergences_, other.sph_divergences_);
         swap(pressures_, other.pressures_);
 
         swap(integration_vectors_, other.integration_vectors_);
@@ -1306,7 +1245,6 @@ namespace pastel
           && forces_ == other.forces_
           && masses_ == other.masses_
           && densities_ == other.densities_
-          && sph_divergences_ == other.sph_divergences_
           && pressures_ == other.pressures_
           && std::equal(integration_vectors_, integration_vectors_ + num_integration_vectors, other.integration_vectors_)
           && std::equal(property_vectors_, property_vectors_ + num_property_vectors, other.property_vectors_)
@@ -1321,7 +1259,6 @@ namespace pastel
           && forces_ < other.forces_
           && masses_ < other.masses_
           && densities_ < other.densities_
-          && sph_divergences_ < other.sph_divergences_
           && pressures_ < other.pressures_
           && std::lexicographical_compare(
                integration_vectors_, integration_vectors_ + num_integration_vectors,
@@ -1451,8 +1388,6 @@ namespace pastel
             = particles.template data< ::pastel::particle::tags::mass >();
           auto const densities_data
             = particles.template data< ::pastel::particle::tags::density >();
-          auto const sph_divergences_data
-            = particles.template data< ::pastel::particle::tags::sph_divergence >();
           auto const pressures_data
             = particles.template data< ::pastel::particle::tags::pressure >();
 
@@ -1464,7 +1399,7 @@ namespace pastel
             {
               target_particles.emplace_back(
                 positions_data[index], velocities_data[index], Vector{}, masses_data[index],
-                densities_data[index], sph_divergences_data[index], pressures_data[index]);
+                densities_data[index], pressures_data[index]);
 
               ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
                 particles, index, target_particles, ::pastel::container::num_particles(target_particles)-1u);
@@ -1479,7 +1414,6 @@ namespace pastel
                 Vector{},
                 ::pastel::container::get< ::pastel::particle::tags::mass >(boundary_particles, index),
                 ::pastel::container::get< ::pastel::particle::tags::density >(boundary_particles, index),
-                ::pastel::container::get< ::pastel::particle::tags::sph_divergence >(boundary_particles, index),
                 ::pastel::container::get< ::pastel::particle::tags::pressure >(boundary_particles, index));
 
               ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
@@ -1530,8 +1464,6 @@ namespace pastel
             = particles.template data< ::pastel::particle::tags::mass >();
           auto const densities_data
             = particles.template data< ::pastel::particle::tags::density >();
-          auto const sph_divergences_data
-            = particles.template data< ::pastel::particle::tags::sph_divergence >();
           auto const pressures_data
             = particles.template data< ::pastel::particle::tags::pressure >();
           auto const boundary_positions_data
@@ -1542,8 +1474,6 @@ namespace pastel
             = boundary_particles.template data< ::pastel::particle::tags::mass >();
           auto const boundary_densities_data
             = boundary_particles.template data< ::pastel::particle::tags::density >();
-          auto const boundary_sph_divergences_data
-            = boundary_particles.template data< ::pastel::particle::tags::sph_divergence >();
           auto const boundary_pressures_data
             = boundary_particles.template data< ::pastel::particle::tags::pressure >();
           auto const target_positions_data
@@ -1554,8 +1484,6 @@ namespace pastel
             = target_particles.template data< ::pastel::particle::tags::mass >();
           auto const target_densities_data
             = target_particles.template data< ::pastel::particle::tags::density >();
-          auto const target_sph_divergences_data
-            = target_particles.template data< ::pastel::particle::tags::sph_divergence >();
           auto const target_pressures_data
             = target_particles.template data< ::pastel::particle::tags::pressure >();
 
@@ -1569,7 +1497,6 @@ namespace pastel
               target_velocities_data[particle_index] = velocities_data[index];
               target_masses_data[particle_index] = masses_data[index];
               target_densities_data[particle_index] = densities_data[index];
-              target_sph_divergences_data[particle_index] = sph_divergences_data[index];
               target_pressures_data[particle_index] = pressures_data[index];
 
               ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(
@@ -1583,7 +1510,6 @@ namespace pastel
               target_velocities_data[particle_index] = boundary_velocities_data[index];
               target_masses_data[particle_index] = boundary_masses_data[index];
               target_densities_data[particle_index] = boundary_densities_data[index];
-              target_sph_divergences_data[particle_index] = boundary_sph_divergences_data[index];
               target_pressures_data[particle_index] = boundary_pressures_data[index];
 
               ::pastel::utility::for_<std::size_t, 0u, num_property_vectors_, ::pastel::container::detail::copy_nth_property_vector>::call(

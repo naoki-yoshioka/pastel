@@ -16,7 +16,7 @@ namespace pastel
 
       // for SPH
       struct density { };
-      struct density_force { };
+      struct sph_divergences { };
       struct pressure { };
     }
   } // namespace particle

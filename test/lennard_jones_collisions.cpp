@@ -81,6 +81,13 @@ BOOST_AUTO_TEST_CASE(lennard_jones_collisions_test, * boost::unit_test::toleranc
       + pastel::system::total_boundary_potential_energy<0u>(brute_force_system);
   for (auto step = 1u; step <= num_steps; ++step)
     pastel::integrate::vverlet::update(brute_force_system, time_step);
+  /*
+  for (auto step = 1u; step <= num_steps; ++step)
+  {
+    pastel::integrate::vverlet::update(brute_force_system, time_step);
+    std::cout << pastel::geometry::get<0u>(pastel::container::get<pastel::particle::tags::position>(pastel::system::particles<0u>(brute_force_system), 0u)) << std::endl;
+  }
+  */
 
   auto const total_energy
     = pastel::system::total_kinetic_energy<0u>(brute_force_system)

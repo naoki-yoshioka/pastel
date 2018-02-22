@@ -18,6 +18,7 @@
 # include <pastel/neighbor/meta/is_partner_data_accessible.hpp>
 # include <pastel/system/particles.hpp>
 # include <pastel/system/meta/particles_of.hpp>
+# include <pastel/system/meta/vector_of.hpp>
 # include <pastel/utility/pair.hpp>
 
 
@@ -36,7 +37,7 @@ namespace pastel
         template <typename Force, typename NeighborList, typename KeyParticles, typename PartnerParticles>
         static void call(
           Force const& force, NeighborList const& neighbor_list,
-          KeyParticles& key_partices, PartnerParticles& partner_particles)
+          KeyParticles& key_particles, PartnerParticles& partner_particles)
         {
           auto const num_keys = ::pastel::neighbor::num_keys(neighbor_list);
           for (auto key = static_cast<decltype(num_keys)>(0); key < num_keys; ++key)
@@ -87,7 +88,7 @@ namespace pastel
         template <typename Force, typename NeighborList, typename KeyParticles, typename PartnerParticles>
         static void call(
           Force const& force, NeighborList const& neighbor_list,
-          KeyParticles& key_partices, PartnerParticles& partner_particles)
+          KeyParticles& key_particles, PartnerParticles& partner_particles)
         {
           auto const num_keys = ::pastel::neighbor::num_keys(neighbor_list);
           for (auto key = static_cast<decltype(num_keys)>(0); key < num_keys; ++key)
@@ -139,7 +140,7 @@ namespace pastel
         template <typename Force, typename NeighborList, typename KeyParticles, typename PartnerParticles>
         static void call(
           Force const& force, NeighborList const& neighbor_list,
-          KeyParticles& key_partices, PartnerParticles& partner_particles)
+          KeyParticles& key_particles, PartnerParticles& partner_particles)
         {
           auto const num_keys = ::pastel::neighbor::num_keys(neighbor_list);
           for (auto key = static_cast<decltype(num_keys)>(0); key < num_keys; ++key)
@@ -190,7 +191,7 @@ namespace pastel
         template <typename Force, typename NeighborList, typename KeyParticles, typename PartnerParticles>
         static void call(
           Force const& force, NeighborList const& neighbor_list,
-          KeyParticles& key_partices, PartnerParticles& partner_particles)
+          KeyParticles& key_particles, PartnerParticles& partner_particles)
         {
           auto const num_keys = ::pastel::neighbor::num_keys(neighbor_list);
           for (auto key = static_cast<decltype(num_keys)>(0); key < num_keys; ++key)
@@ -244,7 +245,7 @@ namespace pastel
         template <typename Force, typename NeighborList, typename KeyParticles, typename PartnerParticles>
         static void call(
           Force const& force, NeighborList const& neighbor_list,
-          KeyParticles& key_partices, PartnerParticles& partner_particles)
+          KeyParticles& key_particles, PartnerParticles& partner_particles)
         {
           auto const num_keys = ::pastel::neighbor::num_keys(neighbor_list);
           for (auto key = static_cast<decltype(num_keys)>(0); key < num_keys; ++key)
@@ -260,7 +261,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const partner_end = ::pastel::neighbor::partner_end(neighbor_list, key);
@@ -294,7 +295,7 @@ namespace pastel
         template <typename Force, typename NeighborList, typename KeyParticles, typename PartnerParticles>
         static void call(
           Force const& force, NeighborList const& neighbor_list,
-          KeyParticles& key_partices, PartnerParticles& partner_particles)
+          KeyParticles& key_particles, PartnerParticles& partner_particles)
         {
           auto const num_keys = ::pastel::neighbor::num_keys(neighbor_list);
           for (auto key = static_cast<decltype(num_keys)>(0); key < num_keys; ++key)
@@ -310,7 +311,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const partner_end = ::pastel::neighbor::partner_end(neighbor_list, key);
@@ -345,7 +346,7 @@ namespace pastel
         template <typename Force, typename NeighborList, typename KeyParticles, typename PartnerParticles>
         static void call(
           Force const& force, NeighborList const& neighbor_list,
-          KeyParticles& key_partices, PartnerParticles& partner_particles)
+          KeyParticles& key_particles, PartnerParticles& partner_particles)
         {
           auto const num_keys = ::pastel::neighbor::num_keys(neighbor_list);
           for (auto key = static_cast<decltype(num_keys)>(0); key < num_keys; ++key)
@@ -359,7 +360,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const partner_end = ::pastel::neighbor::partner_end(neighbor_list, key);
@@ -395,7 +396,7 @@ namespace pastel
         template <typename Force, typename NeighborList, typename KeyParticles, typename PartnerParticles>
         static void call(
           Force const& force, NeighborList const& neighbor_list,
-          KeyParticles& key_partices, PartnerParticles& partner_particles)
+          KeyParticles& key_particles, PartnerParticles& partner_particles)
         {
           auto const num_keys = ::pastel::neighbor::num_keys(neighbor_list);
           for (auto key = static_cast<decltype(num_keys)>(0); key < num_keys; ++key)
@@ -409,7 +410,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const partner_end = ::pastel::neighbor::partner_end(neighbor_list, key);
@@ -532,20 +533,17 @@ namespace pastel
         {
           using interaction_pair_type
             = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
-          using key_particles
+          using key_particles_type
             = typename ::pastel::system::meta::particles_of<interaction_pair_type::first, System>::type;
-          static constexpr bool has_key_mass = ::pastel::container::meta::has_mass<key_particles>::value;
-          using partner_particles
+          static constexpr bool has_key_mass = ::pastel::container::meta::has_mass<key_particles_type>::value;
+          using partner_particles_type
             = typename ::pastel::system::meta::particles_of<interaction_pair_type::second, System>::type;
-          static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles>::value;
-
-          auto& key_particles
-            = ::pastel::system::particles<interaction_pair_type::first>(system);
-          auto& partner_particles
-            = ::pastel::system::particles<interaction_pair_type::second>(system);
+          static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles_type>::value;
 
           ::pastel::force::update_forces_detail::update_newtonian_sph_forces_1<has_key_mass, has_partner_mass>::call(
-            force, neighbor_list, key_particles, partner_particles);
+            force, neighbor_list,
+            ::pastel::system::particles<interaction_pair_type::first>(system),
+            ::pastel::system::particles<interaction_pair_type::second>(system));
         }
       }; // struct update_forces<true>
 
@@ -638,20 +636,17 @@ namespace pastel
         {
           using interaction_pair_type
             = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
-          using key_particles
+          using key_particles_type
             = typename ::pastel::system::meta::particles_of<interaction_pair_type::first, System>::type;
-          static constexpr bool has_key_mass = ::pastel::container::meta::has_mass<key_particles>::value;
-          using partner_particles
+          static constexpr bool has_key_mass = ::pastel::container::meta::has_mass<key_particles_type>::value;
+          using partner_particles_type
             = typename ::pastel::system::meta::particles_of<interaction_pair_type::second, System>::type;
-          static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles>::value;
-
-          auto& key_particles
-            = ::pastel::system::particles<interaction_pair_type::first>(system);
-          auto& partner_particles
-            = ::pastel::system::particles<interaction_pair_type::second>(system);
+          static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles_type>::value;
 
           ::pastel::force::update_forces_detail::update_newtonian_sph_forces_2<has_key_mass, has_partner_mass>::call(
-            force, neighbor_list, key_particles, partner_particles);
+            force, neighbor_list,
+            ::pastel::system::particles<interaction_pair_type::first>(system),
+            ::pastel::system::particles<interaction_pair_type::second>(system));
         }
       }; // struct update_forces<false>
     } // namespace update_forces_detail

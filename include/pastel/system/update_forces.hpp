@@ -58,7 +58,7 @@ namespace pastel
       template <>
       struct update_pressures_impl2<true>
       {
-        template <typename Particles typename ExternalForce>
+        template <typename Particles, typename ExternalForce>
         static void call(Particles& particles, ExternalForce&& external_force)
         {
           auto const pressures_data = particles.template data< ::pastel::particle::tags::pressure >();
@@ -73,7 +73,7 @@ namespace pastel
       template <>
       struct update_pressures_impl2<false>
       {
-        template <typename Particles typename ExternalForce>
+        template <typename Particles, typename ExternalForce>
         static void call(Particles& particles, ExternalForce&& external_force)
         {
           auto const num_particles = ::pastel::container::num_particles(particles);
@@ -81,7 +81,7 @@ namespace pastel
             ::pastel::container::get< ::pastel::particle::tags::pressure >(particles, index)
               = ::pastel::extforce::pressure(
                   external_force,
-                  ::pastel::container::get< ::pastel::particle::tags::density >(particles index));
+                  ::pastel::container::get< ::pastel::particle::tags::density >(particles, index));
         }
       }; // struct update_pressures_impl2<false>
 
@@ -91,7 +91,7 @@ namespace pastel
       template <>
       struct update_pressures_impl<true>
       {
-        template <typename Particles typename ExternalForce>
+        template <typename Particles, typename ExternalForce>
         static void call(Particles& particles, ExternalForce&& external_force)
         {
           static constexpr bool is_data_accessible
@@ -104,7 +104,7 @@ namespace pastel
       template <>
       struct update_pressures_impl<false>
       {
-        template <typename Particles typename ExternalForce>
+        template <typename Particles, typename ExternalForce>
         static void call(Particles&, ExternalForce&&)
         { }
       }; // struct update_pressures_impl<false>

@@ -14,7 +14,7 @@ namespace pastel
 {
   namespace container
   {
-    namespace clear_densities_pressures
+    namespace clear_densities_pressures_detail
     {
       template <bool is_sph_particle, bool has_divergence>
       struct clear;
@@ -55,7 +55,7 @@ namespace pastel
         template <typename Particles>
         static void call(Particles const&) { }
       }; // struct clear<false, false>
-    } // namespace clear_densities_pressures
+    } // namespace clear_densities_pressures_detail
 
     template <typename Particles>
     inline void clear_densities_pressures(Particles& particles)

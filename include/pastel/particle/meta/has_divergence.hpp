@@ -30,7 +30,7 @@ namespace pastel
 
       template <typename Particle>
       struct has_divergence
-        : ::pastel::particle::meta::has_divergence_detail::has_divergence<Particle, ::pastel::particle::meta::is_sph_particle<Particl>::value>
+        : ::pastel::particle::meta::has_divergence_detail::has_divergence<Particle, ::pastel::particle::meta::is_sph_particle<Particle>::value>
       { };
     } // namespace meta
   } // namespace particle

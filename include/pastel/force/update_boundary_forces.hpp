@@ -19,6 +19,7 @@
 # include <pastel/system/particles.hpp>
 # include <pastel/system/boundary_particles.hpp>
 # include <pastel/system/meta/particles_of.hpp>
+# include <pastel/system/meta/vector_of.hpp>
 # include <pastel/utility/pair.hpp>
 
 
@@ -53,7 +54,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const num_partners = ::pastel::neighbor::num_partners(boundary_neighbor_list, key);
@@ -104,7 +105,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const num_partners = ::pastel::neighbor::num_partners(boundary_neighbor_list, key);
@@ -154,7 +155,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const num_partners = ::pastel::neighbor::num_partners(boundary_neighbor_list, key);
@@ -205,7 +206,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const num_partners = ::pastel::neighbor::num_partners(boundary_neighbor_list, key);
@@ -261,7 +262,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const partner_end = ::pastel::neighbor::partner_end(boundary_neighbor_list, key);
@@ -311,7 +312,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const partner_end = ::pastel::neighbor::partner_end(boundary_neighbor_list, key);
@@ -360,7 +361,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const partner_end = ::pastel::neighbor::partner_end(boundary_neighbor_list, key);
@@ -410,7 +411,7 @@ namespace pastel
             auto const& key_pressure
               = ::pastel::container::get< ::pastel::particle::tags::pressure >(key_particles, key);
             using vector_type
-              = typename ::pastel::system::meta::vector_of<interaction_pair_type::first, System>::type;
+              = typename ::pastel::container::meta::vector_of<KeyParticles>::type;
             auto key_force = vector_type{};
 
             auto const partner_end = ::pastel::neighbor::partner_end(boundary_neighbor_list, key);
@@ -534,20 +535,17 @@ namespace pastel
         {
           using interaction_pair_type
             = typename ::pastel::neighbor::meta::interaction_pair_of<BoundaryNeighborList>::type;
-          using key_particles
+          using key_particles_type
             = typename ::pastel::system::meta::particles_of<interaction_pair_type::first, System>::type;
-          static constexpr bool has_key_mass = ::pastel::container::meta::has_mass<key_particles>::value;
-          using partner_particles
+          static constexpr bool has_key_mass = ::pastel::container::meta::has_mass<key_particles_type>::value;
+          using partner_particles_type
             = typename ::pastel::system::meta::particles_of<interaction_pair_type::second, System>::type;
-          static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles>::value;
-
-          auto& key_particles
-            = ::pastel::system::particles<interaction_pair_type::first>(system);
-          auto& partner_particles
-            = ::pastel::system::boundary_particles<interaction_pair_type::second>(system);
+          static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles_type>::value;
 
           ::pastel::force::update_boundary_forces_detail::update_boundary_newtonian_sph_forces_1<has_key_mass, has_partner_mass>::call(
-            force, boundary_neighbor_list, key_particles, partner_particles);
+            force, boundary_neighbor_list,
+            ::pastel::system::particles<interaction_pair_type::first>(system),
+            ::pastel::system::boundary_particles<interaction_pair_type::second>(system));
         }
       }; // struct update_boundary_forces<true>
 
@@ -640,12 +638,12 @@ namespace pastel
         {
           using interaction_pair_type
             = typename ::pastel::neighbor::meta::interaction_pair_of<BoundaryNeighborList>::type;
-          using key_particles
+          using key_particles_type
             = typename ::pastel::system::meta::particles_of<interaction_pair_type::first, System>::type;
-          static constexpr bool has_key_mass = ::pastel::container::meta::has_mass<key_particles>::value;
-          using partner_particles
+          static constexpr bool has_key_mass = ::pastel::container::meta::has_mass<key_particles_type>::value;
+          using partner_particles_type
             = typename ::pastel::system::meta::particles_of<interaction_pair_type::second, System>::type;
-          static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles>::value;
+          static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles_type>::value;
 
           auto& key_particles
             = ::pastel::system::particles<interaction_pair_type::first>(system);
@@ -653,7 +651,9 @@ namespace pastel
             = ::pastel::system::boundary_particles<interaction_pair_type::second>(system);
 
           ::pastel::force::update_boundary_forces_detail::update_boundary_newtonian_sph_forces_2<has_key_mass, has_partner_mass>::call(
-            force, boundary_neighbor_list, key_particles, partner_particles);
+            force, boundary_neighbor_list,
+            ::pastel::system::particles<interaction_pair_type::first>(system),
+            ::pastel::system::boundary_particles<interaction_pair_type::second>(system));
         }
       }; // struct update_boundary_forces<false>
     } // namespace update_boundary_forces_detail

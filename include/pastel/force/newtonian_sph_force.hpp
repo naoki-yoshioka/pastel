@@ -134,7 +134,7 @@ namespace pastel
       template <typename Kernel, typename Value>
       struct squared_cutoff_length< ::pastel::force::newtonian_sph_force<Kernel, Value> >
       {
-        static Value const& call(Force const& force)
+        static Value const& call(::pastel::force::newtonian_sph_force<Kernel, Value> const& force)
         { return force.squared_cutoff_length(); }
       }; // struct squared_cutoff_length< ::pastel::force::newtonian_sph_force<Kernel, Value> >
     } // namespace dispatch

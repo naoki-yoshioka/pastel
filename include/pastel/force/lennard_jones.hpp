@@ -274,7 +274,7 @@ namespace pastel
       template <typename Value>
       struct squared_cutoff_length< ::pastel::force::lennard_jones<true, true, Value> >
       {
-        static Value const& call(Force const& force)
+        static Value const& call(::pastel::force::lennard_jones<true, true, Value> const& force)
         { return force.squared_cutoff_length(); }
       }; // struct squared_cutoff_length< ::pastel::force::lennard_jones<true, true, Value> >
     } // namespace dispatch

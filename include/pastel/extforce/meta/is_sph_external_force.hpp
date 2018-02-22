@@ -10,7 +10,7 @@ namespace pastel
   {
     namespace meta
     {
-      template <typename ExternalFoce>
+      template <typename ExternalForce>
       struct is_sph_external_force
         : std::integral_constant<bool, ExternalForce::is_sph_external_force>
       { };

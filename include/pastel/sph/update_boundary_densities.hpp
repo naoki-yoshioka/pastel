@@ -220,11 +220,11 @@ namespace pastel
     template<typename Force, typename NeighborList, typename System>
     inline void update_boundary_densities(Force const& force, NeighborList const& neighbor_list, System& system)
     {
-      using interaction_pair_type = ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
-      using key_particles = ::pastel::system::meta::particles_of<interaction_pair_type::first, System>::type;
-      using partner_particles = ::pastel::system::meta::particles_of<interaction_pair_type::second, System>::type;
-      using key_particle_type = typename ::pastel::container::meta::value_of<key_particles>::type;
-      using partner_particle_type = typename ::pastel::container::meta::value_of<partner_particles>::type;
+      using interaction_pair_type = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
+      using key_particles_type = typename ::pastel::system::meta::particles_of<interaction_pair_type::first, System>::type;
+      using partner_particles_type = typename ::pastel::system::meta::particles_of<interaction_pair_type::second, System>::type;
+      using key_particle_type = typename ::pastel::container::meta::value_of<key_particles_type>::type;
+      using partner_particle_type = typename ::pastel::container::meta::value_of<partner_particles_type>::type;
       static constexpr bool is_sph_particles_without_divergences
         = (::pastel::particle::meta::is_sph_particle<key_particle_type>::value
            && !::pastel::particle::meta::has_divergence<key_particle_type>::value)
@@ -233,7 +233,7 @@ namespace pastel
 
       static constexpr bool is_partner_data_accessible
         = ::pastel::neighbor::meta::is_partner_data_accessible<NeighborList>::value;
-      static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles>::value;
+      static constexpr bool has_partner_mass = ::pastel::container::meta::has_mass<partner_particles_type>::value;
       ::pastel::sph::update_boundary_densities_detail::update_boundary_densities<is_sph_particles_without_divergences, is_partner_data_accessible, has_partner_mass>::call(
         force, neighbor_list,
         ::pastel::system::particles<interaction_pair_type::first>(system),

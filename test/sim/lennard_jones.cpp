@@ -24,7 +24,7 @@ void output(System const& system)
 {
   auto const& particles
     = pastel::system::particles<0u>(system);
-  auto const num_particles = pastel::container::num_particles(particles);
+  auto const num_particles = static_cast<int>(pastel::container::num_particles(particles));
   for (auto index = 0; index < num_particles; ++index)
   {
     auto const& position
@@ -45,7 +45,7 @@ void output(System const& system)
 
   auto const& boundary_particles
     = pastel::system::boundary_particles<0u>(system);
-  auto const num_boundary_particles = pastel::container::num_particles(boundary_particles);
+  auto const num_boundary_particles = static_cast<int>(pastel::container::num_particles(boundary_particles));
   for (auto index = 0; index < num_boundary_particles; ++index)
   {
     auto const& position
@@ -65,7 +65,6 @@ void output(System const& system)
   std::cout << std::flush;
 }
 
-#include <pastel/geometry/point_io.hpp>
 int main(int argc, char* argv[])
 {
   using rng_type = std::mt19937_64;

@@ -1146,7 +1146,7 @@ namespace pastel
 
       template <
         typename Position, typename Velocity, typename Force, typename Mass,
-        typename Density, typename DensityForce, typename Pressure>
+        typename Density, typename Pressure>
       void emplace_back(
         Position&& position, Velocity&& velocity, Force&& force, Mass&& mass,
         Density&& density, Pressure&& pressure)

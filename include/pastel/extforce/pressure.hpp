@@ -18,7 +18,7 @@ namespace pastel
       {
         template <typename ExternalForce, typename Density>
         static auto call(ExternalForce const& external_force, Density const& density)
-          -> decltype(external_force.pressure(density))
+          -> decltype(external_force.pressure()(density))
         { return external_force.pressure()(density); }
       }; // struct pressure<true>
     } // namespace pressure_detail

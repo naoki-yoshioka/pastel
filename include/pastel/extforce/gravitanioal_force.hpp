@@ -18,8 +18,8 @@ namespace pastel
       template <bool has_mass>
       struct force
       {
-        template <typename Particles>
-        static Vector const& call(
+        template <typename Particles, typename Vector>
+        static Vector call(
           Particles const& particles,
           typename ::pastel::container::meta::size_of<Particles const>::type index,
           Vector const& gravitational_acceleration)
@@ -29,7 +29,7 @@ namespace pastel
       template <>
       struct force<false>
       {
-        template <typename Particles>
+        template <typename Particles, typename Vector>
         static Vector const& call(
           Particles const&,
           typename ::pastel::container::meta::size_of<Particles const>::type,
@@ -58,7 +58,7 @@ namespace pastel
       { gravitational_acceleration_ = std::forward<Vector_>(new_gravitational_acceleration); }
 
       template <typename Particles>
-      Vector const& operator()(
+      Vector operator()(
         Particles const& particles,
         typename ::pastel::container::meta::size_of<Particles const>::type index) const
       {

@@ -986,7 +986,7 @@ namespace pastel
 
       template <
         typename Position, typename Velocity, typename Force,
-        typename Density, typename DensityForce, typename Pressure>
+        typename Density, typename Pressure>
       iterator emplace(
         const_iterator pos, Position&& position, Velocity&& velocity, Force&& force,
         Density&& density, Pressure&& pressure)
@@ -1090,7 +1090,7 @@ namespace pastel
 
       template <
         typename Position, typename Velocity, typename Force,
-        typename Density, typename DensityForce, typename Pressure>
+        typename Density, typename Pressure>
       void emplace_back(
         Position&& position, Velocity&& velocity, Force&& force,
         Density&& density, Pressure&& pressure)

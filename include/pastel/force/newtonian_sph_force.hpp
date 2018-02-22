@@ -20,7 +20,6 @@ namespace pastel
     {
       Kernel kernel_;
 
-      Value cutoff_length_;
       Value squared_cutoff_length_;
 
       Value shear_viscosity_;
@@ -35,30 +34,26 @@ namespace pastel
       template <typename Kernel_>
       explicit newtonian_sph_force(Kernel_&& kernel)
         : kernel_{std::forward<Kernel_>(kernel)},
-          cutoff_length_{Value{1}},
-          squared_cutoff_length_{Value{1}},
+          squared_cutoff_length_{kernel_.support_radius() * kernel_.support_radius()},
           shear_viscosity_{Value{1}},
           viscous_coefficient_{Value{2}}
       { }
 
       template <typename Kernel_>
-      newtonian_sph_force(Kernel_&& kernel, Value const& cutoff_length, Value const& shear_viscosity)
+      newtonian_sph_force(Kernel_&& kernel, Value const& shear_viscosity)
         : kernel_{std::forward<Kernel_>(kernel)},
-          cutoff_length_{cutoff_length},
-          squared_cutoff_length_{cutoff_length * cutoff_length},
+          squared_cutoff_length_{kernel_.support_radius() * kernel_.support_radius()},
           shear_viscosity_{shear_viscosity},
           viscous_coefficient_{Value{2} * shear_viscosity}
-      { assert(cutoff_length > Value{0} && shear_viscosity > Value{0}); }
+      { assert(shear_viscosity > Value{0}); }
 
       constexpr bool operator==(newtonian_sph_force const& other) const
       {
 # ifdef NDEBUG
         return kernel_ == other.kernel_
-          && cutoff_length_ == other.cutoff_length_
           && shear_viscosity_ == other.shear_viscosity_;
 # else
         return kernel_ == other.kernel_
-          && cutoff_length_ == other.cutoff_length_
           && squared_cutoff_length_ == other.squared_cutoff_length_
           && shear_viscosity_ == other.shear_viscosity_
           && viscous_coefficient_ == other.viscous_coefficient_;
@@ -72,7 +67,6 @@ namespace pastel
       {
         using std::swap;
         swap(kernel_, other.kernel_);
-        swap(cutoff_length_, other.cutoff_length_);
         swap(squared_cutoff_length_, other.squared_cutoff_length_);
         swap(shear_viscosity_, other.shear_viscosity_);
         swap(viscous_coefficient_, other.viscous_coefficient_);
@@ -82,11 +76,11 @@ namespace pastel
       template <typename Kernel_>
       void kernel(Kernel_&& new_kernel) { kernel_ = std::forward<Kernel_>(new_kernel); }
 
-      constexpr Value const& cutoff_length() const { return cutoff_length_; }
+      constexpr Value const& cutoff_length() const { return kernel_.support_radius(); }
       void cutoff_length(Value const& new_cutoff_length)
       {
         assert(new_cutoff_length > Value{0});
-        cutoff_length_ = new_cutoff_length;
+        kernel_.support_radius(new_cutoff_length);
         squared_cutoff_length_ = new_cutoff_length * new_cutoff_length;
       }
 
@@ -138,6 +132,19 @@ namespace pastel
         { return force.squared_cutoff_length(); }
       }; // struct squared_cutoff_length< ::pastel::force::newtonian_sph_force<Kernel, Value> >
     } // namespace dispatch
+
+    template <typename Kernel, typename Value>
+    inline constexpr bool operator!=(
+      ::pastel::force::newtonian_sph_force<Kernel, Value> const& lhs,
+      ::pastel::force::newtonian_sph_force<Kernel, Value> const& rhs)
+    { return !(lhs == rhs); }
+
+    template <typename Kernel, typename Value>
+    inline void swap(
+      ::pastel::force::newtonian_sph_force<Kernel, Value>& lhs,
+      ::pastel::force::newtonian_sph_force<Kernel, Value>& rhs)
+      noexcept(noexcept(lhs.swap(rhs)))
+    { lhs.swap(rhs); }
   } // namespace force
 } // namespace pastel
 

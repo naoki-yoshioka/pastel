@@ -18,8 +18,8 @@ namespace pastel
       template <bool has_mass>
       struct force
       {
-        template <typename Particles>
-        static Vector const& call(
+        template <typename Particles, typename Vector>
+        static Vector call(
           Particles const& particles,
           typename ::pastel::container::meta::size_of<Particles const>::type index,
           Vector const& gravitational_acceleration)
@@ -29,14 +29,14 @@ namespace pastel
       template <>
       struct force<false>
       {
-        template <typename Particles>
+        template <typename Particles, typename Vector>
         static Vector const& call(
           Particles const&,
           typename ::pastel::container::meta::size_of<Particles const>::type,
           Vector const& gravitational_acceleration)
         { return gravitational_acceleration; }
       }; // struct force<false>
-    } // namespace gravitational_force_detail
+    } // namespace sph_gravitational_force_detail
 
 
     template <typename Pressure, typename Vector>
@@ -46,9 +46,9 @@ namespace pastel
       Vector gravitational_acceleration_;
 
      public:
-      static constexpr bool is_sph_external_force = false;
+      static constexpr bool is_sph_external_force = true;
 
-      gravitational_force(Pressure const& pressure, Vector const& gravitational_acceleration) noexcept
+      sph_gravitational_force(Pressure const& pressure, Vector const& gravitational_acceleration) noexcept
         : pressure_{pressure},
           gravitational_acceleration_{gravitational_acceleration}
       { }
@@ -61,13 +61,13 @@ namespace pastel
       { gravitational_acceleration_ = std::forward<Vector_>(new_gravitational_acceleration); }
 
       template <typename Particles>
-      Vector const& operator()(
+      Vector operator()(
         Particles const& particles,
         typename ::pastel::container::meta::size_of<Particles const>::type index) const
       {
         static constexpr bool has_mass
           = ::pastel::container::meta::has_mass<Particles>::value;
-        return ::pastel::extforce::gravitational_force_detail::force<has_mass>::call(
+        return ::pastel::extforce::sph_gravitational_force_detail::force<has_mass>::call(
           particles, index, gravitational_acceleration_);
       }
     }; // class sph_gravitational_force<Vector>

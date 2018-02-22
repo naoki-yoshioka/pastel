@@ -143,7 +143,7 @@ namespace pastel
         auto const one_minus_value = Value{1} - value;
         auto const one_minus_value_2 = one_minus_value * one_minus_value;
         auto const one_minus_value_5 = one_minus_value_2 * one_minus_value_2 * one_minus_value;
-        return -Value{56} / Value{3} * value * (Value{5} * value + Value{1}) * one_minus_value_3;
+        return -Value{56} / Value{3} * value * (Value{5} * value + Value{1}) * one_minus_value_5;
       }
 
 
@@ -229,14 +229,14 @@ namespace pastel
       Value derivative_coefficient_;
 
      public:
-      constexpr wendland()
+      wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
           coefficient_{Value{5} / Value{4}},
           derivative_coefficient_{coefficient_}
       { }
 
-      explicit constexpr wendland(Value const& support_radius)
+      explicit wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
           coefficient_{Value{5} * inverse_support_radius_ / Value{4}},
@@ -868,7 +868,7 @@ namespace pastel
 
 
     template <std::size_t order, std::size_t dimension, typename Value>
-    inline bool operator!=(
+    inline constexpr bool operator!=(
       ::pastel::kernel::wendland<order, dimension, Value> const& lhs,
       ::pastel::kernel::wendland<order, dimension, Value> const& rhs)
     { return !(lhs == rhs); }

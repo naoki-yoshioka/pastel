@@ -135,19 +135,6 @@ namespace pastel
       {
         template <typename NeighborList, typename System>
         void operator()(NeighborList const& neighbor_list, System& system) const
-        {
-          this->call(
-            neighbor_list, system,
-            typename ::pastel::neighbor::meta::required_arguments_category_of<NeighborList>::type{});
-        }
-
-       private:
-        template <typename NeighborList, typename System>
-        void call(NeighborList const& neighbor_list, System& system, ::pastel::force::tags::requires_position) const
-        { ::pastel::force::update_forces(neighbor_list.force(), neighbor_list, system); }
-
-        template <typename NeighborList, typename System>
-        void call(NeighborList const& neighbor_list, System& system, ::pastel::force::tags::requires_position_orientation) const
         { ::pastel::force::update_forces(neighbor_list.force(), neighbor_list, system); }
       }; // struct update_force
 
@@ -155,19 +142,6 @@ namespace pastel
       {
         template <typename BoundaryNeighborList, typename System>
         void operator()(BoundaryNeighborList const& boundary_neighbor_list, System& system) const
-        {
-          this->call(
-            boundary_neighbor_list, system,
-            typename ::pastel::neighbor::meta::required_arguments_category_of<BoundaryNeighborList>::type{});
-        }
-
-       private:
-        template <typename BoundaryNeighborList, typename System>
-        void call(BoundaryNeighborList const& boundary_neighbor_list, System& system, ::pastel::force::tags::requires_position) const
-        { ::pastel::force::update_boundary_forces(boundary_neighbor_list.force(), boundary_neighbor_list, system); }
-
-        template <typename BoundaryNeighborList, typename System>
-        void call(BoundaryNeighborList const& boundary_neighbor_list, System& system, ::pastel::force::tags::requires_position_orientation) const
         { ::pastel::force::update_boundary_forces(boundary_neighbor_list.force(), boundary_neighbor_list, system); }
       }; // struct update_boundary_force
 

@@ -3,8 +3,11 @@
 
 # include <cassert>
 # include <cstddef>
+# include <utility>
 
 # include <boost/math/constants/constants.hpp>
+
+# include <pastel/utility/is_nothrow_swappable.hpp>
 
 
 namespace pastel
@@ -226,19 +229,51 @@ namespace pastel
       Value derivative_coefficient_;
 
      public:
-      wendland()
+      constexpr wendland()
         : support_radius_{Value{1}},
           inverse_support_radius_{Value{1}},
           coefficient_{Value{5} / Value{4}},
           derivative_coefficient_{coefficient_}
       { }
 
-      explicit wendland(Value const& support_radius)
+      explicit constexpr wendland(Value const& support_radius)
         : support_radius_{support_radius},
           inverse_support_radius_{Value{1} / support_radius},
           coefficient_{Value{5} * inverse_support_radius_ / Value{4}},
           derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
+
+      constexpr bool operator==(wendland const& other) const
+      {
+# ifdef NDEBUG
+        return support_radius_ == other.support_radius_;
+# else
+        return support_radius_ == other.support_radius_
+          && inverse_support_radius_ == other.inverse_support_radius_
+          && coefficient_ == other.coefficient_
+          && derivative_coefficient_ == other.derivative_coefficient_;
+# endif
+      }
+
+      void swap(wendland& other)
+        noexcept(::pastel::utility::is_nothrow_swappable<Value>::value)
+      {
+        using std::swap;
+        swap(support_radius_, other.support_radius_);
+        swap(inverse_support_radius_, other.inverse_support_radius_);
+        swap(coefficient_, other.coefficient_);
+        swap(derivative_coefficient_, other.derivative_coefficient_);
+      }
+
+      Value const& support_radius() const { return support_radius_; }
+      void support_radius(Value const& new_support_radius)
+      {
+        assert(new_support_radius > Value{0});
+        support_radius_ = new_support_radius;
+        inverse_support_radius_ = Value{1} / new_support_radius;
+        coefficient_ = Value{5} * inverse_support_radius_ / Value{4};
+        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
+      }
 
       Value operator()(Value const& value) const
       {
@@ -250,15 +285,6 @@ namespace pastel
       {
         assert(value >= Value{0});
         return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland21(value * inverse_support_radius_);
-      }
-
-      Value const& support_radius() const { return support_radius_; }
-      void support_radius(Value const& new_support_radius)
-      {
-        support_radius_ = new_support_radius;
-        inverse_support_radius_ = Value{1} / new_support_radius;
-        coefficient_ = Value{5} * inverse_support_radius_ / Value{4};
-        derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
     }; // class wendland<1u, 1u, Value>
 
@@ -289,16 +315,26 @@ namespace pastel
           derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
-      Value operator()(Value const& value) const
+      constexpr bool operator==(wendland const& other) const
       {
-        assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::wendland31(value * inverse_support_radius_);
+# ifdef NDEBUG
+        return support_radius_ == other.support_radius_;
+# else
+        return support_radius_ == other.support_radius_
+          && inverse_support_radius_ == other.inverse_support_radius_
+          && coefficient_ == other.coefficient_
+          && derivative_coefficient_ == other.derivative_coefficient_;
+# endif
       }
 
-      Value derivative(Value const& value) const
+      void swap(wendland& other)
+        noexcept(::pastel::utility::is_nothrow_swappable<Value>::value)
       {
-        assert(value >= Value{0});
-        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland31(value * inverse_support_radius_);
+        using std::swap;
+        swap(support_radius_, other.support_radius_);
+        swap(inverse_support_radius_, other.inverse_support_radius_);
+        swap(coefficient_, other.coefficient_);
+        swap(derivative_coefficient_, other.derivative_coefficient_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -309,6 +345,18 @@ namespace pastel
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{7} * inverse_support_radius_ * inverse_support_radius_ / boost::math::constants::pi<Value>();
         derivative_coefficient_ = coefficient_ * inverse_support_radius_;
+      }
+
+      Value operator()(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return coefficient_ * ::pastel::kernel::wendland_detail::wendland31(value * inverse_support_radius_);
+      }
+
+      Value derivative(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland31(value * inverse_support_radius_);
       }
     }; // class wendland<1u, 2u, Value>
 
@@ -339,16 +387,26 @@ namespace pastel
           derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
-      Value operator()(Value const& value) const
+      constexpr bool operator==(wendland const& other) const
       {
-        assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::wendland31(value * inverse_support_radius_);
+# ifdef NDEBUG
+        return support_radius_ == other.support_radius_;
+# else
+        return support_radius_ == other.support_radius_
+          && inverse_support_radius_ == other.inverse_support_radius_
+          && coefficient_ == other.coefficient_
+          && derivative_coefficient_ == other.derivative_coefficient_;
+# endif
       }
 
-      Value derivative(Value const& value) const
+      void swap(wendland& other)
+        noexcept(::pastel::utility::is_nothrow_swappable<Value>::value)
       {
-        assert(value >= Value{0});
-        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland31(value * inverse_support_radius_);
+        using std::swap;
+        swap(support_radius_, other.support_radius_);
+        swap(inverse_support_radius_, other.inverse_support_radius_);
+        swap(coefficient_, other.coefficient_);
+        swap(derivative_coefficient_, other.derivative_coefficient_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -359,6 +417,18 @@ namespace pastel
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{21} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>();
         derivative_coefficient_ = coefficient_ * inverse_support_radius_;
+      }
+
+      Value operator()(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return coefficient_ * ::pastel::kernel::wendland_detail::wendland31(value * inverse_support_radius_);
+      }
+
+      Value derivative(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland31(value * inverse_support_radius_);
       }
     }; // class wendland<1u, 3u, Value>
 
@@ -390,19 +460,48 @@ namespace pastel
           derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
-      Value operator()(Value const& value) const
-      { return coefficient_ * ::pastel::kernel::wendland_detail::wendland32(value * inverse_support_radius_); }
+      constexpr bool operator==(wendland const& other) const
+      {
+# ifdef NDEBUG
+        return support_radius_ == other.support_radius_;
+# else
+        return support_radius_ == other.support_radius_
+          && inverse_support_radius_ == other.inverse_support_radius_
+          && coefficient_ == other.coefficient_
+          && derivative_coefficient_ == other.derivative_coefficient_;
+# endif
+      }
 
-      Value derivative(Value const& value) const
-      { return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland32(value * inverse_support_radius_); }
+      void swap(wendland& other)
+        noexcept(::pastel::utility::is_nothrow_swappable<Value>::value)
+      {
+        using std::swap;
+        swap(support_radius_, other.support_radius_);
+        swap(inverse_support_radius_, other.inverse_support_radius_);
+        swap(coefficient_, other.coefficient_);
+        swap(derivative_coefficient_, other.derivative_coefficient_);
+      }
 
       Value const& support_radius() const { return support_radius_; }
       void support_radius(Value const& new_support_radius)
       {
+        assert(new_support_radius > Value{0});
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{3} * inverse_support_radius_ / Value{2};
         derivative_coefficient_ = coefficient_ * inverse_support_radius_;
+      }
+
+      Value operator()(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return coefficient_ * ::pastel::kernel::wendland_detail::wendland32(value * inverse_support_radius_);
+      }
+
+      Value derivative(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland32(value * inverse_support_radius_);
       }
     }; // class wendland<2u, 1u, Value>
 
@@ -433,16 +532,26 @@ namespace pastel
           derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
-      Value operator()(Value const& value) const
+      constexpr bool operator==(wendland const& other) const
       {
-        assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::wendland42(value * inverse_support_radius_);
+# ifdef NDEBUG
+        return support_radius_ == other.support_radius_;
+# else
+        return support_radius_ == other.support_radius_
+          && inverse_support_radius_ == other.inverse_support_radius_
+          && coefficient_ == other.coefficient_
+          && derivative_coefficient_ == other.derivative_coefficient_;
+# endif
       }
 
-      Value derivative(Value const& value) const
+      void swap(wendland& other)
+        noexcept(::pastel::utility::is_nothrow_swappable<Value>::value)
       {
-        assert(value >= Value{0});
-        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland42(value * inverse_support_radius_);
+        using std::swap;
+        swap(support_radius_, other.support_radius_);
+        swap(inverse_support_radius_, other.inverse_support_radius_);
+        swap(coefficient_, other.coefficient_);
+        swap(derivative_coefficient_, other.derivative_coefficient_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -453,6 +562,18 @@ namespace pastel
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{9} * inverse_support_radius_ * inverse_support_radius_ / boost::math::constants::pi<Value>();
         derivative_coefficient_ = coefficient_ * inverse_support_radius_;
+      }
+
+      Value operator()(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return coefficient_ * ::pastel::kernel::wendland_detail::wendland42(value * inverse_support_radius_);
+      }
+
+      Value derivative(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland42(value * inverse_support_radius_);
       }
     }; // class wendland<2u, 2u, Value>
 
@@ -483,16 +604,26 @@ namespace pastel
           derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
-      Value operator()(Value const& value) const
+      constexpr bool operator==(wendland const& other) const
       {
-        assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::wendland42(value * inverse_support_radius_);
+# ifdef NDEBUG
+        return support_radius_ == other.support_radius_;
+# else
+        return support_radius_ == other.support_radius_
+          && inverse_support_radius_ == other.inverse_support_radius_
+          && coefficient_ == other.coefficient_
+          && derivative_coefficient_ == other.derivative_coefficient_;
+# endif
       }
 
-      Value derivative(Value const& value) const
+      void swap(wendland& other)
+        noexcept(::pastel::utility::is_nothrow_swappable<Value>::value)
       {
-        assert(value >= Value{0});
-        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland42(value * inverse_support_radius_);
+        using std::swap;
+        swap(support_radius_, other.support_radius_);
+        swap(inverse_support_radius_, other.inverse_support_radius_);
+        swap(coefficient_, other.coefficient_);
+        swap(derivative_coefficient_, other.derivative_coefficient_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -503,6 +634,18 @@ namespace pastel
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{495} / Value{16} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>();
         derivative_coefficient_ = coefficient_ * inverse_support_radius_;
+      }
+
+      Value operator()(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return coefficient_ * ::pastel::kernel::wendland_detail::wendland42(value * inverse_support_radius_);
+      }
+
+      Value derivative(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland42(value * inverse_support_radius_);
       }
     }; // class wendland<2u, 3u, Value>
 
@@ -534,19 +677,48 @@ namespace pastel
           derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
-      Value operator()(Value const& value) const
-      { return coefficient_ * ::pastel::kernel::wendland_detail::wendland43(value * inverse_support_radius_); }
+      constexpr bool operator==(wendland const& other) const
+      {
+# ifdef NDEBUG
+        return support_radius_ == other.support_radius_;
+# else
+        return support_radius_ == other.support_radius_
+          && inverse_support_radius_ == other.inverse_support_radius_
+          && coefficient_ == other.coefficient_
+          && derivative_coefficient_ == other.derivative_coefficient_;
+# endif
+      }
 
-      Value derivative(Value const& value) const
-      { return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland43(value * inverse_support_radius_); }
+      void swap(wendland& other)
+        noexcept(::pastel::utility::is_nothrow_swappable<Value>::value)
+      {
+        using std::swap;
+        swap(support_radius_, other.support_radius_);
+        swap(inverse_support_radius_, other.inverse_support_radius_);
+        swap(coefficient_, other.coefficient_);
+        swap(derivative_coefficient_, other.derivative_coefficient_);
+      }
 
       Value const& support_radius() const { return support_radius_; }
       void support_radius(Value const& new_support_radius)
       {
+        assert(new_support_radius > Value{0});
         support_radius_ = new_support_radius;
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{55} * inverse_support_radius_ / Value{32};
         derivative_coefficient_ = coefficient_ * inverse_support_radius_;
+      }
+
+      Value operator()(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return coefficient_ * ::pastel::kernel::wendland_detail::wendland43(value * inverse_support_radius_);
+      }
+
+      Value derivative(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland43(value * inverse_support_radius_);
       }
     }; // class wendland<3u, 1u, Value>
 
@@ -577,16 +749,26 @@ namespace pastel
           derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
-      Value operator()(Value const& value) const
+      constexpr bool operator==(wendland const& other) const
       {
-        assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::wendland53(value * inverse_support_radius_);
+# ifdef NDEBUG
+        return support_radius_ == other.support_radius_;
+# else
+        return support_radius_ == other.support_radius_
+          && inverse_support_radius_ == other.inverse_support_radius_
+          && coefficient_ == other.coefficient_
+          && derivative_coefficient_ == other.derivative_coefficient_;
+# endif
       }
 
-      Value derivative(Value const& value) const
+      void swap(wendland& other)
+        noexcept(::pastel::utility::is_nothrow_swappable<Value>::value)
       {
-        assert(value >= Value{0});
-        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland53(value * inverse_support_radius_);
+        using std::swap;
+        swap(support_radius_, other.support_radius_);
+        swap(inverse_support_radius_, other.inverse_support_radius_);
+        swap(coefficient_, other.coefficient_);
+        swap(derivative_coefficient_, other.derivative_coefficient_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -597,6 +779,18 @@ namespace pastel
         inverse_support_radius_ = Value{1} / new_support_radius;
         coefficient_ = Value{78} * inverse_support_radius_ * inverse_support_radius_ / Value{7} / boost::math::constants::pi<Value>();
         derivative_coefficient_ = coefficient_ * inverse_support_radius_;
+      }
+
+      Value operator()(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return coefficient_ * ::pastel::kernel::wendland_detail::wendland53(value * inverse_support_radius_);
+      }
+
+      Value derivative(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland53(value * inverse_support_radius_);
       }
     }; // class wendland<3u, 2u, Value>
 
@@ -627,16 +821,26 @@ namespace pastel
           derivative_coefficient_{coefficient_ * inverse_support_radius_}
       { assert(support_radius_ > Value{0}); }
 
-      Value operator()(Value const& value) const
+      constexpr bool operator==(wendland const& other) const
       {
-        assert(value >= Value{0});
-        return coefficient_ * ::pastel::kernel::wendland_detail::wendland53(value * inverse_support_radius_);
+# ifdef NDEBUG
+        return support_radius_ == other.support_radius_;
+# else
+        return support_radius_ == other.support_radius_
+          && inverse_support_radius_ == other.inverse_support_radius_
+          && coefficient_ == other.coefficient_
+          && derivative_coefficient_ == other.derivative_coefficient_;
+# endif
       }
 
-      Value derivative(Value const& value) const
+      void swap(wendland& other)
+        noexcept(::pastel::utility::is_nothrow_swappable<Value>::value)
       {
-        assert(value >= Value{0});
-        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland53(value * inverse_support_radius_);
+        using std::swap;
+        swap(support_radius_, other.support_radius_);
+        swap(inverse_support_radius_, other.inverse_support_radius_);
+        swap(coefficient_, other.coefficient_);
+        swap(derivative_coefficient_, other.derivative_coefficient_);
       }
 
       Value const& support_radius() const { return support_radius_; }
@@ -648,7 +852,33 @@ namespace pastel
         coefficient_ = Value{1365} / Value{32} * inverse_support_radius_ * inverse_support_radius_ * inverse_support_radius_ * boost::math::constants::one_div_two_pi<Value>();
         derivative_coefficient_ = coefficient_ * inverse_support_radius_;
       }
+
+      Value operator()(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return coefficient_ * ::pastel::kernel::wendland_detail::wendland53(value * inverse_support_radius_);
+      }
+
+      Value derivative(Value const& value) const
+      {
+        assert(value >= Value{0});
+        return derivative_coefficient_ * ::pastel::kernel::wendland_detail::derivative_wendland53(value * inverse_support_radius_);
+      }
     }; // class wendland<3u, 3u, Value>
+
+
+    template <std::size_t order, std::size_t dimension, typename Value>
+    inline bool operator!=(
+      ::pastel::kernel::wendland<order, dimension, Value> const& lhs,
+      ::pastel::kernel::wendland<order, dimension, Value> const& rhs)
+    { return !(lhs == rhs); }
+
+    template <std::size_t order, std::size_t dimension, typename Value>
+    inline void swap(
+      ::pastel::kernel::wendland<order, dimension, Value>& lhs,
+      ::pastel::kernel::wendland<order, dimension, Value>& rhs)
+      noexcept(noexcept(lhs.swap(rhs)))
+    { lhs.swap(rhs); }
   } // namespace kernel
 } // namespace pastel
 

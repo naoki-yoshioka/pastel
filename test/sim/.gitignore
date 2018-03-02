@@ -1,4 +1,3 @@
 bin/
+figs/
 *.dat
-*.plt
-*.eps

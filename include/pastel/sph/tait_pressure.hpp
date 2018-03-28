@@ -54,7 +54,7 @@ namespace pastel
       Value operator()(Density const& density) const
       {
         using std::pow;
-        return reference_pressure_ * (pow(density * inverse_reference_density_, exponent) - Value{1});
+        return reference_pressure_ * (pow(density * inverse_reference_density_, exponent_) - Value{1});
       }
     }; // class tait_pressure<Value>
   } // namespace sph

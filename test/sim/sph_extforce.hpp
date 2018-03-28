@@ -74,7 +74,7 @@ class sph_extforce
     auto const& position = pastel::geometry::get<wall_dimension>(pastel::container::get<pastel::particle::tags::position>(particles, index));
     auto const distance = position - wall_position_;
     auto wall_force = Vector{};
-    pastel::geometry::get<wall_dimension>(wall_force) = distance > Value{0} ? Value{0} : -Value{10} * distance;
+    pastel::geometry::get<wall_dimension>(wall_force) = distance > Value{0} ? Value{0} : -Value{1000} * distance;
     return gravitational_force + wall_force;
   }
 }; // class sph_extforce<Vector>

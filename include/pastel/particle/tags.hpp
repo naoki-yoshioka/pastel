@@ -13,6 +13,11 @@ namespace pastel
       struct force { };
       struct mass { };
       struct diameter { };
+
+      // for SPH
+      struct density { };
+      struct sph_divergences { };
+      struct pressure { };
     }
   } // namespace particle
 } // namespace pastel

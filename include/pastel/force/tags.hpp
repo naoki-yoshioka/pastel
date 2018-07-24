@@ -11,7 +11,9 @@ namespace pastel
       struct requires_position { };
       struct requires_position_velocity { };
       struct requires_position_orientation { };
+
       struct dem_requirement { };
+      struct newtonian_sph_requirement { };
     } // namespace tags
   } // namespace force
 } // namespace pastel

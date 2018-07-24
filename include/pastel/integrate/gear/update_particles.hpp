@@ -87,14 +87,6 @@ namespace pastel
         }; // struct update_nth_order_derivatives<index, IntegrationVectorIndexTuple, Time>
 
 
-        struct clear_forces
-        {
-          template <typename Particles, typename ExternalForce>
-          void operator()(Particles& particles, ExternalForce&&) const
-          { ::pastel::container::clear_forces(particles); }
-        }; // struct clear_forces
-
-
         struct apply_external_forces
         {
           template <typename Particles, typename ExternalForce>

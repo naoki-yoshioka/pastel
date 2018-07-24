@@ -16,7 +16,7 @@ namespace pastel
     inline Value distance(
       ::pastel::geometry::point<dimension_, Value> const& lhs,
       ::pastel::geometry::point<dimension_, Value> const& rhs)
-    { return std::sqrt(::pastel::geometry::squared_distance(lhs, rhs)); }
+    { using std::sqrt; return sqrt(::pastel::geometry::squared_distance(lhs, rhs)); }
   } // namespace geometry
 } // namespace pastel
 

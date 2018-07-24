@@ -1,15 +1,14 @@
 #ifndef PASTEL_SYSTEM_INITIALIZE_HPP
 # define PASTEL_SYSTEM_INITIALIZE_HPP
 
+# include <cassert>
 # include <cstddef>
 # include <tuple>
 
 # include <pastel/system/for_each_neighbor_list.hpp>
 # include <pastel/system/for_each_boundary_neighbor_list.hpp>
-# ifndef NDEBUG
-#   include <pastel/system/all_of_neighbor_lists.hpp>
-#   include <pastel/system/all_of_boundary_neighbor_lists.hpp>
-# endif
+# include <pastel/system/all_of_neighbor_lists.hpp>
+# include <pastel/system/all_of_boundary_neighbor_lists.hpp>
 # include <pastel/system/particles.hpp>
 # include <pastel/system/boundary_particles.hpp>
 # include <pastel/system/boundary.hpp>
@@ -165,7 +164,10 @@ namespace pastel
       {
         template <typename System>
         static void call(System& system)
-        { ::pastel::system::boundary_particles<index>(system).clear(); }
+        {
+          ::pastel::system::boundary_particles<index>(system).clear();
+          ::pastel::system::particle_indices_for_boundary<index>(system).clear();
+        }
       }; // struct call_clear_boundary_particles<index>
 
 

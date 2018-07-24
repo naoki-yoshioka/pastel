@@ -73,6 +73,7 @@ namespace pastel
 
         ::pastel::system::update_forces(system);
         // modify_local_torques
+        // TODO: avoid DEM & SPH
 
         ::pastel::system::for_each_container(
           system,

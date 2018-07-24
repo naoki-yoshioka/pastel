@@ -277,7 +277,6 @@ namespace pastel
         auto const& particles = ::pastel::system::particles<index>(system);
         auto& boundary_particles = ::pastel::system::boundary_particles<index>(system);
         auto& particle_indices_for_boundary = ::pastel::system::particle_indices_for_boundary<index>(system);
-        particle_indices_for_boundary.clear();
         static constexpr bool is_data_accessible
           = ::pastel::container::meta::is_data_accessible<typename std::remove_reference<decltype(particles)>::type>::value;
         static constexpr bool is_boundary_data_accessible

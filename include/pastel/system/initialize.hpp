@@ -12,6 +12,7 @@
 # include <pastel/system/particles.hpp>
 # include <pastel/system/boundary_particles.hpp>
 # include <pastel/system/boundary.hpp>
+# include <pastel/system/particle_indices_for_boundary.hpp>
 # include <pastel/system/meta/dimension_of.hpp>
 # include <pastel/system/meta/boundary_particles_tuple_size_of.hpp>
 # include <pastel/neighbor/meta/interaction_pair_of.hpp>

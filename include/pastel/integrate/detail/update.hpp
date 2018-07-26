@@ -12,6 +12,8 @@
 # include <pastel/system/boundary_particles.hpp>
 # include <pastel/system/boundary.hpp>
 # include <pastel/system/initialize.hpp>
+# include <pastel/system/update_forces.hpp>
+//# include <pastel/container/modify_local_torques.hpp>
 # include <pastel/system/meta/dimension_of.hpp>
 # include <pastel/system/meta/boundary_particles_tuple_size_of.hpp>
 # include <pastel/neighbor/meta/interaction_pair_of.hpp>
@@ -129,9 +131,11 @@ namespace pastel
       } // namespace update_detail
 
 
-      template <typename System, typename Time, typename Function>
-      inline void update(System& system, Time time_step, Function&& update_particles)
+      template <typename System, typename Time, typename Predictor, typename Corrector>
+      inline void update(System& system, Time time_step, Predictor&& predict_particles, Corrector&& correct_particles)
       {
+        predict_particles(system, time_step);
+
         ::pastel::system::for_each_neighbor_list(
           system,
           ::pastel::integrate::detail::update_detail::update_status<Time>{time_step});
@@ -157,7 +161,10 @@ namespace pastel
           update_boundary_particles_func::call(system);
         }
 
-        update_particles(system, time_step);
+        ::pastel::system::update_forces(system);
+        // modify_local_torques
+
+        correct_particles(system, time_step);
       }
     } // namespace detail
   } // namespace integrate

@@ -1,5 +1,5 @@
-#ifndef PASTEL_INTEGRATE_EULER_UPDATE_PARTICLES_HPP
-# define PASTEL_INTEGRATE_EULER_UPDATE_PARTICLES_HPP
+#ifndef PASTEL_INTEGRATE_VVERLET_PREDICT_PARTICLES_HPP
+# define PASTEL_INTEGRATE_VVERLET_PREDICT_PARTICLES_HPP
 
 # include <cstddef>
 # include <tuple>
@@ -9,18 +9,16 @@
 //# include <pastel/integrate/detail/update_orientations_order1.hpp>
 //# include <pastel/integrate/detail/update_local_angular_velocities_order1.hpp>
 # include <pastel/system/for_each_container.hpp>
-# include <pastel/system/update_forces.hpp>
 //# include <pastel/container/modify_global_angular_velocities.hpp>
-//# include <pastel/container/modify_local_torques.hpp>
 
 
 namespace pastel
 {
   namespace integrate
   {
-    namespace euler
+    namespace vverlet
     {
-      namespace update_particles_detail
+      namespace predict_particles_detail
       {
         template <typename Time>
         struct update_positions
@@ -33,7 +31,7 @@ namespace pastel
 
           template <typename Particles, typename ExternalForce>
           void operator()(Particles& particles, ExternalForce&&) const
-          { ::pastel::integrate::detail::update_positions<2u, std::tuple<>>(particles, time_step_); }
+          { ::pastel::integrate::detail::update_positions<1u, std::tuple<>>(particles, time_step_); }
         }; // struct update_positions<Time>
 
 
@@ -50,30 +48,29 @@ namespace pastel
           void operator()(Particles& particles, ExternalForce&&) const
           { ::pastel::integrate::detail::update_velocities<1u, std::tuple<>>(particles, time_step_); }
         }; // struct update_velocities<Time>
-      } // namespace update_particles_detail
+      } // namespace predict_particles_detail
 
 
-      // x_i(t+dt) = x_i(t) + v_i(t) dt + [f_i(t)/m_i] dt^2 / 2
-      // v_i(t+dt) = v_i(t) + [f_i(t)/m_i] dt
-      // f_i(t+dt) = \sum_j f(x_i(t+dt), v_i(t+dt), ..., x_j(t+dt), v_j(t+dt), ...)
+      // v_i(t+dt/2) = v_i(t) + [f_i(t)/m_i] (dt/2)
+      // x_i(t+dt) = x_i(t) + v_i(t+dt/2) dt
       template <typename System, typename Time>
-      inline void update_particles(System& system, Time time_step)
+      inline void predict_particles(System& system, Time time_step)
       {
+        auto const half_time_step = time_step / Time{2};
         ::pastel::system::for_each_container(
           system,
-          ::pastel::integrate::euler::update_particles_detail::update_positions<Time>{time_step});
-        ::pastel::system::for_each_container(
-          system,
-          ::pastel::integrate::euler::update_particles_detail::update_velocities<Time>{time_step});
-        // update_orientations, update_local_angular_velocities, modify_global_angular_velocities
+          ::pastel::integrate::vverlet::predict_particles_detail::update_velocities<Time>{half_time_step});
+        // update_local_angular_velocities, modify_global_angular_velocities
 
-        ::pastel::system::update_forces(system);
-        // modify_local_torques
+        ::pastel::system::for_each_container(
+          system,
+          ::pastel::integrate::vverlet::predict_particles_detail::update_positions<Time>{time_step});
+        // update_orientations
       }
-    } // namespace euler
+    } // namespace vverlet
   } // namespace integrate
 } // namespace pastel
 
 
-#endif // PASTEL_INTEGRATE_EULER_UPDATE_PARTICLES_HPP
+#endif // PASTEL_INTEGRATE_VVERLET_PREDICT_PARTICLES_HPP
 

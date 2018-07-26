@@ -3,7 +3,8 @@
 
 # include <cstddef>
 
-# include <pastel/integrate/vverlet/update_particles.hpp>
+# include <pastel/integrate/vverlet/predict_particles.hpp>
+# include <pastel/integrate/vverlet/correct_particles.hpp>
 # include <pastel/integrate/detail/update.hpp>
 
 
@@ -19,7 +20,9 @@ namespace pastel
         ::pastel::integrate::detail::update(
           system, time_step,
           [](System& system, Time time_step)
-          { ::pastel::integrate::vverlet::update_particles(system, time_step); });
+          { ::pastel::integrate::vverlet::predict_particles(system, time_step); },
+          [](System& system, Time time_step)
+          { ::pastel::integrate::vverlet::correct_particles(system, time_step); });
       }
     } // namespace vverlet
   } // namespace integrate

@@ -3,7 +3,8 @@
 
 # include <cstddef>
 
-# include <pastel/integrate/gear/update_particles.hpp>
+# include <pastel/integrate/gear/predict_particles.hpp>
+# include <pastel/integrate/gear/correct_particles.hpp>
 # include <pastel/integrate/detail/update.hpp>
 
 
@@ -21,7 +22,15 @@ namespace pastel
         ::pastel::integrate::detail::update(
           system, time_step,
           [](System& system, Time time_step)
-          { ::pastel::integrate::gear::update_particles<order, acceleration_index, IntegrationVectorIndexTuple>(system, time_step); });
+          {
+            ::pastel::integrate::gear::predict_particles<order, acceleration_index, IntegrationVectorIndexTuple>(
+              system, time_step);
+          },
+          [](System& system, Time time_step)
+          {
+            ::pastel::integrate::gear::correct_particles<order, acceleration_index, IntegrationVectorIndexTuple>(
+              system, time_step);
+          });
       }
 
       namespace update_detail

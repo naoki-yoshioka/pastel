@@ -3,7 +3,7 @@
 
 # include <cstddef>
 
-# include <pastel/integrate/euler/update_particles.hpp>
+# include <pastel/integrate/euler/predict_particles.hpp>
 # include <pastel/integrate/detail/update.hpp>
 
 
@@ -19,7 +19,8 @@ namespace pastel
         ::pastel::integrate::detail::update(
           system, time_step,
           [](System& system, Time time_step)
-          { ::pastel::integrate::euler::update_particles(system, time_step); });
+          { ::pastel::integrate::euler::predict_particles(system, time_step); },
+          [](System&, Time) { });
       }
     } // namespace euler
   } // namespace integrate

@@ -880,6 +880,8 @@ namespace pastel
         //::pastel::neighbor::neighbor_list_detail::assertion<is_intraparticle>::call(new_key, new_partner);
 
         auto const num_keys = this->num_keys();
+        assert(new_key >= num_keys || std::lower_bound(this->partner_data(new_key), this->partner_data(new_key+size_type{1}), new_partner) == this->partner_data(num_keys));
+
         if (new_key >= num_keys)
           do_insert_last(num_keys, new_key, new_partner);
         else

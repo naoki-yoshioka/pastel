@@ -4,13 +4,12 @@
 # include <cassert>
 # include <cstddef>
 # include <cstdint>
+# include <cmath>
 # include <array>
 # include <vector>
 # include <iterator>
 # include <algorithm>
-# ifndef NDEBUG
-#  include <functional>
-# endif
+# include <functional>
 # include <type_traits>
 # include <memory>
 
@@ -18,6 +17,8 @@
 # include <pastel/neighbor/meta/force_of.hpp>
 # include <pastel/neighbor/meta/interaction_pair_of.hpp>
 # include <pastel/geometry/squared_distance.hpp>
+# include <pastel/geometry/meta/dimension_of.hpp>
+# include <pastel/geometry/meta/value_of.hpp>
 # include <pastel/particle/tags.hpp>
 # include <pastel/container/get.hpp>
 # include <pastel/container/num_particles.hpp>
@@ -49,10 +50,10 @@ namespace pastel
       }
 
 
-      template <typename Vector, std::size_t dimension>
-      inline Vector generate_cell_vector(Vector system_vector, std::array<std::size_t, dimension> const& num_cells)
+      template <typename Vector, std::size_t dimension_>
+      inline Vector generate_cell_vector(Vector system_vector, std::array<std::size_t, dimension_> const& num_cells)
       {
-        static_assert(::pastel::geometry::meta::dimension_of<Vector>::value == dimension, "dimension_of<Vector> must be equal to dimension");
+        static_assert(::pastel::geometry::meta::dimension_of<Vector>::value == dimension_, "dimension_of<Vector> must be equal to dimension_");
 
         for (auto dim = std::size_t{0u}; dim < dimension_; ++dim)
           system_vector[dim] /= num_cells[dim];
@@ -87,6 +88,8 @@ namespace pastel
               cell_coordinate *= num_cells[dim_];
             result += cell_coordinate;
           }
+
+          return result;
         }
       }; // struct generate_cell_index<true>
 
@@ -102,7 +105,7 @@ namespace pastel
           static_assert(::pastel::geometry::meta::dimension_of<Vector>::value == dimension, "dimension_of<Vector> must be equal to dimension");
 
           auto const position_vector_from_lower_bound
-            = ::psatel::container::get< ::pastel::particle::tags::position >(particles, index) - lower_bound;
+            = ::pastel::container::get< ::pastel::particle::tags::position >(particles, index) - lower_bound;
 
           auto result = std::size_t{0u};
           for (auto dim = std::size_t{0u}; dim < dimension; ++dim)
@@ -165,7 +168,7 @@ namespace pastel
       template <std::size_t dimension_>
       struct generate_neighbor_cell_indices_impl2<dimension_, dimension_>
       {
-        template <typename Index, typename IndexAllocator, typename Iterator, typename IteratorAllocator>
+        template <std::size_t N>
         static void call(
           std::array<std::size_t, N>&,
           std::size_t&,
@@ -979,7 +982,7 @@ namespace pastel
     {
      public:
       using point_type = Point;
-      using vector_type = decltype(std::declval<Point>{} - std::declval<Point>{});
+      using vector_type = decltype(std::declval<Point>() - std::declval<Point>());
       static constexpr std::size_t dimension = ::pastel::geometry::meta::dimension_of<point_type>::value;
       using value_type = typename ::pastel::geometry::meta::value_of<point_type>::type;
 
@@ -1040,7 +1043,7 @@ namespace pastel
           particle_index_to_cell_index_{},
           num_particles_in_each_cell_(total_num_cells_, 0u),
           neighbor_cell_indices_((::pastel::utility::intpow(2u, dimension) - 1u) * total_num_cells_),
-          neighbor_cell_indices_firsts_(total_num_cells_+1u, neighbor_cell_incides_.begin())
+          neighbor_cell_indices_firsts_(total_num_cells_+1u, neighbor_cell_indices_.begin())
       {
         static_assert(sizeof...(NumCells) == dimension, "The number of num_cells arguments must be equal to dimension");
         assert(search_length > cutoff_length && cutoff_length > value_type{0});
@@ -1048,7 +1051,8 @@ namespace pastel
         assert(maximal_speed > Speed{0});
         assert(lower_bound_ < upper_bound_);
 
-        generate_neighbor_cell_indices<dimension>::call(neighbor_cell_indices_firsts_, num_cells_, total_num_cells_);
+        ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices<dimension>::call(
+          neighbor_cell_indices_firsts_, num_cells_, total_num_cells_);
         neighbor_cell_indices_.resize(neighbor_cell_indices_firsts_.back() - neighbor_cell_indices_firsts_.front());
       }
 

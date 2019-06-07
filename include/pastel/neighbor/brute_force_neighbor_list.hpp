@@ -15,9 +15,9 @@ namespace pastel
       typename IndexAllocator = std::allocator<std::size_t>>
     using brute_force_neighbor_list
       = ::pastel::neighbor::neighbor_list<
-          Force, InteractionPair,
+          Force,
           ::pastel::neighbor::brute_force_updater<typename ::pastel::force::meta::value_of<Force>::type>,
-          IndexAllocator>;
+          InteractionPair, IndexAllocator>;
   } // namespace neighbor
 } // namespace pastel
 

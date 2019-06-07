@@ -31,23 +31,23 @@ namespace pastel
   {
     template <
       typename Force,
-      typename InteractionPair = ::pastel::utility::size_pair<0u, 0u>,
       typename Updater = ::pastel::neighbor::inexclusive_cells_updater<typename ::pastel::force::meta::value_of<Force>::type>,
+      typename InteractionPair = ::pastel::utility::size_pair<0u, 0u>,
       typename IndexAllocator = std::allocator<std::size_t>>
     class neighbor_list;
 
     namespace neighbor_list_detail
     {
-      template <typename Force, typename InteractionPair, typename Updater, typename IndexAllocator>
+      template <typename Force, typename Updater, typename InteractionPair, typename IndexAllocator>
       class const_iterator final
         : public boost::iterators::iterator_facade<
-            const_iterator<Force, InteractionPair, Updater, IndexAllocator>,
-            typename ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator>::value_type const,
+            const_iterator<Force, Updater, InteractionPair, IndexAllocator>,
+            typename ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator>::value_type const,
             std::bidirectional_iterator_tag,
-            typename ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator>::value_type const>
+            typename ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator>::value_type const>
       {
        public:
-        using neighbor_list_type = ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator>;
+        using neighbor_list_type = ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator>;
         using neighbor_type = typename neighbor_list_type::value_type;
         using index_type = typename neighbor_list_type::size_type;
         using partner_const_pointer = typename neighbor_list_type::partner_const_pointer;
@@ -110,12 +110,12 @@ namespace pastel
 
         index_type const& key() const { return key_; }
         partner_const_pointer const& partner_ptr() const { return partner_ptr_; }
-      }; // class const_iterator<Force, InteractionPair, Updater, IndexAllocator>
+      }; // class const_iterator<Force, Updater, InteractionPair, IndexAllocator>
 
-      template <typename Force, typename InteractionPair, typename Updater, typename IndexAllocator>
+      template <typename Force, typename Updater, typename InteractionPair, typename IndexAllocator>
       inline void swap(
-        ::pastel::neighbor::neighbor_list_detail::const_iterator<Force, InteractionPair, Updater, IndexAllocator>& lhs,
-        ::pastel::neighbor::neighbor_list_detail::const_iterator<Force, InteractionPair, Updater, IndexAllocator>& rhs)
+        ::pastel::neighbor::neighbor_list_detail::const_iterator<Force, Updater, InteractionPair, IndexAllocator>& lhs,
+        ::pastel::neighbor::neighbor_list_detail::const_iterator<Force, Updater, InteractionPair, IndexAllocator>& rhs)
         noexcept
       { lhs.swap(rhs); }
 
@@ -191,7 +191,7 @@ namespace pastel
     } // namespace neighbor_list_detail
 
 
-    template <typename Force, typename InteractionPair, typename Updater, typename IndexAllocator>
+    template <typename Force, typename Updater, typename InteractionPair, typename IndexAllocator>
     class neighbor_list final
     {
       static_assert(::pastel::utility::is_pair<InteractionPair>::value, "InteractionPair must be pastel::utility::pair<T, n, m>");
@@ -221,7 +221,7 @@ namespace pastel
       using key_compare = std::less<key_type>;
       using value_compare = std::less<value_type>;
       using key_equal = std::equal_to<key_type>;
-      using iterator = ::pastel::neighbor::neighbor_list_detail::const_iterator<Force, InteractionPair, Updater, IndexAllocator>;
+      using iterator = ::pastel::neighbor::neighbor_list_detail::const_iterator<Force, Updater, InteractionPair, IndexAllocator>;
       using const_iterator = iterator;
       using reverse_iterator = std::reverse_iterator<iterator>;
       using const_reverse_iterator = std::reverse_iterator<const_iterator>;
@@ -238,9 +238,9 @@ namespace pastel
       template <interaction_pair_key_type boundary_partner>
       using boundary_neighbor_list_type
         = ::pastel::neighbor::neighbor_list<
-            Force,
+            Force, Updater,
             ::pastel::utility::pair<interaction_pair_key_type, interaction_pair::first, boundary_partner>,
-            Updater, IndexAllocator>;
+            IndexAllocator>;
 
       ~neighbor_list()
         noexcept(
@@ -1062,36 +1062,36 @@ namespace pastel
       updater_type const& updater() const { return updater_; }
       template <typename Updater_>
       void updater(Updater_&& new_updater) { updater_ = std::forward<Updater_>(new_updater); }
-    }; // class neighbor_list<Force, InteractionPair, Updater, IndexAllocator>
+    }; // class neighbor_list<Force, Updater, InteractionPair, IndexAllocator>
 
-    template <typename Force, typename InteractionPair, typename Updater, typename IndexAllocator>
+    template <typename Force, typename Updater, typename InteractionPair, typename IndexAllocator>
     inline bool operator!=(
-      ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator> const& lhs,
-      ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator> const& rhs)
+      ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator> const& lhs,
+      ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator> const& rhs)
     { return !(lhs == rhs); }
 
-    template <typename Force, typename InteractionPair, typename Updater, typename IndexAllocator>
+    template <typename Force, typename Updater, typename InteractionPair, typename IndexAllocator>
     inline bool operator>(
-      ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator> const& lhs,
-      ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator> const& rhs)
+      ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator> const& lhs,
+      ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator> const& rhs)
     { return rhs < lhs; }
 
-    template <typename Force, typename InteractionPair, typename Updater, typename IndexAllocator>
+    template <typename Force, typename Updater, typename InteractionPair, typename IndexAllocator>
     inline bool operator<=(
-      ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator> const& lhs,
-      ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator> const& rhs)
+      ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator> const& lhs,
+      ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator> const& rhs)
     { return !(lhs > rhs); }
 
-    template <typename Force, typename InteractionPair, typename Updater, typename IndexAllocator>
+    template <typename Force, typename Updater, typename InteractionPair, typename IndexAllocator>
     inline bool operator>=(
-      ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator> const& lhs,
-      ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator> const& rhs)
+      ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator> const& lhs,
+      ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator> const& rhs)
     { return !(lhs < rhs); }
 
-    template <typename Force, typename InteractionPair, typename Updater, typename IndexAllocator>
+    template <typename Force, typename Updater, typename InteractionPair, typename IndexAllocator>
     inline void swap(
-      ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator>& lhs,
-      ::pastel::neighbor::neighbor_list<Force, InteractionPair, Updater, IndexAllocator>& rhs)
+      ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator>& lhs,
+      ::pastel::neighbor::neighbor_list<Force, Updater, InteractionPair, IndexAllocator>& rhs)
       noexcept(noexcept(lhs.swap(rhs)))
     { lhs.swap(rhs); }
   } // namespace neighbor

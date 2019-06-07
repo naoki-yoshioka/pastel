@@ -15,7 +15,7 @@ namespace pastel
       typename IndexAllocator = std::allocator<std::size_t>>
     using fixed_neighbor_list
       = ::pastel::neighbor::neighbor_list<
-          Force, InteractionPair, ::pastel::neighbor::no_updater, IndexAllocator>;
+          Force, ::pastel::neighbor::no_updater, InteractionPair, IndexAllocator>;
   } // namespace neighbor
 } // namespace pastel
 

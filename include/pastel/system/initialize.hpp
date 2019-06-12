@@ -100,7 +100,7 @@ namespace pastel
       struct update_neighbor_list_impl
       {
         template <typename Updater, typename NeighborList, typename System>
-        static void call(Updater const& updater, NeighborList& neighbor_list, System const& system)
+        static void call(Updater& updater, NeighborList& neighbor_list, System const& system)
         {
           updater.update_neighbor_list(
             neighbor_list,
@@ -113,7 +113,7 @@ namespace pastel
       struct update_neighbor_list_impl<index, index>
       {
         template <typename Updater, typename NeighborList, typename System>
-        static void call(Updater const& updater, NeighborList& neighbor_list, System const& system)
+        static void call(Updater& updater, NeighborList& neighbor_list, System const& system)
         {
           updater.update_neighbor_list(
             neighbor_list,

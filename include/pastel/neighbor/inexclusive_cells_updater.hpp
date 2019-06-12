@@ -180,14 +180,14 @@ namespace pastel
       template <std::size_t rindex, std::size_t dimension_>
       struct generate_neighbor_cell_indices_impl
       {
-        template <typename Index, typename IndexAllocator, typename Iterator, typename IteratorAllocator>
+        template <typename Iterator, typename IteratorAllocator>
         static void call(
           std::array<std::size_t, dimension_>& present_cell_coordinate,
           std::vector<Iterator, IteratorAllocator>& neighbor_cell_indices_firsts,
           std::array<std::size_t, dimension_> const& num_cells)
         {
           constexpr auto dim = dimension_ - rindex - std::size_t{1u};
-          for (present_cell_coordinate[dim] = 0u; present_cell_coordinate[dim] < num_cells[dim]; ++present_cell_coordinate[dim])
+          for (present_cell_coordinate[dim] = std::size_t{0u}; present_cell_coordinate[dim] < num_cells[dim]; ++present_cell_coordinate[dim])
             ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices_impl<rindex+1u, dimension_>::call(
               present_cell_coordinate, neighbor_cell_indices_firsts, num_cells);
         }
@@ -196,7 +196,7 @@ namespace pastel
       template <std::size_t dimension_>
       struct generate_neighbor_cell_indices_impl<dimension_, dimension_>
       {
-        template <typename Index, typename IndexAllocator, typename Iterator, typename IteratorAllocator>
+        template <typename Iterator, typename IteratorAllocator>
         static void call(
           std::array<std::size_t, dimension_>& present_cell_coordinate,
           std::vector<Iterator, IteratorAllocator>& neighbor_cell_indices_firsts,
@@ -204,13 +204,13 @@ namespace pastel
         {
           auto const present_cell_index = cell_coordinate_to_cell_index(present_cell_coordinate, num_cells);
           auto possible_neighbor_cell_indices = std::array<std::size_t, ::pastel::utility::intpow(2u, dimension_)>{present_cell_index};
-          auto array_size = 1u;
+          auto array_size = std::size_t{1u};
 
           ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices_impl2<0u, dimension_>::call(
             possible_neighbor_cell_indices, array_size, present_cell_coordinate, num_cells);
 
           Iterator neighbor_cell_indices_iter = neighbor_cell_indices_firsts[present_cell_index];
-          for (auto index = 1u; index < array_size; ++index)
+          for (auto index = std::size_t{1u}; index < array_size; ++index)
             *neighbor_cell_indices_iter++ = possible_neighbor_cell_indices[index];
 
           neighbor_cell_indices_firsts[present_cell_index+1u] = neighbor_cell_indices_iter;
@@ -220,7 +220,7 @@ namespace pastel
       template <std::size_t dimension_>
       struct generate_neighbor_cell_indices
       {
-        template <typename Index, typename IndexAllocator, typename Iterator, typename IteratorAllocator>
+        template <typename Iterator, typename IteratorAllocator>
         static void call(
           std::vector<Iterator, IteratorAllocator>& neighbor_cell_indices_firsts,
           std::array<std::size_t, dimension_> const& num_cells,
@@ -1068,6 +1068,7 @@ namespace pastel
       value_type const& buffer_length() const { return buffer_length_; }
 
       bool is_valid() const { return buffer_length_ > value_type{0}; }
+      bool is_invalid() const { return !this->is_valid(); }
 
 
       template <typename NeighborList, typename Particles, typename Time>
@@ -1130,7 +1131,7 @@ namespace pastel
       }
 
 
-      template <typename NeighborList, typename Particles, typename Time>
+      template <typename NeighborList, typename Particles>
       void update_neighbor_list(NeighborList& neighbor_list, Particles const& particles)
       {
         using interaction_pair_type
@@ -1158,7 +1159,7 @@ namespace pastel
           particle_indices_in_each_cell_firsts_, neighbor_cell_indices_firsts_);
       }
 
-      template <typename NeighborList, typename KeyParticles, typename PartnerParticles, typename Time>
+      template <typename NeighborList, typename KeyParticles, typename PartnerParticles>
       void update_neighbor_list(NeighborList& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles)
       {
         //using interaction_pair_type

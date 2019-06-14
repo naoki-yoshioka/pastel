@@ -13,6 +13,7 @@
 # include <type_traits>
 # include <memory>
 
+# include <pastel/neighbor/boundary_inexclusive_cells_updater.hpp>
 # include <pastel/neighbor/force.hpp>
 # include <pastel/neighbor/meta/force_of.hpp>
 # include <pastel/neighbor/meta/interaction_pair_of.hpp>
@@ -985,6 +986,7 @@ namespace pastel
       using vector_type = decltype(std::declval<Point>() - std::declval<Point>());
       static constexpr std::size_t dimension = ::pastel::geometry::meta::dimension_of<point_type>::value;
       using value_type = typename ::pastel::geometry::meta::value_of<point_type>::type;
+      using boundary_updater_type = ::pastel::neighbor::boundary_inexclusive_cells_updater<Point>;
 
      private:
       value_type search_length_;

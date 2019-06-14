@@ -17,6 +17,7 @@
 # include <pastel/neighbor/neighbor.hpp>
 # include <pastel/neighbor/inexclusive_cells_updater.hpp>
 # include <pastel/neighbor/meta/is_partner_data_accessible.hpp>
+# include <pastel/neighbor/meta/boundary_updater_of.hpp>
 # include <pastel/force/meta/value_of.hpp>
 # include <pastel/utility/pair.hpp>
 # include <pastel/utility/is_pair.hpp>
@@ -238,7 +239,7 @@ namespace pastel
       template <interaction_pair_key_type boundary_partner>
       using boundary_neighbor_list_type
         = ::pastel::neighbor::neighbor_list<
-            Force, Updater,
+            Force, typename ::pastel::neighbor::meta::boundary_updater_of<Updater>::type,
             ::pastel::utility::pair<interaction_pair_key_type, interaction_pair::first, boundary_partner>,
             IndexAllocator>;
 

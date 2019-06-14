@@ -182,6 +182,8 @@ namespace pastel
       Value buffer_length_;
 
      public:
+      using boundary_updater_type = brute_force_updater;
+
       brute_force_updater()
         : search_length_{Value{1}},
           squared_search_length_{search_length_ * search_length_},

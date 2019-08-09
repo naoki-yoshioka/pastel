@@ -12,7 +12,7 @@ namespace pastel
   {
     namespace prod_detail
     {
-      struct plus
+      struct multiplies
       {
         template <typename Value1, typename Value2>
         auto operator()(Value1&& value1, Value2&& value2) const
@@ -23,8 +23,13 @@ namespace pastel
 
     template <typename... Values>
     inline auto prod(Values&&... values)
-      -> decltype(::pastel::utility::foldl(::pastel::utility::prod_detail::plus{}, std::forward<Values>(values)...))
-    { return ::pastel::utility::foldl(::pastel::utility::prod_detail::plus{}, std::forward<Values>(values)...); }
+      -> decltype(::pastel::utility::foldl(::pastel::utility::prod_detail::multiplies{}, std::forward<Values>(values)...))
+    { return ::pastel::utility::foldl(::pastel::utility::prod_detail::multiplies{}, std::forward<Values>(values)...); }
+
+    template <typename Value, std::size_t N>
+    inline auto prod(std::array<Value, N> const& array)
+      -> decltype(::pastel::utility::foldl(::pastel::utility::sum_detail::multiplies{}, array))
+    { return ::pastel::utility::foldl(::pastel::utility::prod_detail::multiplies{}, array); }
   } // namespace utility
 } // namespace pastel
 

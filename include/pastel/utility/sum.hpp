@@ -2,6 +2,7 @@
 # define PASTEL_UTILITY_SUM_HPP
 
 # include <utility>
+# include <array>
 
 # include <pastel/utility/foldl.hpp>
 
@@ -25,6 +26,11 @@ namespace pastel
     inline auto sum(Values&&... values)
       -> decltype(::pastel::utility::foldl(::pastel::utility::sum_detail::plus{}, std::forward<Values>(values)...))
     { return ::pastel::utility::foldl(::pastel::utility::sum_detail::plus{}, std::forward<Values>(values)...); }
+
+    template <typename Value, std::size_t N>
+    inline auto sum(std::array<Value, N> const& array)
+      -> decltype(::pastel::utility::foldl(::pastel::utility::sum_detail::plus{}, array))
+    { return ::pastel::utility::foldl(::pastel::utility::sum_detail::plus{}, array); }
   } // namespace utility
 } // namespace pastel
 

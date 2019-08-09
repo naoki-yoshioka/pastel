@@ -17,6 +17,7 @@
 # include <pastel/neighbor/force.hpp>
 # include <pastel/neighbor/meta/force_of.hpp>
 # include <pastel/neighbor/meta/interaction_pair_of.hpp>
+# include <pastel/neighbor/detail/update_status.hpp>
 # include <pastel/geometry/squared_distance.hpp>
 # include <pastel/geometry/meta/dimension_of.hpp>
 # include <pastel/geometry/meta/value_of.hpp>
@@ -38,19 +39,6 @@ namespace pastel
   {
     namespace inexclusive_cells_updater_detail
     {
-      template <typename NeighborList, typename Particles, typename Value>
-      inline Value update_status(NeighborList const& neighbor_list, Particles const& particles, Value time_step, Value buffer_length)
-      { return buffer_length - Value{2} * time_step * ::pastel::container::maximal_speed(particles); }
-
-      template <typename NeighborList, typename KeyParticles, typename PartnerParticles, typename Value>
-      inline Value update_status(NeighborList const& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles, Value time_step, Value buffer_length)
-      {
-        return buffer_length - Value{2} * time_step * std::max(
-          ::pastel::container::maximal_speed(key_particles),
-          ::pastel::container::maximal_speed(partner_particles));
-      }
-
-
       template <typename Vector, std::size_t dimension_>
       inline Vector generate_cell_vector(Vector system_vector, std::array<std::size_t, dimension_> const& num_cells)
       {
@@ -218,20 +206,16 @@ namespace pastel
         }
       }; // struct generate_neighbor_cell_indices_impl<dimension_, dimension_>
 
-      template <std::size_t dimension_>
-      struct generate_neighbor_cell_indices
+      template <typename Iterator, typename IteratorAllocator, std::size_t dimension_>
+      inline void generate_neighbor_cell_indices(
+        std::vector<Iterator, IteratorAllocator>& neighbor_cell_indices_firsts,
+        std::array<std::size_t, dimension_> const& num_cells,
+        std::size_t const total_num_cells)
       {
-        template <typename Iterator, typename IteratorAllocator>
-        static void call(
-          std::vector<Iterator, IteratorAllocator>& neighbor_cell_indices_firsts,
-          std::array<std::size_t, dimension_> const& num_cells,
-          std::size_t const total_num_cells)
-        {
-          auto present_cell_coordinate = std::array<std::size_t, dimension_>{};
-          ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices_impl<0u, dimension_>::call(
-            present_cell_coordinate, neighbor_cell_indices_firsts, num_cells);
-        }
-      }; // struct generate_neighbor_cell_indices<dimension_>
+        auto present_cell_coordinate = std::array<std::size_t, dimension_>{};
+        ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices_impl<0u, dimension_>::call(
+          present_cell_coordinate, neighbor_cell_indices_firsts, num_cells);
+      }
 
 
       template <
@@ -981,6 +965,8 @@ namespace pastel
     template <typename Point>
     class inexclusive_cells_updater
     {
+      friend class ::pastel::neighbor::boundary_inexclusive_cells_updater<Point>;
+
      public:
       using point_type = Point;
       using vector_type = decltype(std::declval<Point>() - std::declval<Point>());
@@ -1053,7 +1039,7 @@ namespace pastel
         assert(maximal_speed > Speed{0});
         assert(lower_bound_ < upper_bound_);
 
-        ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices<dimension>::call(
+        ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices(
           neighbor_cell_indices_firsts_, num_cells_, total_num_cells_);
         neighbor_cell_indices_.resize(neighbor_cell_indices_firsts_.back() - neighbor_cell_indices_firsts_.front());
       }
@@ -1084,7 +1070,7 @@ namespace pastel
           "Force of NeighborList must have cutoff");
 
         buffer_length_
-          = ::pastel::neighbor::inexclusive_cells_updater_detail::update_status(
+          = ::pastel::neighbor::detail::update_status(
               neighbor_list, particles, time_step,
               search_length_ - ::pastel::force::cutoff_length(::pastel::neighbor::force(neighbor_list)));
       }
@@ -1100,7 +1086,7 @@ namespace pastel
           "Force of NeighborList must have cutoff");
 
         buffer_length_
-          = ::pastel::neighbor::inexclusive_cells_updater_detail::update_status(
+          = ::pastel::neighbor::detail::update_status(
               neighbor_list, key_particles, partner_particles, time_step,
               search_length_ - ::pastel::force::cutoff_length(::pastel::neighbor::force(neighbor_list)));
       }
@@ -1116,7 +1102,7 @@ namespace pastel
           ::pastel::force::meta::has_cutoff<typename ::pastel::neighbor::meta::force_of<NeighborList const>::type>::value,
           "Force of NeighborList must have cutoff");
 
-        buffer_length_ = ::pastel::neighbor::inexclusive_cells_updater_detail::update_status(neighbor_list, particles, time_step, buffer_length_);
+        buffer_length_ = ::pastel::neighbor::detail::update_status(neighbor_list, particles, time_step, buffer_length_);
       }
 
       template <typename NeighborList, typename KeyParticles, typename PartnerParticles, typename Time>
@@ -1129,7 +1115,7 @@ namespace pastel
           ::pastel::force::meta::has_cutoff<typename ::pastel::neighbor::meta::force_of<NeighborList const>::type>::value,
           "Force of NeighborList must have cutoff");
 
-        buffer_length_ = ::pastel::neighbor::inexclusive_cells_updater_detail::update_status(neighbor_list, key_particles, partner_particles, time_step, buffer_length_);
+        buffer_length_ = ::pastel::neighbor::detail::update_status(neighbor_list, key_particles, partner_particles, time_step, buffer_length_);
       }
 
 

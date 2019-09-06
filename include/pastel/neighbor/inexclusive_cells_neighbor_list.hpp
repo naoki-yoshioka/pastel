@@ -3,6 +3,7 @@
 
 # include <pastel/neighbor/neighbor_list.hpp>
 # include <pastel/neighbor/inexclusive_cells_updater.hpp>
+# include <pastel/neighbor/boundary_inexclusive_cells_updater.hpp>
 
 
 namespace pastel

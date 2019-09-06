@@ -16,6 +16,7 @@
 
 # include <pastel/neighbor/neighbor.hpp>
 # include <pastel/neighbor/inexclusive_cells_updater.hpp>
+# include <pastel/neighbor/boundary_inexclusive_cells_updater.hpp>
 # include <pastel/neighbor/meta/is_partner_data_accessible.hpp>
 # include <pastel/neighbor/meta/boundary_updater_of.hpp>
 # include <pastel/force/meta/value_of.hpp>

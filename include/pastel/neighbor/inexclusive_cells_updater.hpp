@@ -3,7 +3,6 @@
 
 # include <cassert>
 # include <cstddef>
-# include <cstdint>
 # include <cmath>
 # include <array>
 # include <vector>
@@ -13,7 +12,6 @@
 # include <type_traits>
 # include <memory>
 
-# include <pastel/neighbor/boundary_inexclusive_cells_updater.hpp>
 # include <pastel/neighbor/force.hpp>
 # include <pastel/neighbor/meta/force_of.hpp>
 # include <pastel/neighbor/meta/interaction_pair_of.hpp>
@@ -26,7 +24,6 @@
 # include <pastel/container/num_particles.hpp>
 # include <pastel/container/maximal_speed.hpp>
 # include <pastel/container/meta/is_data_accessible.hpp>
-# include <pastel/system/particles.hpp>
 # include <pastel/force/cutoff_length.hpp>
 # include <pastel/force/meta/has_cutoff.hpp>
 # include <pastel/utility/prod.hpp>
@@ -65,8 +62,8 @@ namespace pastel
         {
           static_assert(::pastel::geometry::meta::dimension_of<Vector>::value == dimension, "dimension_of<Vector> must be equal to dimension");
 
-          auto const position_data = particles.template data< ::pastel::particle::tags::position >();
-          auto const position_vector_from_lower_bound = position_data[index] - lower_bound;
+          auto const positions_data = particles.template data< ::pastel::particle::tags::position >();
+          auto const position_vector_from_lower_bound = positions_data[index] - lower_bound;
 
           auto result = std::size_t{0u};
           for (auto dim = std::size_t{0u}; dim < dimension; ++dim)
@@ -191,26 +188,32 @@ namespace pastel
           std::vector<Iterator, IteratorAllocator>& neighbor_cell_indices_firsts,
           std::array<std::size_t, dimension_> const& num_cells)
         {
-          auto const present_cell_index = cell_coordinate_to_cell_index(present_cell_coordinate, num_cells);
+          auto const present_cell_index
+            = ::pastel::neighbor::inexclusive_cells_updater_detail::cell_coordinate_to_cell_index(present_cell_coordinate, num_cells);
           auto possible_neighbor_cell_indices = std::array<std::size_t, ::pastel::utility::intpow(2u, dimension_)>{present_cell_index};
           auto array_size = std::size_t{1u};
 
           ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices_impl2<0u, dimension_>::call(
             possible_neighbor_cell_indices, array_size, present_cell_coordinate, num_cells);
 
+          neighbor_cell_indices_firsts[present_cell_index+1u]
+            = std::copy(
+                std::begin(possible_neighbor_cell_indices) + 1u, std::begin(possible_neighbor_cell_indices) + array_size,
+                neighbor_cell_indices_firsts[present_cell_index]);
+          /* TODO: remove this comment lines
           Iterator neighbor_cell_indices_iter = neighbor_cell_indices_firsts[present_cell_index];
           for (auto index = std::size_t{1u}; index < array_size; ++index)
             *neighbor_cell_indices_iter++ = possible_neighbor_cell_indices[index];
 
           neighbor_cell_indices_firsts[present_cell_index+1u] = neighbor_cell_indices_iter;
+          */
         }
       }; // struct generate_neighbor_cell_indices_impl<dimension_, dimension_>
 
       template <typename Iterator, typename IteratorAllocator, std::size_t dimension_>
       inline void generate_neighbor_cell_indices(
         std::vector<Iterator, IteratorAllocator>& neighbor_cell_indices_firsts,
-        std::array<std::size_t, dimension_> const& num_cells,
-        std::size_t const total_num_cells)
+        std::array<std::size_t, dimension_> const& num_cells)
       {
         auto present_cell_coordinate = std::array<std::size_t, dimension_>{};
         ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices_impl<0u, dimension_>::call(
@@ -226,13 +229,11 @@ namespace pastel
         std::vector<Iterator, IteratorAllocator>& particle_indices_in_each_cell_firsts,
         std::vector<Index, IndexAllocator>& particle_index_to_cell_index,
         std::vector<Index, IndexAllocator>& num_particles_in_each_cell,
-        Point const& lower_bound, Point const& upper_bound, Vector const& cell_vector,
+        Point const& lower_bound, Vector const& cell_vector,
         std::array<std::size_t, dimension_> const& num_cells,
         std::size_t const total_num_cells,
         Particles const& particles)
       {
-        assert(lower_bound < upper_bound);
-
         auto const num_particles = ::pastel::container::num_particles(particles);
         assert(particle_indices_in_each_cell.size() == num_particles);
         assert(particle_indices_in_each_cell_firsts.size() == total_num_cells+1);
@@ -275,13 +276,11 @@ namespace pastel
         std::vector<Iterator, IteratorAllocator>& particle_indices_in_each_cell_firsts,
         std::vector<Index, IndexAllocator>& particle_index_to_cell_index,
         std::vector<Index, IndexAllocator>& num_particles_in_each_cell,
-        Point const& lower_bound, Point const& upper_bound, Vector const& cell_vector,
+        Point const& lower_bound, Vector const& cell_vector,
         std::array<std::size_t, dimension_> const& num_cells,
         std::size_t const total_num_cells,
         Particles1 const& particles1, Particles2 const& particles2)
       {
-        assert(lower_bound < upper_bound);
-
         auto const num_particles1 = ::pastel::container::num_particles(particles1);
         auto const num_particles2 = ::pastel::container::num_particles(particles2);
         auto const total_num_particles = num_particles1 + num_particles2;
@@ -329,6 +328,62 @@ namespace pastel
       }
 
 
+      template <
+        typename NeighborList, typename Value, typename Index,
+        typename ParticleIndicesIterator, typename Allocator1,
+        typename NextCellIndicesIterator, typename Allocator2,
+        typename SquaredDistanceFunction>
+      inline void do_update_neighbor_list1(
+        NeighborList& neighbor_list,
+        Value const& squared_search_length, Index const total_num_cells,
+        std::vector<ParticleIndicesIterator, Allocator1> const& particle_indices_in_each_cell_firsts,
+        std::vector<NextCellIndicesIterator, Allocator2> const& neighbor_cell_indices_firsts,
+        SquaredDistanceFunction&& squared_distance_function)
+      {
+        assert(particle_indices_in_each_cell_firsts.size() == total_num_cells + Index{1});
+        assert(neighbor_cell_indices_firsts.size() == total_num_cells + Index{1});
+
+        neighbor_list.clear();
+
+        for (auto cell_index = Index{0}; cell_index < total_num_cells; ++cell_index)
+        {
+          auto const particle_index_first = particle_indices_in_each_cell_firsts[cell_index];
+          auto const particle_index_last = particle_indices_in_each_cell_firsts[cell_index+1];
+          auto const neighbor_cell_index_first = neighbor_cell_indices_firsts[cell_index];
+          auto const neighbor_cell_index_last = neighbor_cell_indices_firsts[cell_index+1];
+
+          for (auto particle_index1_iter = particle_index_first; particle_index1_iter != particle_index_last; ++particle_index1_iter)
+          {
+            auto const particle_index1 = *particle_index1_iter;
+            for (auto particle_index2_iter = std::next(particle_index1_iter); particle_index2_iter != particle_index_last; ++particle_index2_iter)
+            {
+              auto const particle_index2 = *particle_index2_iter;
+              if (squared_distance_function(particle_index1, particle_index2) >= squared_search_length)
+                continue;
+              auto const key_partner = std::minmax(particle_index1, particle_index2);
+              neighbor_list.emplace(key_partner.first, key_partner.second);
+            }
+
+            for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
+                 neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
+            {
+              auto const neighbor_cell_index = *neighbor_cell_index_iter;
+              auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
+              auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
+
+              for (auto particle_index2_iter = particle_index2_first; particle_index2_iter != particle_index2_last; ++particle_index2_iter)
+              {
+                auto const particle_index2 = *particle_index2_iter;
+                if (squared_distance_function(particle_index1, particle_index2) >= squared_search_length)
+                  continue;
+                auto const key_partner = std::minmax(particle_index1, particle_index2);
+                neighbor_list.emplace(key_partner.first, key_partner.second);
+              }
+            }
+          }
+        }
+      }
+
       template <bool is_data_accessible>
       struct update_neighbor_list1;
 
@@ -345,50 +400,12 @@ namespace pastel
           std::vector<ParticleIndicesIterator, Allocator1> const& particle_indices_in_each_cell_firsts,
           std::vector<NextCellIndicesIterator, Allocator2> const& neighbor_cell_indices_firsts)
         {
-          assert(particle_indices_in_each_cell_firsts.size() == total_num_cells + Index{1});
-          assert(neighbor_cell_indices_firsts.size() == total_num_cells + Index{1});
-
-          neighbor_list.clear();
-
           auto const positions_data = particles.template data< ::pastel::particle::tags::position >();
-
-          for (auto cell_index = Index{0}; cell_index < total_num_cells; ++cell_index)
-          {
-            auto const particle_index_first = particle_indices_in_each_cell_firsts[cell_index];
-            auto const particle_index_last = particle_indices_in_each_cell_firsts[cell_index+1];
-            auto const neighbor_cell_index_first= neighbor_cell_indices_firsts[cell_index];
-            auto const neighbor_cell_index_last = neighbor_cell_indices_firsts[cell_index+1];
-
-            for (auto particle_index1_iter = particle_index_first; particle_index1_iter != particle_index_last; ++particle_index1_iter)
-            {
-              auto const particle_index1 = *particle_index1_iter;
-              for (auto particle_index2_iter = std::next(particle_index1_iter); particle_index2_iter != particle_index_last; ++particle_index2_iter)
-              {
-                auto const particle_index2 = *particle_index2_iter;
-                if (::pastel::geometry::squared_distance(positions_data[particle_index1], positions_data[particle_index2]) >= squared_search_length)
-                  continue;
-                auto const key_partner = std::minmax(particle_index1, particle_index2);
-                neighbor_list.emplace(key_partner.first, key_partner.second);
-              }
-
-              for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
-                   neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
-              {
-                auto const neighbor_cell_index = *neighbor_cell_index_iter;
-                auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
-                auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
-
-                for (auto particle_index2_iter = particle_index2_first; particle_index2_iter != particle_index2_last; ++particle_index2_iter)
-                {
-                  auto const particle_index2 = *particle_index2_iter;
-                  if (::pastel::geometry::squared_distance(positions_data[particle_index1], positions_data[particle_index2]) >= squared_search_length)
-                    continue;
-                  auto const key_partner = std::minmax(particle_index1, particle_index2);
-                  neighbor_list.emplace(key_partner.first, key_partner.second);
-                }
-              }
-            }
-          }
+          ::pastel::neighbor::inexclusive_cells_updater_detail::do_update_neighbor_list1(
+            neighbor_list, squared_search_length, total_num_cells,
+            particle_indices_in_each_cell_firsts, neighbor_cell_indices_firsts,
+            [positions_data](Index const particle_index1, Index const particle_index2)
+            { return ::pastel::geometry::squared_distance(positions_data[particle_index1], positions_data[particle_index2]); });
         }
       }; // struct update_neighbor_list1<true>
 
@@ -405,31 +422,63 @@ namespace pastel
           std::vector<ParticleIndicesIterator, Allocator1> const& particle_indices_in_each_cell_firsts,
           std::vector<NextCellIndicesIterator, Allocator2> const& neighbor_cell_indices_firsts)
         {
-          assert(particle_indices_in_each_cell_firsts.size() == total_num_cells + Index{1});
-          assert(neighbor_cell_indices_firsts.size() == total_num_cells + Index{1});
-
-          neighbor_list.clear();
-
-          for (auto cell_index = Index{0}; cell_index < total_num_cells; ++cell_index)
-          {
-            auto const particle_index_first = particle_indices_in_each_cell_firsts[cell_index];
-            auto const particle_index_last = particle_indices_in_each_cell_firsts[cell_index+1];
-            auto const neighbor_cell_index_first= neighbor_cell_indices_firsts[cell_index];
-            auto const neighbor_cell_index_last = neighbor_cell_indices_firsts[cell_index+1];
-
-            for (auto particle_index1_iter = particle_index_first; particle_index1_iter != particle_index_last; ++particle_index1_iter)
+          ::pastel::neighbor::inexclusive_cells_updater_detail::do_update_neighbor_list1(
+            neighbor_list, squared_search_length, total_num_cells,
+            particle_indices_in_each_cell_firsts, neighbor_cell_indices_firsts,
+            [&particles](Index const particle_index1, Index const particle_index2)
             {
-              auto const particle_index1 = *particle_index1_iter;
-              for (auto particle_index2_iter = std::next(particle_index1_iter); particle_index2_iter != particle_index_last; ++particle_index2_iter)
+              return ::pastel::geometry::squared_distance(
+                ::pastel::container::get< ::pastel::particle::tags::position >(particles, particle_index1),
+                ::pastel::container::get< ::pastel::particle::tags::position >(particles, particle_index2));
+            });
+        }
+      }; // struct update_neighbor_list1<false>
+
+
+      template <
+        typename NeighborList, typename Size,
+        typename Value, typename Index,
+        typename ParticleIndicesIterator, typename Allocator1,
+        typename NextCellIndicesIterator, typename Allocator2,
+        typename SquaredDistanceFunction>
+      inline void do_update_neighbor_list2(
+        NeighborList& neighbor_list, Size const num_key_particles,
+        Value const& squared_search_length, Index const total_num_cells,
+        std::vector<ParticleIndicesIterator, Allocator1> const& particle_indices_in_each_cell_firsts,
+        std::vector<NextCellIndicesIterator, Allocator2> const& neighbor_cell_indices_firsts,
+        SquaredDistanceFunction&& squared_distance_function)
+      {
+        assert(particle_indices_in_each_cell_firsts.size() == total_num_cells + Index{1});
+        assert(neighbor_cell_indices_firsts.size() == total_num_cells + Index{1});
+
+        neighbor_list.clear();
+
+        for (auto cell_index = Index{0}; cell_index < total_num_cells; ++cell_index)
+        {
+          auto const particle_index_first = particle_indices_in_each_cell_firsts[cell_index];
+          auto const particle_index_last = particle_indices_in_each_cell_firsts[cell_index+1];
+          auto const neighbor_cell_index_first = neighbor_cell_indices_firsts[cell_index];
+          auto const neighbor_cell_index_last = neighbor_cell_indices_firsts[cell_index+1];
+
+          for (auto particle_index1_iter = particle_index_first;
+               particle_index1_iter != particle_index_last; ++particle_index1_iter)
+          {
+            auto const particle_index1 = *particle_index1_iter;
+            if (particle_index1 < num_key_particles) // particle1 is a key
+            {
+              auto const key = particle_index1;
+
+              for (auto particle_index2_iter = std::next(particle_index1_iter);
+                   particle_index2_iter != particle_index_last; ++particle_index2_iter)
               {
                 auto const particle_index2 = *particle_index2_iter;
-                if (::pastel::geometry::squared_distance(
-                      ::pastel::container::get< ::pastel::particle::tags::position >(particles, particle_index1),
-                      ::pastel::container::get< ::pastel::particle::tags::position >(particles, particle_index2))
-                    >= squared_search_length)
+                if (particle_index2 < num_key_particles) // particle2 must be a partner
                   continue;
-                auto const key_partner = std::minmax(particle_index1, particle_index2);
-                neighbor_list.emplace(key_partner.first, key_partner.second);
+
+                auto const partner = particle_index2 - num_key_particles;
+                if (squared_distance_function(key, partner) >= squared_search_length)
+                  continue;
+                neighbor_list.emplace(key, partner);
               }
 
               for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
@@ -439,23 +488,61 @@ namespace pastel
                 auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
                 auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
 
-                for (auto particle_index2_iter = particle_index2_first; particle_index2_iter != particle_index2_last; ++particle_index2_iter)
+                for (auto particle_index2_iter = particle_index2_first;
+                     particle_index2_iter != particle_index2_last; ++particle_index2_iter)
                 {
                   auto const particle_index2 = *particle_index2_iter;
-                  if (::pastel::geometry::squared_distance(
-                        ::pastel::container::get< ::pastel::particle::tags::position >(particles, particle_index1),
-                        ::pastel::container::get< ::pastel::particle::tags::position >(particles, particle_index2))
-                      >= squared_search_length)
+                  if (particle_index2 < num_key_particles) // particle2 must be a partner
                     continue;
-                  auto const key_partner = std::minmax(particle_index1, particle_index2);
-                  neighbor_list.emplace(key_partner.first, key_partner.second);
+
+                  auto const partner = particle_index2 - num_key_particles;
+                  if (squared_distance_function(key, partner) >= squared_search_length)
+                    continue;
+                  neighbor_list.emplace(key, partner);
+                }
+              }
+            }
+            else // particle1 is a partner
+            {
+              auto const partner = particle_index1 - num_key_particles;
+
+              for (auto particle_index2_iter = std::next(particle_index1_iter);
+                   particle_index2_iter != particle_index_last; ++particle_index2_iter)
+              {
+                auto const particle_index2 = *particle_index2_iter;
+                if (particle_index2 >= num_key_particles) // particle2 must be a key
+                  continue;
+
+                auto const key = particle_index2;
+                if (squared_distance_function(key, partner) >= squared_search_length)
+                  continue;
+                neighbor_list.emplace(key, partner);
+              }
+
+              for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
+                   neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
+              {
+                auto const neighbor_cell_index = *neighbor_cell_index_iter;
+                auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
+                auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
+
+                for (auto particle_index2_iter = particle_index2_first;
+                     particle_index2_iter != particle_index2_last; ++particle_index2_iter)
+                {
+                  auto const particle_index2 = *particle_index2_iter;
+                  if (particle_index2 >= num_key_particles) // particle2 must be a key
+                    continue;
+
+                  auto const key = particle_index2;
+                  if (squared_distance_function(key, partner) >= squared_search_length)
+                    continue;
+                  neighbor_list.emplace(key, partner);
                 }
               }
             }
           }
         }
-      }; // struct update_neighbor_list1<false>
-
+      }
 
       template <bool is_key_data_accessible, bool is_partner_data_accessible>
       struct update_neighbor_list2;
@@ -474,112 +561,14 @@ namespace pastel
           std::vector<ParticleIndicesIterator, Allocator1> const& particle_indices_in_each_cell_firsts,
           std::vector<NextCellIndicesIterator, Allocator2> const& neighbor_cell_indices_firsts)
         {
-          assert(particle_indices_in_each_cell_firsts.size() == total_num_cells + Index{1});
-          assert(neighbor_cell_indices_firsts.size() == total_num_cells + Index{1});
-
-          neighbor_list.clear();
-
           auto const key_positions_data = key_particles.template data< ::pastel::particle::tags::position >();
           auto const partner_positions_data = partner_particles.template data< ::pastel::particle::tags::position >();
-          auto const num_key_particles = ::pastel::container::num_particles(key_particles);
-
-          for (auto cell_index = Index{0}; cell_index < total_num_cells; ++cell_index)
-          {
-            auto const particle_index_first = particle_indices_in_each_cell_firsts[cell_index];
-            auto const particle_index_last = particle_indices_in_each_cell_firsts[cell_index+1];
-            auto const neighbor_cell_index_first= neighbor_cell_indices_firsts[cell_index];
-            auto const neighbor_cell_index_last = neighbor_cell_indices_firsts[cell_index+1];
-
-            for (auto particle_index1_iter = particle_index_first;
-                 particle_index1_iter != particle_index_last; ++particle_index1_iter)
-            {
-              auto const particle_index1 = *particle_index1_iter;
-              if (particle_index1 < num_key_particles) // particle1 is a key
-              {
-                auto const key = particle_index1;
-
-                for (auto particle_index2_iter = std::next(particle_index1_iter);
-                     particle_index2_iter != particle_index_last; ++particle_index2_iter)
-                {
-                  auto const particle_index2 = *particle_index2_iter;
-                  if (particle_index2 < num_key_particles) // particle2 must be a partner
-                    continue;
-
-                  auto const partner = particle_index2 - num_key_particles;
-                  if (::pastel::geometry::squared_distance(
-                        key_positions_data[key], partner_positions_data[partner])
-                      >= squared_search_length)
-                    continue;
-                  neighbor_list.emplace(key, partner);
-                }
-
-                for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
-                     neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
-                {
-                  auto const neighbor_cell_index = *neighbor_cell_index_iter;
-                  auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
-                  auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
-
-                  for (auto particle_index2_iter = particle_index2_first;
-                       particle_index2_iter != particle_index2_last; ++particle_index2_iter)
-                  {
-                    auto const particle_index2 = *particle_index2_iter;
-                    if (particle_index2 < num_key_particles) // particle2 must be a partner
-                      continue;
-
-                    auto const partner = particle_index2 - num_key_particles;
-                    if (::pastel::geometry::squared_distance(
-                          key_positions_data[key], partner_positions_data[partner])
-                        >= squared_search_length)
-                      continue;
-                    neighbor_list.emplace(key, partner);
-                  }
-                }
-              }
-              else // particle1 is a partner
-              {
-                auto const partner = particle_index1 - num_key_particles;
-
-                for (auto particle_index2_iter = std::next(particle_index1_iter);
-                     particle_index2_iter != particle_index_last; ++particle_index2_iter)
-                {
-                  auto const particle_index2 = *particle_index2_iter;
-                  if (particle_index2 >= num_key_particles) // particle2 must be a key
-                    continue;
-
-                  auto const key = particle_index2;
-                  if (::pastel::geometry::squared_distance(
-                        key_positions_data[key], partner_positions_data[partner])
-                      >= squared_search_length)
-                    continue;
-                  neighbor_list.emplace(key, partner);
-                }
-
-                for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
-                     neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
-                {
-                  auto const neighbor_cell_index = *neighbor_cell_index_iter;
-                  auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
-                  auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
-
-                  for (auto particle_index2_iter = particle_index2_first;
-                       particle_index2_iter != particle_index2_last; ++particle_index2_iter)
-                  {
-                    auto const particle_index2 = *particle_index2_iter;
-                    if (particle_index2 >= num_key_particles) // particle2 must be a key
-                      continue;
-
-                    auto const key = particle_index2;
-                    if (::pastel::geometry::squared_distance(
-                          key_positions_data[key], partner_positions_data[partner])
-                        >= squared_search_length)
-                      continue;
-                    neighbor_list.emplace(key, partner);
-                  }
-                }
-              }
-            }
-          }
+          ::pastel::neighbor::inexclusive_cells_updater_detail::do_update_neighbor_list2(
+            neighbor_list, ::pastel::container::num_particles(key_particles),
+            squared_search_length, total_num_cells,
+            particle_indices_in_each_cell_firsts, neighbor_cell_indices_firsts,
+            [key_positions_data, partner_positions_data](Index const key, Index const partner)
+            { return ::pastel::geometry::squared_distance(key_positions_data[key], partner_positions_data[partner]); });
         }
       }; // struct update_neighbor_list2<true, true>
 
@@ -597,115 +586,17 @@ namespace pastel
           std::vector<ParticleIndicesIterator, Allocator1> const& particle_indices_in_each_cell_firsts,
           std::vector<NextCellIndicesIterator, Allocator2> const& neighbor_cell_indices_firsts)
         {
-          assert(particle_indices_in_each_cell_firsts.size() == total_num_cells + Index{1});
-          assert(neighbor_cell_indices_firsts.size() == total_num_cells + Index{1});
-
-          neighbor_list.clear();
-
           auto const key_positions_data = key_particles.template data< ::pastel::particle::tags::position >();
-          auto const num_key_particles = ::pastel::container::num_particles(key_particles);
-
-          for (auto cell_index = Index{0}; cell_index < total_num_cells; ++cell_index)
-          {
-            auto const particle_index_first = particle_indices_in_each_cell_firsts[cell_index];
-            auto const particle_index_last = particle_indices_in_each_cell_firsts[cell_index+1];
-            auto const neighbor_cell_index_first= neighbor_cell_indices_firsts[cell_index];
-            auto const neighbor_cell_index_last = neighbor_cell_indices_firsts[cell_index+1];
-
-            for (auto particle_index1_iter = particle_index_first;
-                 particle_index1_iter != particle_index_last; ++particle_index1_iter)
+          ::pastel::neighbor::inexclusive_cells_updater_detail::do_update_neighbor_list2(
+            neighbor_list, ::pastel::container::num_particles(key_particles),
+            squared_search_length, total_num_cells,
+            particle_indices_in_each_cell_firsts, neighbor_cell_indices_firsts,
+            [key_positions_data, &partner_particles](Index const key, Index const partner)
             {
-              auto const particle_index1 = *particle_index1_iter;
-              if (particle_index1 < num_key_particles) // particle1 is a key
-              {
-                auto const key = particle_index1;
-
-                for (auto particle_index2_iter = std::next(particle_index1_iter);
-                     particle_index2_iter != particle_index_last; ++particle_index2_iter)
-                {
-                  auto const particle_index2 = *particle_index2_iter;
-                  if (particle_index2 < num_key_particles) // particle2 must be a partner
-                    continue;
-
-                  auto const partner = particle_index2 - num_key_particles;
-                  if (::pastel::geometry::squared_distance(
-                        key_positions_data[key],
-                        ::pastel::container::get< ::pastel::particle::tags::position >(partner_particles, partner))
-                      >= squared_search_length)
-                    continue;
-                  neighbor_list.emplace(key, partner);
-                }
-
-                for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
-                     neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
-                {
-                  auto const neighbor_cell_index = *neighbor_cell_index_iter;
-                  auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
-                  auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
-
-                  for (auto particle_index2_iter = particle_index2_first;
-                       particle_index2_iter != particle_index2_last; ++particle_index2_iter)
-                  {
-                    auto const particle_index2 = *particle_index2_iter;
-                    if (particle_index2 < num_key_particles) // particle2 must be a partner
-                      continue;
-
-                    auto const partner = particle_index2 - num_key_particles;
-                    if (::pastel::geometry::squared_distance(
-                          key_positions_data[key],
-                          ::pastel::container::get< ::pastel::particle::tags::position >(partner_particles, partner))
-                        >= squared_search_length)
-                      continue;
-                    neighbor_list.emplace(key, partner);
-                  }
-                }
-              }
-              else // particle1 is a partner
-              {
-                auto const partner = particle_index1 - num_key_particles;
-
-                for (auto particle_index2_iter = std::next(particle_index1_iter);
-                     particle_index2_iter != particle_index_last; ++particle_index2_iter)
-                {
-                  auto const particle_index2 = *particle_index2_iter;
-                  if (particle_index2 >= num_key_particles) // particle2 must be a key
-                    continue;
-
-                  auto const key = particle_index2;
-                  if (::pastel::geometry::squared_distance(
-                        key_positions_data[key],
-                        ::pastel::container::get< ::pastel::particle::tags::position >(partner_particles, partner))
-                      >= squared_search_length)
-                    continue;
-                  neighbor_list.emplace(key, partner);
-                }
-
-                for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
-                     neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
-                {
-                  auto const neighbor_cell_index = *neighbor_cell_index_iter;
-                  auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
-                  auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
-
-                  for (auto particle_index2_iter = particle_index2_first;
-                       particle_index2_iter != particle_index2_last; ++particle_index2_iter)
-                  {
-                    auto const particle_index2 = *particle_index2_iter;
-                    if (particle_index2 >= num_key_particles) // particle2 must be a key
-                      continue;
-
-                    auto const key = particle_index2;
-                    if (::pastel::geometry::squared_distance(
-                          key_positions_data[key],
-                          ::pastel::container::get< ::pastel::particle::tags::position >(partner_particles, partner))
-                        >= squared_search_length)
-                      continue;
-                    neighbor_list.emplace(key, partner);
-                  }
-                }
-              }
-            }
-          }
+              return ::pastel::geometry::squared_distance(
+                key_positions_data[key],
+                ::pastel::container::get< ::pastel::particle::tags::position >(partner_particles, partner));
+            });
         }
       }; // struct update_neighbor_list2<true, false>
 
@@ -723,115 +614,17 @@ namespace pastel
           std::vector<ParticleIndicesIterator, Allocator1> const& particle_indices_in_each_cell_firsts,
           std::vector<NextCellIndicesIterator, Allocator2> const& neighbor_cell_indices_firsts)
         {
-          assert(particle_indices_in_each_cell_firsts.size() == total_num_cells + Index{1});
-          assert(neighbor_cell_indices_firsts.size() == total_num_cells + Index{1});
-
-          neighbor_list.clear();
-
           auto const partner_positions_data = partner_particles.template data< ::pastel::particle::tags::position >();
-          auto const num_key_particles = ::pastel::container::num_particles(key_particles);
-
-          for (auto cell_index = Index{0}; cell_index < total_num_cells; ++cell_index)
-          {
-            auto const particle_index_first = particle_indices_in_each_cell_firsts[cell_index];
-            auto const particle_index_last = particle_indices_in_each_cell_firsts[cell_index+1];
-            auto const neighbor_cell_index_first= neighbor_cell_indices_firsts[cell_index];
-            auto const neighbor_cell_index_last = neighbor_cell_indices_firsts[cell_index+1];
-
-            for (auto particle_index1_iter = particle_index_first;
-                 particle_index1_iter != particle_index_last; ++particle_index1_iter)
+          ::pastel::neighbor::inexclusive_cells_updater_detail::do_update_neighbor_list2(
+            neighbor_list, ::pastel::container::num_particles(key_particles),
+            squared_search_length, total_num_cells,
+            particle_indices_in_each_cell_firsts, neighbor_cell_indices_firsts,
+            [&key_particles, partner_positions_data](Index const key, Index const partner)
             {
-              auto const particle_index1 = *particle_index1_iter;
-              if (particle_index1 < num_key_particles) // particle1 is a key
-              {
-                auto const key = particle_index1;
-
-                for (auto particle_index2_iter = std::next(particle_index1_iter);
-                     particle_index2_iter != particle_index_last; ++particle_index2_iter)
-                {
-                  auto const particle_index2 = *particle_index2_iter;
-                  if (particle_index2 < num_key_particles) // particle2 must be a partner
-                    continue;
-
-                  auto const partner = particle_index2 - num_key_particles;
-                  if (::pastel::geometry::squared_distance(
-                        ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key),
-                        partner_positions_data[partner])
-                      >= squared_search_length)
-                    continue;
-                  neighbor_list.emplace(key, partner);
-                }
-
-                for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
-                     neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
-                {
-                  auto const neighbor_cell_index = *neighbor_cell_index_iter;
-                  auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
-                  auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
-
-                  for (auto particle_index2_iter = particle_index2_first;
-                       particle_index2_iter != particle_index2_last; ++particle_index2_iter)
-                  {
-                    auto const particle_index2 = *particle_index2_iter;
-                    if (particle_index2 < num_key_particles) // particle2 must be a partner
-                      continue;
-
-                    auto const partner = particle_index2 - num_key_particles;
-                    if (::pastel::geometry::squared_distance(
-                          ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key),
-                          partner_positions_data[partner])
-                        >= squared_search_length)
-                      continue;
-                    neighbor_list.emplace(key, partner);
-                  }
-                }
-              }
-              else // particle1 is a partner
-              {
-                auto const partner = particle_index1 - num_key_particles;
-
-                for (auto particle_index2_iter = std::next(particle_index1_iter);
-                     particle_index2_iter != particle_index_last; ++particle_index2_iter)
-                {
-                  auto const particle_index2 = *particle_index2_iter;
-                  if (particle_index2 >= num_key_particles) // particle2 must be a key
-                    continue;
-
-                  auto const key = particle_index2;
-                  if (::pastel::geometry::squared_distance(
-                        ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key),
-                        partner_positions_data[partner])
-                      >= squared_search_length)
-                    continue;
-                  neighbor_list.emplace(key, partner);
-                }
-
-                for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
-                     neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
-                {
-                  auto const neighbor_cell_index = *neighbor_cell_index_iter;
-                  auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
-                  auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
-
-                  for (auto particle_index2_iter = particle_index2_first;
-                       particle_index2_iter != particle_index2_last; ++particle_index2_iter)
-                  {
-                    auto const particle_index2 = *particle_index2_iter;
-                    if (particle_index2 >= num_key_particles) // particle2 must be a key
-                      continue;
-
-                    auto const key = particle_index2;
-                    if (::pastel::geometry::squared_distance(
-                          ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key),
-                          partner_positions_data[partner])
-                        >= squared_search_length)
-                      continue;
-                    neighbor_list.emplace(key, partner);
-                  }
-                }
-              }
-            }
-          }
+              return ::pastel::geometry::squared_distance(
+                ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key),
+                partner_positions_data[partner]);
+            });
         }
       }; // struct update_neighbor_list2<false, true>
 
@@ -849,118 +642,23 @@ namespace pastel
           std::vector<ParticleIndicesIterator, Allocator1> const& particle_indices_in_each_cell_firsts,
           std::vector<NextCellIndicesIterator, Allocator2> const& neighbor_cell_indices_firsts)
         {
-          assert(particle_indices_in_each_cell_firsts.size() == total_num_cells + Index{1});
-          assert(neighbor_cell_indices_firsts.size() == total_num_cells + Index{1});
-
-          neighbor_list.clear();
-
-          auto const num_key_particles = ::pastel::container::num_particles(key_particles);
-
-          for (auto cell_index = Index{0}; cell_index < total_num_cells; ++cell_index)
-          {
-            auto const particle_index_first = particle_indices_in_each_cell_firsts[cell_index];
-            auto const particle_index_last = particle_indices_in_each_cell_firsts[cell_index+1];
-            auto const neighbor_cell_index_first= neighbor_cell_indices_firsts[cell_index];
-            auto const neighbor_cell_index_last = neighbor_cell_indices_firsts[cell_index+1];
-
-            for (auto particle_index1_iter = particle_index_first;
-                 particle_index1_iter != particle_index_last; ++particle_index1_iter)
+          ::pastel::neighbor::inexclusive_cells_updater_detail::do_update_neighbor_list2(
+            neighbor_list, ::pastel::container::num_particles(key_particles),
+            squared_search_length, total_num_cells,
+            particle_indices_in_each_cell_firsts, neighbor_cell_indices_firsts,
+            [&key_particles, &partner_particles](Index const key, Index const partner)
             {
-              auto const particle_index1 = *particle_index1_iter;
-              if (particle_index1 < num_key_particles) // particle1 is a key
-              {
-                auto const key = particle_index1;
-
-                for (auto particle_index2_iter = std::next(particle_index1_iter);
-                     particle_index2_iter != particle_index_last; ++particle_index2_iter)
-                {
-                  auto const particle_index2 = *particle_index2_iter;
-                  if (particle_index2 < num_key_particles) // particle2 must be a partner
-                    continue;
-
-                  auto const partner = particle_index2 - num_key_particles;
-                  if (::pastel::geometry::squared_distance(
-                        ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key),
-                        ::pastel::container::get< ::pastel::particle::tags::position >(partner_particles, partner))
-                      >= squared_search_length)
-                    continue;
-                  neighbor_list.emplace(key, partner);
-                }
-
-                for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
-                     neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
-                {
-                  auto const neighbor_cell_index = *neighbor_cell_index_iter;
-                  auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
-                  auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
-
-                  for (auto particle_index2_iter = particle_index2_first;
-                       particle_index2_iter != particle_index2_last; ++particle_index2_iter)
-                  {
-                    auto const particle_index2 = *particle_index2_iter;
-                    if (particle_index2 < num_key_particles) // particle2 must be a partner
-                      continue;
-
-                    auto const partner = particle_index2 - num_key_particles;
-                    if (::pastel::geometry::squared_distance(
-                          ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key),
-                          ::pastel::container::get< ::pastel::particle::tags::position >(partner_particles, partner))
-                        >= squared_search_length)
-                      continue;
-                    neighbor_list.emplace(key, partner);
-                  }
-                }
-              }
-              else // particle1 is a partner
-              {
-                auto const partner = particle_index1 - num_key_particles;
-
-                for (auto particle_index2_iter = std::next(particle_index1_iter);
-                     particle_index2_iter != particle_index_last; ++particle_index2_iter)
-                {
-                  auto const particle_index2 = *particle_index2_iter;
-                  if (particle_index2 >= num_key_particles) // particle2 must be a key
-                    continue;
-
-                  auto const key = particle_index2;
-                  if (::pastel::geometry::squared_distance(
-                        ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key),
-                        ::pastel::container::get< ::pastel::particle::tags::position >(partner_particles, partner))
-                      >= squared_search_length)
-                    continue;
-                  neighbor_list.emplace(key, partner);
-                }
-
-                for (auto neighbor_cell_index_iter = neighbor_cell_index_first;
-                     neighbor_cell_index_iter != neighbor_cell_index_last; ++neighbor_cell_index_iter)
-                {
-                  auto const neighbor_cell_index = *neighbor_cell_index_iter;
-                  auto const particle_index2_first = particle_indices_in_each_cell_firsts[neighbor_cell_index];
-                  auto const particle_index2_last = particle_indices_in_each_cell_firsts[neighbor_cell_index+1];
-
-                  for (auto particle_index2_iter = particle_index2_first;
-                       particle_index2_iter != particle_index2_last; ++particle_index2_iter)
-                  {
-                    auto const particle_index2 = *particle_index2_iter;
-                    if (particle_index2 >= num_key_particles) // particle2 must be a key
-                      continue;
-
-                    auto const key = particle_index2;
-                    if (::pastel::geometry::squared_distance(
-                          ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key),
-                          ::pastel::container::get< ::pastel::particle::tags::position >(partner_particles, partner))
-                        >= squared_search_length)
-                      continue;
-                    neighbor_list.emplace(key, partner);
-                  }
-                }
-              }
-            }
-          }
+              return ::pastel::geometry::squared_distance(
+                ::pastel::container::get< ::pastel::particle::tags::position >(key_particles, key),
+                ::pastel::container::get< ::pastel::particle::tags::position >(partner_particles, partner));
+            });
         }
       }; // struct update_neighbor_list2<false, false>
     } // namespace inexclusive_cells_updater_detail
 
+
+    template <typename Point>
+    class boundary_inexclusive_cells_updater;
 
     template <typename Point>
     class inexclusive_cells_updater
@@ -1039,8 +737,7 @@ namespace pastel
         assert(maximal_speed > Speed{0});
         assert(lower_bound_ < upper_bound_);
 
-        ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices(
-          neighbor_cell_indices_firsts_, num_cells_, total_num_cells_);
+        ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices(neighbor_cell_indices_firsts_, num_cells_);
         neighbor_cell_indices_.resize(neighbor_cell_indices_firsts_.back() - neighbor_cell_indices_firsts_.front());
       }
 
@@ -1078,9 +775,6 @@ namespace pastel
       template <typename NeighborList, typename KeyParticles, typename PartnerParticles, typename Time>
       void reset_status(NeighborList const& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles, Time time_step)
       {
-        //using interaction_pair_type
-        //  = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
-        //static_assert(interaction_pair_type::first != interaction_pair_type::second, "NeighborList must be interparticle");
         static_assert(
           ::pastel::force::meta::has_cutoff<typename ::pastel::neighbor::meta::force_of<NeighborList const>::type>::value,
           "Force of NeighborList must have cutoff");
@@ -1108,9 +802,6 @@ namespace pastel
       template <typename NeighborList, typename KeyParticles, typename PartnerParticles, typename Time>
       void update_status(NeighborList const& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles, Time time_step)
       {
-        //using interaction_pair_type
-        //  = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
-        //static_assert(interaction_pair_type::first != interaction_pair_type::second, "NeighborList must be interparticle");
         static_assert(
           ::pastel::force::meta::has_cutoff<typename ::pastel::neighbor::meta::force_of<NeighborList const>::type>::value,
           "Force of NeighborList must have cutoff");
@@ -1135,7 +826,7 @@ namespace pastel
         ::pastel::neighbor::inexclusive_cells_updater_detail::update_cell_data(
           particle_indices_in_each_cell_, particle_indices_in_each_cell_firsts_,
           particle_index_to_cell_index_, num_particles_in_each_cell_,
-          lower_bound_, upper_bound_, cell_vector_, num_cells_, total_num_cells_,
+          lower_bound_, cell_vector_, num_cells_, total_num_cells_,
           particles);
 
         static constexpr bool is_data_accessible
@@ -1150,9 +841,6 @@ namespace pastel
       template <typename NeighborList, typename KeyParticles, typename PartnerParticles>
       void update_neighbor_list(NeighborList& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles)
       {
-        //using interaction_pair_type
-        //  = typename ::pastel::neighbor::meta::interaction_pair_of<NeighborList>::type;
-        //static_assert(interaction_pair_type::first != interaction_pair_type::second, "NeighborList must be interparticle");
         static_assert(
           ::pastel::force::meta::has_cutoff<typename ::pastel::neighbor::meta::force_of<NeighborList>::type>::value,
           "Force of NeighborList must have cutoff");
@@ -1164,7 +852,7 @@ namespace pastel
         ::pastel::neighbor::inexclusive_cells_updater_detail::update_cell_data(
           particle_indices_in_each_cell_, particle_indices_in_each_cell_firsts_,
           particle_index_to_cell_index_, num_particles_in_each_cell_,
-          lower_bound_, upper_bound_, cell_vector_, num_cells_, total_num_cells_,
+          lower_bound_, cell_vector_, num_cells_, total_num_cells_,
           key_particles, partner_particles);
 
         static constexpr bool is_key_data_accessible

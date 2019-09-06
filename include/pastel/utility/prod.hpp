@@ -28,7 +28,7 @@ namespace pastel
 
     template <typename Value, std::size_t N>
     inline auto prod(std::array<Value, N> const& array)
-      -> decltype(::pastel::utility::foldl(::pastel::utility::sum_detail::multiplies{}, array))
+      -> decltype(::pastel::utility::foldl(::pastel::utility::prod_detail::multiplies{}, array))
     { return ::pastel::utility::foldl(::pastel::utility::prod_detail::multiplies{}, array); }
   } // namespace utility
 } // namespace pastel

@@ -369,7 +369,6 @@ namespace pastel
         for (auto cell_index = Index{0}; cell_index < total_num_cells; ++cell_index)
           particle_indices_in_each_cell_firsts[cell_index+Index{1}]
             = particle_indices_in_each_cell_firsts[cell_index] + num_particles_in_each_cell[cell_index];
-        assert(particle_indices_in_each_cell_firsts.back() == std::end(particle_indices_in_each_cell));
 
         auto particle_indices_in_each_cell_iters = particle_indices_in_each_cell_firsts;
         for (auto particle_index: near_boundary_bulk_particle_indices)

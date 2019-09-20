@@ -294,8 +294,12 @@ namespace pastel
         std::vector<std::size_t> const& near_boundary_cell_indices,
         std::array<std::size_t, dimension_> const& num_cells)
       {
-        for (auto const cell_index: near_boundary_cell_indices)
+        auto const num_near_boundary_cells = near_boundary_cell_indices.size();
+
+        for (auto index = decltype(num_near_boundary_cells){0u}; index < num_near_boundary_cells - decltype(num_near_boundary_cells){1u}; ++index)
         {
+          auto const cell_index = near_boundary_cell_indices[index];
+
           auto const cell_coordinate
             = ::pastel::neighbor::boundary_inexclusive_cells_updater_detail::cell_index_to_cell_coordinate(cell_index, num_cells);
           auto possible_neighbor_cell_indices = std::array<std::size_t, ::pastel::utility::intpow(2u, dimension_)>{cell_index};
@@ -304,11 +308,28 @@ namespace pastel
           ::pastel::neighbor::boundary_inexclusive_cells_updater_detail::generate_neighbor_cell_indices_impl<0u, dimension_>::call(
             possible_neighbor_cell_indices, array_size, cell_coordinate, num_cells);
 
-          neighbor_cell_indices_firsts[cell_index+1u]
-            = std::copy(
-                std::begin(possible_neighbor_cell_indices) + 1u, std::begin(possible_neighbor_cell_indices) + array_size,
-                neighbor_cell_indices_firsts[cell_index]);
+          auto const next_cell_index = near_boundary_cell_indices[index+1u];
+          std::fill(
+            std::begin(neighbor_cell_indices_firsts) + cell_index + 1u,
+            std::begin(neighbor_cell_indices_firsts) + next_cell_index + 1u,
+            std::copy(
+              std::begin(possible_neighbor_cell_indices) + 1u, std::begin(possible_neighbor_cell_indices) + array_size,
+              neighbor_cell_indices_firsts[cell_index]));
         }
+
+        auto const cell_index = near_boundary_cell_indices.back();
+        auto const cell_coordinate
+          = ::pastel::neighbor::boundary_inexclusive_cells_updater_detail::cell_index_to_cell_coordinate(cell_index, num_cells);
+        auto possible_neighbor_cell_indices = std::array<std::size_t, ::pastel::utility::intpow(2u, dimension_)>{cell_index};
+        auto array_size = std::size_t{1u};
+
+        ::pastel::neighbor::boundary_inexclusive_cells_updater_detail::generate_neighbor_cell_indices_impl<0u, dimension_>::call(
+          possible_neighbor_cell_indices, array_size, cell_coordinate, num_cells);
+
+        neighbor_cell_indices_firsts[cell_index+1u]
+          = std::copy(
+              std::begin(possible_neighbor_cell_indices) + 1u, std::begin(possible_neighbor_cell_indices) + array_size,
+              neighbor_cell_indices_firsts[cell_index]);
       }
 
 

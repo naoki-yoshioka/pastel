@@ -11,12 +11,18 @@
 #include <pastel/container/meta/point_of.hpp>
 #include <pastel/container/meta/vector_of.hpp>
 #include <pastel/force/lennard_jones.hpp>
-#include <pastel/neighbor/brute_force_neighbor_list.hpp>
-#include <pastel/neighbor/brute_force_updater.hpp>
+//#include <pastel/neighbor/brute_force_neighbor_list.hpp>
+//#include <pastel/neighbor/brute_force_updater.hpp>
+#include <pastel/neighbor/inexclusive_cells_neighbor_list.hpp>
+#include <pastel/neighbor/inexclusive_cells_updater.hpp>
 #include <pastel/system/simple_system.hpp>
 #include <pastel/system/periodic_boundary.hpp>
 #include <pastel/system/particles.hpp>
+#include <pastel/system/total_kinetic_energy.hpp>
+#include <pastel/system/total_potential_energy.hpp>
+#include <pastel/system/total_boundary_potential_energy.hpp>
 #include <pastel/integrate/gear/update.hpp>
+//#include <pastel/integrate/vverlet/update.hpp>
 
 
 template <typename System>
@@ -79,9 +85,10 @@ int main(int argc, char* argv[])
   constexpr auto diameter = 1.0;
   constexpr auto cutoff_length = 3.0 * diameter;
   constexpr auto search_length = 4.0 * diameter;
-  constexpr auto lower_bound = -10.0 * diameter;
-  constexpr auto upper_bound = +10.0 * diameter;
-  constexpr auto boundary_width = search_length;
+  constexpr auto lower_bound_1d = -10.0 * diameter;
+  constexpr auto upper_bound_1d = +10.0 * diameter;
+  constexpr auto num_cells_1d = 4u;
+  constexpr auto boundary_width = (upper_bound_1d - lower_bound_1d) / static_cast<decltype(lower_bound_1d)>(num_cells_1d);
   constexpr auto num_steps = 10000;
   //constexpr auto num_steps = 1000000;
   //constexpr auto num_steps_to_output = 1000;
@@ -91,8 +98,8 @@ int main(int argc, char* argv[])
 
   using x_boundary_type = pastel::system::periodic_boundary<>;
   using y_boundary_type = pastel::system::periodic_boundary<>;
-  auto const x_boundary = x_boundary_type{lower_bound, upper_bound, boundary_width};
-  auto const y_boundary = y_boundary_type{lower_bound, upper_bound, boundary_width};
+  auto const x_boundary = x_boundary_type{lower_bound_1d, upper_bound_1d, boundary_width};
+  auto const y_boundary = y_boundary_type{lower_bound_1d, upper_bound_1d, boundary_width};
   using boundary_type = std::tuple<x_boundary_type, y_boundary_type>;
   auto const boundary = boundary_type{x_boundary, y_boundary};
 
@@ -102,10 +109,13 @@ int main(int argc, char* argv[])
   particles.reserve(num_particles);
 
   using point_type = typename pastel::container::meta::point_of<particles_type>::type;
+  auto const lower_bound = point_type{lower_bound_1d, lower_bound_1d};
+  auto const upper_bound = point_type{upper_bound_1d, upper_bound_1d};
+
   using vector_type = typename pastel::container::meta::vector_of<particles_type>::type;
   auto rng = rng_type{seed};
-  constexpr auto cell_length_x = (upper_bound - lower_bound) / num_particles_x;
-  constexpr auto cell_length_y = (upper_bound - lower_bound) / num_particles_y;
+  constexpr auto cell_length_x = (upper_bound_1d - lower_bound_1d) / num_particles_x;
+  constexpr auto cell_length_y = (upper_bound_1d - lower_bound_1d) / num_particles_y;
   auto x_dist = std::uniform_real_distribution<>{-cell_length_x*0.1, cell_length_x*0.1};
   auto y_dist = std::uniform_real_distribution<>{-cell_length_y*0.1, cell_length_y*0.1};
   auto speed_dist = std::normal_distribution<>{0.0, initial_typical_speed};
@@ -115,17 +125,24 @@ int main(int argc, char* argv[])
       if (index_y * num_particles_y + index_x >= num_particles)
         break;
       particles.emplace_back(
-        point_type{(index_x + 0.5) * cell_length_x + x_dist(rng), (index_y + 0.5) * cell_length_y + y_dist(rng)},
+        lower_bound + vector_type{(index_x + 0.5) * cell_length_x + x_dist(rng), (index_y + 0.5) * cell_length_y + y_dist(rng)},
         vector_type{speed_dist(rng), speed_dist(rng)},
         vector_type{});
     }
 
-  using neighbor_list_type = pastel::neighbor::brute_force_neighbor_list<force_type>;
+  //using neighbor_list_type = pastel::neighbor::brute_force_neighbor_list<force_type>;
+  //auto neighbor_list
+  //  = neighbor_list_type{
+  //      particles, std::move(force),
+  //      pastel::neighbor::brute_force_updater<double>{
+  //        search_length, cutoff_length, time_step, pastel::container::maximal_speed(particles)}};
+  using neighbor_list_type = pastel::neighbor::inexclusive_cells_neighbor_list<force_type, point_type>;
   auto neighbor_list
     = neighbor_list_type{
         particles, std::move(force),
-        pastel::neighbor::brute_force_updater<double>{
-          search_length, cutoff_length, time_step, pastel::container::maximal_speed(particles)}};
+        pastel::neighbor::inexclusive_cells_updater<point_type>{
+          search_length, cutoff_length, time_step, pastel::container::maximal_speed(particles),
+          lower_bound, upper_bound, num_cells_1d, num_cells_1d}};
 
   using system_type = pastel::system::simple_system<particles_type, neighbor_list_type, boundary_type>;
   auto system = system_type{std::move(particles), std::move(neighbor_list), std::move(boundary), time_step};
@@ -139,8 +156,20 @@ int main(int argc, char* argv[])
       output(system, time_step * step);
   }
   */
+  //for (auto step = 1; step <= num_steps; ++step)
+  //  pastel::integrate::gear::update<6u>(system, time_step);
+  //output(system);
+  auto kinetic_energy = pastel::system::total_kinetic_energy<0u>(system);
+  auto potential_energy = pastel::system::total_potential_energy<0u>(system) + pastel::system::total_boundary_potential_energy<0u>(system);
+  std::cout << 0 << ' ' << kinetic_energy << ' ' << potential_energy << ' ' << kinetic_energy + potential_energy << std::endl;
   for (auto step = 1; step <= num_steps; ++step)
+  {
+    //pastel::integrate::vverlet::update(system, time_step);
     pastel::integrate::gear::update<6u>(system, time_step);
-  output(system);
+
+    kinetic_energy = pastel::system::total_kinetic_energy<0u>(system);
+    potential_energy = pastel::system::total_potential_energy<0u>(system) + pastel::system::total_boundary_potential_energy<0u>(system);
+    std::cout << time_step * step << ' ' << kinetic_energy << ' ' << potential_energy << ' ' << kinetic_energy + potential_energy << std::endl;
+  }
 }
 

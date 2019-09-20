@@ -9,7 +9,8 @@ bin/linear_spring: linear_spring.cpp
 
 bin/lennard_jones: lennard_jones.cpp
 	mkdir -p bin
-	g++ lennard_jones.cpp -O3 -DNDEBUG -Wall -I../../include -o bin/lennard_jones
+	g++ lennard_jones.cpp -Wall -I../../include -o bin/lennard_jones
+#	g++ lennard_jones.cpp -O3 -DNDEBUG -Wall -I../../include -o bin/lennard_jones
 
 bin/sph: sph.cpp
 	mkdir -p bin
@@ -17,5 +18,6 @@ bin/sph: sph.cpp
 
 .PHONY: clean
 clean: 
-	$(RM) bin/linear_spring bin/lennard_jones bin/sph *.dat
+	$(RM) bin/linear_spring bin/lennard_jones bin/sph
+#	$(RM) bin/linear_spring bin/lennard_jones bin/sph *.dat
 

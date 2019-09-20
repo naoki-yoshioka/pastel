@@ -41,13 +41,16 @@ BOOST_AUTO_TEST_CASE(lennard_jones_collisions_test, * boost::unit_test::toleranc
   constexpr auto search_length = 4.0 * diameter;
   constexpr auto lower_bound_1d = -10.0 * diameter;
   constexpr auto upper_bound_1d = +10.0 * diameter;
-  constexpr auto num_cells_1d = 4u;
-  constexpr auto boundary_width = search_length;
   using force_type = pastel::force::lennard_jones<true>;
   auto force = force_type{1.0, diameter, cutoff_length};
   constexpr auto time_step = 0.001;
   constexpr auto num_steps = 40000u;
 
+  using particles_type = pastel::container::aligned_simple_particles<2u>;
+  using point_type = typename pastel::container::meta::point_of<particles_type>::type;
+  using vector_type = typename pastel::container::meta::vector_of<particles_type>::type;
+  {
+  constexpr auto boundary_width = search_length;
   using x_boundary_type = pastel::system::periodic_boundary<>;
   using y_boundary_type = pastel::system::periodic_boundary<>;
   auto const x_boundary = x_boundary_type{lower_bound_1d, upper_bound_1d, boundary_width};
@@ -55,10 +58,6 @@ BOOST_AUTO_TEST_CASE(lennard_jones_collisions_test, * boost::unit_test::toleranc
   using boundary_type = std::tuple<x_boundary_type, y_boundary_type>;
   auto const boundary = boundary_type{x_boundary, y_boundary};
 
-  using particles_type = pastel::container::aligned_simple_particles<2u>;
-  using point_type = typename pastel::container::meta::point_of<particles_type>::type;
-  using vector_type = typename pastel::container::meta::vector_of<particles_type>::type;
-  {
   auto particles = particles_type{};
   particles.reserve(2u);
   particles.emplace_back(point_type{lower_bound_1d/2.0, 0.0}, vector_type{+speed, 0.0}, vector_type{});
@@ -108,6 +107,15 @@ BOOST_AUTO_TEST_CASE(lennard_jones_collisions_test, * boost::unit_test::toleranc
 
 
   {
+  constexpr auto num_cells_1d = 4u;
+  constexpr auto boundary_width = (upper_bound_1d - lower_bound_1d) / static_cast<decltype(lower_bound_1d)>(num_cells_1d);
+  using x_boundary_type = pastel::system::periodic_boundary<>;
+  using y_boundary_type = pastel::system::periodic_boundary<>;
+  auto const x_boundary = x_boundary_type{lower_bound_1d, upper_bound_1d, boundary_width};
+  auto const y_boundary = y_boundary_type{lower_bound_1d, upper_bound_1d, boundary_width};
+  using boundary_type = std::tuple<x_boundary_type, y_boundary_type>;
+  auto const boundary = boundary_type{x_boundary, y_boundary};
+
   auto particles = particles_type{};
   particles.reserve(2u);
   particles.emplace_back(point_type{lower_bound_1d/2.0, 0.0}, vector_type{+speed, 0.0}, vector_type{});

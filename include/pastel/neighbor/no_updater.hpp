@@ -8,6 +8,8 @@ namespace pastel
   {
     struct no_updater
     {
+      using boundary_updater_type = no_updater;
+
       constexpr bool is_valid() const { return true; }
       constexpr bool is_invalid() const { return false; }
 

@@ -106,17 +106,17 @@ namespace pastel
 
       constexpr reference operator[](size_type const index) & noexcept
       {
-        static_assert(index < dimension, "point index is within bounds");
+        assert(index < dimension);
         return data_[index];
       }
       constexpr const_reference operator[](size_type const index) const& noexcept
       {
-        static_assert(index < dimension, "point index is within bounds");
+        assert(index < dimension);
         return data_[index];
       }
       constexpr value_type operator[](size_type const index) && noexcept
       {
-        static_assert(index < dimension, "point index is within bounds");
+        assert(index < dimension);
         return std::move(data_[index]);
       }
 

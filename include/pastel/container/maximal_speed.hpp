@@ -4,9 +4,12 @@
 # include <cmath>
 # include <algorithm>
 # include <numeric>
+# include <iterator>
+# include <utility>
 
 # include <pastel/geometry/squared_norm.hpp>
 # include <pastel/particle/tags.hpp>
+# include <pastel/container/get.hpp>
 # include <pastel/container/num_particles.hpp>
 # include <pastel/container/meta/scalar_of.hpp>
 # include <pastel/container/meta/vector_of.hpp>
@@ -34,8 +37,22 @@ namespace pastel
           return sqrt(
             std::accumulate(
               velocities_data, velocities_data+num_particles, scalar_type{0},
-              [](scalar_type last_maximal_squared_speed, vector_type const& velocity)
+              [](scalar_type const last_maximal_squared_speed, vector_type const& velocity)
               { return std::max(last_maximal_squared_speed, ::pastel::geometry::squared_norm(velocity)); }));
+        }
+
+        template <typename Particles, typename Indices>
+        static typename ::pastel::container::meta::scalar_of<Particles const>::type call(Particles const& particles, Indices const& indices)
+        {
+          auto const velocities_data = particles.template data< ::pastel::particle::tags::velocity >();
+
+          using scalar_type = typename ::pastel::container::meta::scalar_of<Particles const>::type;
+          using std::sqrt;
+          return sqrt(
+            std::accumulate(
+              std::begin(indices), std::end(indices), scalar_type{0},
+              [velocities_data](scalar_type const last_maximal_squared_speed, decltype(*std::begin(indices)) const index)
+              { return std::max(last_maximal_squared_speed, ::pastel::geometry::squared_norm(velocities_data[index])); }));
         }
       }; // struct maximal_speed<is_data_accessible>
 
@@ -58,6 +75,22 @@ namespace pastel
           using std::sqrt;
           return sqrt(last_maximal_squared_speed);
         }
+
+        template <typename Particles, typename Indices>
+        static typename ::pastel::container::meta::scalar_of<Particles const>::type call(Particles const& particles, Indices const& indices)
+        {
+          using scalar_type = typename ::pastel::container::meta::scalar_of<Particles const>::type;
+          using std::sqrt;
+          return sqrt(
+            std::accumulate(
+              std::begin(indices), std::end(indices), scalar_type{0},
+              [&particles](scalar_type const last_maximal_squared_speed, decltype(*std::begin(indices)) const index)
+              {
+                return std::max(
+                  last_maximal_squared_speed,
+                  ::pastel::geometry::squared_norm(::pastel::container::get< ::pastel::particle::tags::velocity >(particles, index)));
+              }));
+        }
       }; // struct maximal_speed<false>
     } // namespace maximal_speed_detail
 
@@ -69,6 +102,16 @@ namespace pastel
       using maximal_speed_func
         = ::pastel::container::maximal_speed_detail::maximal_speed<is_data_accessible>;
       return maximal_speed_func::call(particles);
+    }
+
+    template <typename Particles, typename Indices>
+    inline typename ::pastel::container::meta::scalar_of<Particles const>::type maximal_speed(Particles const& particles, Indices const& indices)
+    {
+      static constexpr bool is_data_accessible
+        = ::pastel::container::meta::is_data_accessible<Particles const>::value;
+      using maximal_speed_func
+        = ::pastel::container::maximal_speed_detail::maximal_speed<is_data_accessible>;
+      return maximal_speed_func::call(particles, indices);
     }
   } // namespace container
 } // namespace pastel

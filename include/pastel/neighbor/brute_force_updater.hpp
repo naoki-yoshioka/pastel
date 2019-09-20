@@ -8,6 +8,7 @@
 # include <pastel/neighbor/force.hpp>
 # include <pastel/neighbor/meta/force_of.hpp>
 # include <pastel/neighbor/meta/interaction_pair_of.hpp>
+# include <pastel/neighbor/detail/update_status.hpp>
 # include <pastel/geometry/squared_distance.hpp>
 # include <pastel/particle/tags.hpp>
 # include <pastel/container/get.hpp>
@@ -25,19 +26,6 @@ namespace pastel
   {
     namespace brute_force_updater_detail
     {
-      template <typename NeighborList, typename Particles, typename Value>
-      inline Value update_status(NeighborList const& neighbor_list, Particles const& particles, Value time_step, Value buffer_length)
-      { return buffer_length - Value{2} * time_step * ::pastel::container::maximal_speed(particles); }
-
-      template <typename NeighborList, typename KeyParticles, typename PartnerParticles, typename Value>
-      inline Value update_status(NeighborList const& neighbor_list, KeyParticles const& key_particles, PartnerParticles const& partner_particles, Value time_step, Value buffer_length)
-      {
-        return buffer_length - Value{2} * time_step * std::max(
-          ::pastel::container::maximal_speed(key_particles),
-          ::pastel::container::maximal_speed(partner_particles));
-      }
-
-
       template <bool is_data_accessible>
       struct update_neighbor_list1;
 
@@ -182,6 +170,8 @@ namespace pastel
       Value buffer_length_;
 
      public:
+      using boundary_updater_type = brute_force_updater;
+
       brute_force_updater()
         : search_length_{Value{1}},
           squared_search_length_{search_length_ * search_length_},
@@ -220,7 +210,7 @@ namespace pastel
           "Force of NeighborList must have cutoff");
 
         buffer_length_
-          = ::pastel::neighbor::brute_force_updater_detail::update_status(
+          = ::pastel::neighbor::detail::update_status(
               neighbor_list, particles, time_step,
               search_length_ - ::pastel::force::cutoff_length(::pastel::neighbor::force(neighbor_list)));
       }
@@ -236,7 +226,7 @@ namespace pastel
           "Force of NeighborList must have cutoff");
 
         buffer_length_
-          = ::pastel::neighbor::brute_force_updater_detail::update_status(
+          = ::pastel::neighbor::detail::update_status(
               neighbor_list, key_particles, partner_particles, time_step,
               search_length_ - ::pastel::force::cutoff_length(::pastel::neighbor::force(neighbor_list)));
       }
@@ -252,7 +242,7 @@ namespace pastel
           ::pastel::force::meta::has_cutoff<typename ::pastel::neighbor::meta::force_of<NeighborList const>::type>::value,
           "Force of NeighborList must have cutoff");
 
-        buffer_length_ = ::pastel::neighbor::brute_force_updater_detail::update_status(neighbor_list, particles, time_step, buffer_length_);
+        buffer_length_ = ::pastel::neighbor::detail::update_status(neighbor_list, particles, time_step, buffer_length_);
       }
 
       template <typename NeighborList, typename KeyParticles, typename PartnerParticles, typename Time>
@@ -265,7 +255,7 @@ namespace pastel
           ::pastel::force::meta::has_cutoff<typename ::pastel::neighbor::meta::force_of<NeighborList const>::type>::value,
           "Force of NeighborList must have cutoff");
 
-        buffer_length_ = ::pastel::neighbor::brute_force_updater_detail::update_status(neighbor_list, key_particles, partner_particles, time_step, buffer_length_);
+        buffer_length_ = ::pastel::neighbor::detail::update_status(neighbor_list, key_particles, partner_particles, time_step, buffer_length_);
       }
 
 

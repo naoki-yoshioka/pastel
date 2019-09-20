@@ -200,13 +200,6 @@ namespace pastel
             = std::copy(
                 std::begin(possible_neighbor_cell_indices) + 1u, std::begin(possible_neighbor_cell_indices) + array_size,
                 neighbor_cell_indices_firsts[present_cell_index]);
-          /* TODO: remove this comment lines
-          Iterator neighbor_cell_indices_iter = neighbor_cell_indices_firsts[present_cell_index];
-          for (auto index = std::size_t{1u}; index < array_size; ++index)
-            *neighbor_cell_indices_iter++ = possible_neighbor_cell_indices[index];
-
-          neighbor_cell_indices_firsts[present_cell_index+1u] = neighbor_cell_indices_iter;
-          */
         }
       }; // struct generate_neighbor_cell_indices_impl<dimension_, dimension_>
 

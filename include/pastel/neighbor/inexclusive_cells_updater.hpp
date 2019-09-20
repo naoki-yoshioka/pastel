@@ -729,6 +729,7 @@ namespace pastel
         assert(time_step > Time{0});
         assert(maximal_speed > Speed{0});
         assert(lower_bound_ < upper_bound_);
+        assert(std::all_of(std::begin(cell_vector_), std::end(cell_vector_), [search_length](value_type const& cell_length) { return cell_length >= search_length; }));
 
         ::pastel::neighbor::inexclusive_cells_updater_detail::generate_neighbor_cell_indices(neighbor_cell_indices_firsts_, num_cells_);
         neighbor_cell_indices_.resize(neighbor_cell_indices_firsts_.back() - neighbor_cell_indices_firsts_.front());

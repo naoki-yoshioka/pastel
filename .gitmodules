@@ -1,0 +1,3 @@
+[submodule "yampi"]
+	path = yampi
+	url = https://github.com/naoki-yoshioka/yampi.git
